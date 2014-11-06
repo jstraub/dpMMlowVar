@@ -158,3 +158,5 @@ inline Matrix<T,Dynamic,Dynamic> rotationFromAtoB(const Matrix<T,Dynamic,1>& a,
   return bRa;
 }
 
+
+

@@ -117,6 +117,14 @@ ELSE(BOOST_OLD)
 
 ENDIF(BOOST_OLD)
 
+add_executable(testSO3 ./test/SO3.cpp
+  )
+target_link_libraries(testSO3
+  boost_system
+  boost_random
+  boost_unit_test_framework
+  )
+
 
 
 INSTALL(TARGETS dpMMlowVar #dpStickGMM dpDirMM

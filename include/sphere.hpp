@@ -8,7 +8,7 @@
 #include <boost/random/mersenne_twister.hpp>
 
 #include "global.hpp"
-#include "normal.hpp"
+//#include "normal.hpp"
 
 using  namespace Eigen;
 using std::min;

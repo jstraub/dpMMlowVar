@@ -18,7 +18,11 @@ class SO3
     static inline Matrix<T,Dynamic,1> logMap(const Matrix<T,Dynamic,Dynamic>& R);
     static inline Matrix<T,Dynamic,Dynamic> expMap(const Matrix<T,Dynamic,1>& w);
     static inline Matrix<T,Dynamic,Dynamic> expMap(const Matrix<T,Dynamic,Dynamic>& W);
-    static inline Matrix<T,Dynamic,Dynamic> meanRotation(const vector<Matrix<T,Dynamic,Dynamic> > Rs, uint32_t Tmax);
+    static inline Matrix<T,Dynamic,Dynamic> meanRotation(const
+        vector<Matrix<T,Dynamic,Dynamic> > Rs, uint32_t Tmax=100);
+    static inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const
+        vector<Matrix<T,Dynamic,Dynamic> >& Rs, Matrix<T,Dynamic,1> w, uint32_t
+        Tmax=100);
 };
 
 // ----------------------------- impl ----------------------------------
@@ -91,7 +95,7 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::expMap(const Matrix<T,Dynamic,Dynamic>&
 
 /* compute the mean rotation using karcher mean on SO3 */
 template<typename T>
-inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dynamic,Dynamic> > Rs, uint32_t Tmax)
+inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dynamic,Dynamic> >& Rs, uint32_t Tmax)
 {
   Matrix<T,Dynamic,Dynamic> x(3,Rs.size());
   Matrix<T,Dynamic,Dynamic> muR = Rs[0];// arbitrarily 
@@ -101,6 +105,26 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dyna
     for(uint32_t i=0; i<Rs.size(); ++i)
       x.col(i) = logMap(muR.transpose()*Rs[i]);
     xMean = x.rowwise().sum()/x.cols();
+    muR = expMap(xMean)*muR;
+//    cout<<"@t"<<t<<": "<<xMean.transpose()<<endl;
+//    cout<<x<<endl;
+    if((xMean.array().abs()<1e-6).all()) break;
+  }
+  return muR;
+}
+
+/* compute the weighted mean rotation using karcher mean on SO3 */
+template<typename T>
+inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dynamic,Dynamic> >& Rs, Matrix<T,Dynamic,1> w, uint32_t Tmax)
+{
+  Matrix<T,Dynamic,Dynamic> x(3,Rs.size());
+  Matrix<T,Dynamic,Dynamic> muR = Rs[0];// arbitrarily 
+  Matrix<T,Dynamic,1> xMean;
+  for(uint32_t t=0; t<Tmax; ++t)
+  {
+    for(uint32_t i=0; i<Rs.size(); ++i)
+      x.col(i) = logMap(muR.transpose()*Rs[i])*w(i);
+    xMean = x.rowwise().sum()/w.sum();
     muR = expMap(xMean)*muR;
 //    cout<<"@t"<<t<<": "<<xMean.transpose()<<endl;
 //    cout<<x<<endl;

@@ -26,6 +26,7 @@ public:
   virtual T avgIntraClusterDeviation() = 0;
   
   const VectorXu& z() const {return z_;};
+  const VectorXu& counts() const {return Ns_;};
   const Matrix<T,Dynamic,Dynamic>& centroids() const {return ps_;};
 
   uint32_t getK(){return K_;};
@@ -37,7 +38,7 @@ protected:
   uint32_t N_;
   boost::shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
   Matrix<T,Dynamic,Dynamic> ps_; // centroids on the sphere
-  Matrix<uint32_t,Dynamic,1> Ns_; // counts for each cluster
+  VectorXu Ns_; // counts for each cluster
   VectorXu z_; // labels
   boost::mt19937* pRndGen_;
 };

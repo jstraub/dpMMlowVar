@@ -140,6 +140,8 @@ void DDPvMFMeansCUDA<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,D
 template<class T>
 void DDPvMFMeansCUDA<T>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset)
 {
+  this->psPrev_ = this->ps_;
+  this->Kprev_ = this->K_;
   // TODO: hopefully this does not mess stuff up
 //  DDPvMFMeans<T>::nextTimeStep(spx);
   this->N_ = N;

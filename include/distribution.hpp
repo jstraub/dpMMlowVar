@@ -73,3 +73,33 @@ inline T logsumexp(T x1, T x2)
    else                                                                         
       return x2 + log(1.+exp(x1-x2));                                            
 }
+
+template<typename T>
+inline T logSumExpRow(const Matrix<T,Dynamic,Dynamic>& pdf, uint32_t i)
+{
+  T max = pdf.row(i).maxCoeff();
+  return log((pdf.row(i).array()-max).exp().matrix().sum()) + max;
+}
+
+template<typename T>
+inline T logSumExpCol(const Matrix<T,Dynamic,Dynamic>& pdf, uint32_t i)
+{
+  T max = pdf.col(i).maxCoeff();
+  return log((pdf.col(i).array()-max).exp().matrix().sum()) + max;
+}
+
+
+template<typename T>
+inline T logSumExp(const Matrix<T,Dynamic,1>& pdf)
+{
+  T max = pdf.maxCoeff();
+  return log((pdf.array()-max).exp().matrix().sum()) + max;
+}
+
+//template<typename T>
+//inline T logSumExp(const Matrix<T,1,Dynamic>& pdf)
+//{
+//  T max = pdf.maxCoeff();
+//  return log((pdf.array()-max).exp().matrix().sum()) + max;
+//}
+

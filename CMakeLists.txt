@@ -42,6 +42,7 @@ IF(BOOST_OLD)
     )
   # no sampling from chi_squared
   cuda_add_library(dpMMlowVar SHARED
+    ./src/normal.cpp
     ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
@@ -65,6 +66,7 @@ ELSE(BOOST_OLD)
     $ENV{WORKSPACE_HOME}/3rdparty/lib
     )
   cuda_add_library(dpMMlowVar SHARED
+    ./src/normal.cpp
     ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu

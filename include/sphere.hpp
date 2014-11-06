@@ -3,12 +3,14 @@
 #include <stdint.h>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 #include <Eigen/Dense>
 
 #include <boost/random/mersenne_twister.hpp>
+#include <boost/math/special_functions/gamma.hpp>                               
 
 #include "global.hpp"
-//#include "normal.hpp"
+#include "normal.hpp"
 
 using  namespace Eigen;
 using std::min;
@@ -21,6 +23,10 @@ using boost::mt19937;
 #else
 using boost::mt19937;
 #endif
+
+#define LOG_2 0.69314718055994529
+#define LOG_2PI 1.8378770664093453
+
 
 
 // TODO Template needs fixing - probably just remove

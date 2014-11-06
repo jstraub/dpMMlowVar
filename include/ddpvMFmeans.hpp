@@ -323,6 +323,8 @@ void DDPvMFMeans<T>::updateCenters()
 template<class T>
 void DDPvMFMeans<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
+  this->psPrev_ = this->ps_;
+  this->Kprev_ = this->K_;
   assert(this->D_ == spx->rows());
   if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
   this->N_ = spx->cols();
@@ -383,8 +385,6 @@ void DDPvMFMeans<T>::updateState()
       nRemoved ++;
     }
   this->K_ -= nRemoved;
-  this->psPrev_ = this->ps_;
-  this->Kprev_ = this->K_;
 };
 
 
@@ -409,6 +409,9 @@ void DDPvMFMeans<T>::removeCluster(uint32_t k)
 //  cout<<this->ps_<<endl;
   this->ps_.middleCols(k,this->ps_.cols()-k-1) = this->ps_.rightCols(this->ps_.cols()-k-1);
   this->ps_.conservativeResize(this->ps_.rows(),this->ps_.cols()-1);
+
+  this->psPrev_.middleCols(k,this->psPrev_.cols()-k-1) = this->psPrev_.rightCols(this->psPrev_.cols()-k-1);
+  this->psPrev_.conservativeResize(this->psPrev_.rows(),this->psPrev_.cols()-1);
 //  cout<<this->ps_<<endl;
   //this->xSums_;
 //  cout<<this->xSums_<<endl;

@@ -32,6 +32,7 @@ public:
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i);
+  Matrix<T,Dynamic,Dynamic> prevCentroids(){ return psPrev_;};
 
   const static uint32_t UNASSIGNED = 4294967295;
 protected:

@@ -19,8 +19,8 @@ class SO3
     static inline Matrix<T,Dynamic,Dynamic> expMap(const Matrix<T,Dynamic,1>& w);
     static inline Matrix<T,Dynamic,Dynamic> expMap(const Matrix<T,Dynamic,Dynamic>& W);
     static inline Matrix<T,Dynamic,Dynamic> meanRotation(const
-        vector<Matrix<T,Dynamic,Dynamic> > Rs, uint32_t Tmax=100);
-    static inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const
+        vector<Matrix<T,Dynamic,Dynamic> >& Rs, uint32_t Tmax=100);
+    static inline Matrix<T,Dynamic,Dynamic> meanRotation(const
         vector<Matrix<T,Dynamic,Dynamic> >& Rs, Matrix<T,Dynamic,1> w, uint32_t
         Tmax=100);
 };

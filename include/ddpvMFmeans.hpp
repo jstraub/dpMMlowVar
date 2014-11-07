@@ -29,6 +29,7 @@ public:
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
 
+  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual void updateLabelsParallel();
   virtual void updateLabels();
   virtual void updateCenters();
@@ -75,6 +76,12 @@ DDPvMFMeans<T>::DDPvMFMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >&
   xSums_ = Matrix<T,Dynamic,Dynamic>::Zero(this->D_,1);
 
   assert(-2.0 < this->lambda_ && this->lambda_ < 0.0);
+
+//  assert(this->D_ == spx->rows());
+//  if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
+//  this->N_ = spx->cols();
+//  this->z_.resize(this->N_);
+//  this->z_.fill(this->UNASSIGNED);
 }
 
 template<class T>
@@ -87,7 +94,7 @@ uint32_t DDPvMFMeans<T>::indOfClosestCluster(int32_t i)
   int z_i = this->K_;
   T sim_closest = this->lambda_+1.;
   T sim_k = 0.;
-  cout<<"cluster dists "<<i<<": "<< sim_closest;
+//  cout<<"cluster dists "<<i<<": "<< sim_closest;
   for (uint32_t k=0; k<this->K_; ++k)
   {
     if(this->Ns_(k) == 0) 
@@ -96,20 +103,21 @@ uint32_t DDPvMFMeans<T>::indOfClosestCluster(int32_t i)
     }else{ // cluster instantiated
       sim_k = dist(this->ps_.col(k), this->spx_->col(i));
     }
-    cout<<" "<<sim_k;
+//    cout<<" "<<sim_k;
     if(closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
       z_i = k;
     }
   }
-  cout<<" => z_i="<<z_i<<endl;
+//  cout<<" => z_i="<<z_i<<endl;
   return z_i;
 }
 
 template<class T>
 T DDPvMFMeans<T>::distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, uint32_t k)
 {
+  assert(k<this->psPrev_.cols());
 
   T phi, theta, eta;
   T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
@@ -134,6 +142,8 @@ T DDPvMFMeans<T>::distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, uint32_t 
 template<class T>
 void DDPvMFMeans<T>::updateLabels()
 {
+ return updateLabelsParallel();
+
 // TODO not sure how to parallelize
 //#pragma omp parallel for 
   for(uint32_t i=0; i<this->N_; ++i)
@@ -154,7 +164,7 @@ void DDPvMFMeans<T>::updateLabels()
       }
       this->Ns_(z_i) ++;
     }
-    if(this->z_(i) != this->UNASSIGNED) this->Ns_(this->z_(i)) --;
+    if(this->z_(i) != UNASSIGNED) this->Ns_(this->z_(i)) --;
     this->z_(i) = z_i;
   }
 
@@ -172,78 +182,56 @@ void DDPvMFMeans<T>::updateLabels()
 };
 
 template<class T>
+uint32_t DDPvMFMeans<T>::optimisticLabelsAssign(uint32_t i0)
+{
+  uint32_t idAction = UNASSIGNED;
+#pragma omp parallel for 
+  for(uint32_t i=i0; i<this->N_; ++i)
+  {
+    uint32_t z_i = indOfClosestCluster(i);
+#pragma omp critical
+    {
+      if(z_i == this->K_ || this->Ns_[z_i] == 0) 
+      { // note this as starting position
+        if(idAction > i) idAction = i;
+      }
+    }
+    //    if(this->z_(i) != UNASSIGNED) this->Ns_(this->z_(i)) --;
+    this->z_(i) = z_i;
+  }
+  return idAction;
+};
+
+template<class T>
 void DDPvMFMeans<T>::updateLabelsParallel()
 {
-// TODO not sure how to parallelize
-  Matrix<T,Dynamic,1> psNew(this->D_,1);
-  psNew.fill(0);
-  int32_t iNew = -1;
-  uint32_t reInstantiateOld = 0;
-  Matrix<T,Dynamic,1> reInstantiateFrom(this->D_,1);
-  reInstantiateFrom.fill(0);
-  int32_t iReinstantiate = -1;
-  cout<<"::updateLabelsParallel"<<endl;
-  uint32_t i0=0;
+  uint32_t idAction = UNASSIGNED;
+  uint32_t i0 = 0;
+//  cout<<"::updateLabelsParallel"<<endl;
   do{
-    iNew = -1;
-    iReinstantiate = -1;
-#pragma omp parallel for 
-    for(uint32_t i=i0; i<this->N_; ++i)
+    idAction = optimisticLabelsAssign(i0);
+//  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
+    if(idAction != UNASSIGNED)
     {
-      uint32_t z_i = indOfClosestCluster(i);
-#pragma omp critical
-      {
-        if(z_i == this->K_) 
-        { // start a new cluster
-          if(iNew < 0)
-          {
-            psNew = this->spx_->col(i);
-            iNew = i;
-          }
-        } else {
-          if(this->Ns_[z_i] == 0 && iReinstantiate < 0)
-          { // instantiated an old cluster
-            reInstantiateOld = z_i;
-            reInstantiateFrom =  this->spx_->col(i); 
-            iReinstantiate = i;
-          }
-          //        this->Ns_(z_i) ++;
-        }
-      }
-      //    if(this->z_(i) != this->UNASSIGNED) this->Ns_(this->z_(i)) --;
-      this->z_(i) = z_i;
-    }
-    cout<<iReinstantiate<<" "<<iNew<<endl;
-
-    if(iReinstantiate >= 0 && iNew >= 0)
-    {
-      if(iNew < iReinstantiate)
-      {
+      uint32_t z_i = this->indOfClosestCluster(idAction);
+      if(z_i == this->K_) 
+      { // start a new cluster
         this->ps_.conservativeResize(this->D_,this->K_+1);
         this->Ns_.conservativeResize(this->K_+1); 
-        this->ps_.col(this->K_) = psNew;
-        this->Ns_(this->K_) = 1.;
+        this->ps_.col(this->K_) = this->spx_->col(idAction);
+        this->Ns_(z_i) = 1.;
         this->K_ ++;
-        i0 = iNew;
-      }else{
-        reInstantiatedOldCluster(reInstantiateFrom, reInstantiateOld);
-        i0 = iReinstantiate;
+      } 
+      else if(this->Ns_[z_i] == 0)
+      { // instantiated an old cluster
+        reInstantiatedOldCluster(this->spx_->col(idAction), z_i);
+        this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
+        // computeLabelsGPU to use the cluster;
       }
-    }else if(iReinstantiate < 0 && iNew >= 0)
-    {
-      this->ps_.conservativeResize(this->D_,this->K_+1);
-      this->Ns_.conservativeResize(this->K_+1); 
-      this->ps_.col(this->K_) = psNew;
-      this->Ns_(this->K_) = 1.;
-      this->K_ ++;
-      i0 = iNew;
-    }else if(iReinstantiate >= 0 && iNew < 0)
-    {
-      reInstantiatedOldCluster(reInstantiateFrom, reInstantiateOld);
-        i0 = iReinstantiate;
+      i0 = idAction;
     }
-  }while(iReinstantiate >= 0 || iNew >= 0);
-
+    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<<endl;
+  }while(idAction != UNASSIGNED);
   //TODO get counts from GPU
 #pragma omp parallel for
   for(uint32_t k=0; k<this->K_; ++k)
@@ -252,8 +240,92 @@ void DDPvMFMeans<T>::updateLabelsParallel()
       {
         this->Ns_(k) ++; 
       }
-
 };
+
+
+//template<class T>
+//void DDPvMFMeans<T>::updateLabelsParallel()
+//{
+//  
+//  Matrix<T,Dynamic,1> psNew(this->D_,1);
+//  psNew.fill(0);
+//  int32_t iNew = -1;
+//  uint32_t reInstantiateOld = 0;
+//  Matrix<T,Dynamic,1> reInstantiateFrom(this->D_,1);
+//  reInstantiateFrom.fill(0);
+//  int32_t iReinstantiate = -1;
+//  cout<<"::updateLabelsParallel"<<endl;
+//  uint32_t i0=0;
+//  do{
+//    iNew = -1;
+//    iReinstantiate = -1;
+//#pragma omp parallel for 
+//    for(uint32_t i=i0; i<this->N_; ++i)
+//    {
+//      uint32_t z_i = indOfClosestCluster(i);
+//#pragma omp critical
+//      {
+//        if(z_i == this->K_) 
+//        { // start a new cluster
+//          if(iNew < 0)
+//          {
+//            psNew = this->spx_->col(i);
+//            iNew = i;
+//          }
+//        } else {
+//          if(this->Ns_[z_i] == 0 && iReinstantiate < 0)
+//          { // instantiated an old cluster
+//            reInstantiateOld = z_i;
+//            reInstantiateFrom =  this->spx_->col(i); 
+//            iReinstantiate = i;
+//          }
+//          //        this->Ns_(z_i) ++;
+//        }
+//      }
+//      //    if(this->z_(i) != UNASSIGNED) this->Ns_(this->z_(i)) --;
+//      this->z_(i) = z_i;
+//    }
+//    cout<<iReinstantiate<<" "<<iNew<<endl;
+//
+//    if(iReinstantiate >= 0 && iNew >= 0)
+//    {
+//      if(iNew < iReinstantiate)
+//      {
+//        this->ps_.conservativeResize(this->D_,this->K_+1);
+//        this->Ns_.conservativeResize(this->K_+1); 
+//        this->ps_.col(this->K_) = psNew;
+//        this->Ns_(this->K_) = 1.;
+//        this->K_ ++;
+//        i0 = iNew;
+//      }else{
+//        reInstantiatedOldCluster(reInstantiateFrom, reInstantiateOld);
+//        i0 = iReinstantiate;
+//      }
+//    }else if(iReinstantiate < 0 && iNew >= 0)
+//    {
+//      this->ps_.conservativeResize(this->D_,this->K_+1);
+//      this->Ns_.conservativeResize(this->K_+1); 
+//      this->ps_.col(this->K_) = psNew;
+//      this->Ns_(this->K_) = 1.;
+//      this->K_ ++;
+//      i0 = iNew;
+//    }else if(iReinstantiate >= 0 && iNew < 0)
+//    {
+//      reInstantiatedOldCluster(reInstantiateFrom, reInstantiateOld);
+//        i0 = iReinstantiate;
+//    }
+//  }while(iReinstantiate >= 0 || iNew >= 0);
+//
+//  //TODO get counts from GPU
+//#pragma omp parallel for
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    for(uint32_t i=0; i<this->N_; ++i)
+//      if(this->z_(i) == k)
+//      {
+//        this->Ns_(k) ++; 
+//      }
+//
+//};
 
 template<class T>
 void DDPvMFMeans<T>::reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k)
@@ -329,7 +401,7 @@ void DDPvMFMeans<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynam
   if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
   this->N_ = spx->cols();
   this->z_.resize(this->N_);
-  this->z_.fill(this->UNASSIGNED);
+  this->z_.fill(UNASSIGNED);
 };
 
 template<class T>

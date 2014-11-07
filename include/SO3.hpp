@@ -72,7 +72,7 @@ inline Matrix<T,Dynamic,1> SO3<T>::logMap(const Matrix<T,Dynamic,Dynamic>& R)
 template<typename T>
 inline Matrix<T,Dynamic,Dynamic> SO3<T>::expMap(const Matrix<T,Dynamic,1>& w)
 {
-  assert(w.rows() ==w);
+  assert(w.rows() == 3);
   const T theta = sqrt(w.array().square().matrix().sum());
 //  cout<<"theta="<<theta<<endl;
   const Matrix<T,Dynamic,Dynamic> W = invVee(w);

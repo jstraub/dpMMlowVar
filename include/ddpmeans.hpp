@@ -16,6 +16,8 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+#define UNASSIGNED 4294967295
+
 template<class T>
 class DDPMeans : public DPMeans<T>
 {
@@ -34,7 +36,6 @@ public:
   virtual uint32_t indOfClosestCluster(int32_t i);
   Matrix<T,Dynamic,Dynamic> prevCentroids(){ return psPrev_;};
 
-  const static uint32_t UNASSIGNED = 4294967295;
 protected:
 
   std::vector<T> ts_; // age of clusters - incremented each iteration
@@ -162,7 +163,8 @@ void DDPMeans<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic>
   this->spx_ = spx; // update the data
   this->N_ = spx->cols();
   this->z_.resize(this->N_);
-  this->z_.fill(UNASSIGNED);
+  this->z_.fill(0);
+//  this->z_.fill(UNASSIGNED);
 };
 
 template<class T>

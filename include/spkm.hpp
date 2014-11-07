@@ -6,7 +6,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "sphere.hpp"
-#include "karcherMean.hpp"
+//#include "karcherMean.hpp"
 #include "kmeans.hpp"
 #include "clusterer.hpp"
 
@@ -36,18 +36,18 @@ public:
 
 };
 
-template<class T>
-class SphericalKMeansKarcher : public SphericalKMeans<T>
-{
-public:
-  SphericalKMeansKarcher(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-      uint32_t K, boost::mt19937* pRndGen);
-  ~SphericalKMeansKarcher();
-
-//  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
-
-  virtual Matrix<T,Dynamic,1> computeCenter(uint32_t k);
-};
+//template<class T>
+//class SphericalKMeansKarcher : public SphericalKMeans<T>
+//{
+//public:
+//  SphericalKMeansKarcher(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
+//      uint32_t K, boost::mt19937* pRndGen);
+//  ~SphericalKMeansKarcher();
+//
+////  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
+//
+//  virtual Matrix<T,Dynamic,1> computeCenter(uint32_t k);
+//};
 
 // --------------------------------- impl -------------------------------------
 template<class T>
@@ -114,31 +114,31 @@ uint32_t SphericalKMeans<T>::indOfClosestCluster(int32_t i)
 //  
 //}
 //
-template<class T>
-SphericalKMeansKarcher<T>::SphericalKMeansKarcher(
-    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    boost::mt19937* pRndGen)
-  : SphericalKMeans<T>(spx,K,pRndGen)
-{}
-
-template<class T>
-SphericalKMeansKarcher<T>::~SphericalKMeansKarcher()
-{}
-
-template<class T>
-Matrix<T,Dynamic,1> SphericalKMeansKarcher<T>::computeCenter(uint32_t k)
-{
-  Matrix<T,Dynamic,Dynamic> xPs(this->spx_->rows(),this->spx_->cols());
-  Matrix<T,Dynamic,1> mean_k = karcherMean<T>(this->ps_.col(k), *(this->spx_), 
-        xPs, this->z_, k, 100,1);
-  this->Ns_(k) = 0.0;
-  for(uint32_t i=0; i<this->N_; ++i)
-    if(this->z_(i) == k)
-    {
-      this->Ns_(k) ++;
-    }
-  return mean_k;
-}
+//template<class T>
+//SphericalKMeansKarcher<T>::SphericalKMeansKarcher(
+//    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+//    boost::mt19937* pRndGen)
+//  : SphericalKMeans<T>(spx,K,pRndGen)
+//{}
+//
+//template<class T>
+//SphericalKMeansKarcher<T>::~SphericalKMeansKarcher()
+//{}
+//
+//template<class T>
+//Matrix<T,Dynamic,1> SphericalKMeansKarcher<T>::computeCenter(uint32_t k)
+//{
+//  Matrix<T,Dynamic,Dynamic> xPs(this->spx_->rows(),this->spx_->cols());
+//  Matrix<T,Dynamic,1> mean_k = karcherMean<T>(this->ps_.col(k), *(this->spx_), 
+//        xPs, this->z_, k, 100,1);
+//  this->Ns_(k) = 0.0;
+//  for(uint32_t i=0; i<this->N_; ++i)
+//    if(this->z_(i) == k)
+//    {
+//      this->Ns_(k) ++;
+//    }
+//  return mean_k;
+//}
 
 //template<class T>
 //void SphericalKMeansKarcher<T>::updateCenters()

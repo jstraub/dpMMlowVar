@@ -49,12 +49,16 @@ KMeans<T>::KMeans(
     boost::mt19937* pRndGen)
   : Clusterer<T>(spx,K, pRndGen), S_(this->D_) 
 {
-  Matrix<T,Dynamic,1> alpha(this->K_);
-  alpha.setOnes(this->K_);
-  Dir<Cat<T>,T> dir(alpha,this->pRndGen_);
-  Cat<T> pi = dir.sample(); 
-  cout<<"init pi="<<pi.pdf().transpose()<<endl;
-  pi.sample(this->z_);
+  if(K>0){
+    Matrix<T,Dynamic,1> alpha(this->K_);
+    alpha.setOnes(this->K_);
+    Dir<Cat<T>,T> dir(alpha,this->pRndGen_);
+    Cat<T> pi = dir.sample(); 
+    cout<<"init pi="<<pi.pdf().transpose()<<endl;
+    pi.sample(this->z_);
+  }else{
+    this->z_.fill(0);
+  }
 
   this->ps_.setZero(); 
 //  updateCenters();

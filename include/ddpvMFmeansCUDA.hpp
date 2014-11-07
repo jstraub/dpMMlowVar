@@ -206,39 +206,44 @@ uint32_t DDPvMFMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
   return iAction;
 }
 
-
 template<class T>
-void DDPvMFMeansCUDA<T>::updateLabelsParallel()
+uint32_t DDPvMFMeansCUDA<T>::optimisticLabelsAssign(uint32_t i0)
 {
-  uint32_t idAction = MAX_UINT32;
-//  cout<<"::updateLabelsParallel"<<endl;
-  do{
-//    if(idAction == MAX_UINT32)
-//    {
-      idAction = computeLabelsGPU(0);
-//    }else{
-//      idAction = computeLabelsGPU(idAction-1);
-//    }
-//  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
-    if(idAction != MAX_UINT32)
-    {
-      uint32_t z_i = this->indOfClosestCluster(idAction);
-      if(z_i == this->K_) 
-      { // start a new cluster
-        this->ps_.conservativeResize(this->D_,this->K_+1);
-        this->Ns_.conservativeResize(this->K_+1); 
-        this->ps_.col(this->K_) = this->spx_->col(idAction);
-        this->Ns_(z_i) = 1.;
-        this->K_ ++;
-      } 
-      else if(this->Ns_[z_i] == 0)
-      { // instantiated an old cluster
-        reInstantiatedOldCluster(this->spx_->col(idAction), z_i);
-        this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
-        // computeLabelsGPU to use the cluster;
-      }
-    }
-    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<<endl;
-  }while(idAction != MAX_UINT32);
+  return computeLabelsGPU(0); // TODO make passing i0 work!
 };
+
+//template<class T>
+//void DDPvMFMeansCUDA<T>::updateLabelsParallel()
+//{
+//  uint32_t idAction = MAX_UINT32;
+////  cout<<"::updateLabelsParallel"<<endl;
+//  do{
+////    if(idAction == MAX_UINT32)
+////    {
+//      idAction = computeLabelsGPU(0);
+////    }else{
+////      idAction = computeLabelsGPU(idAction-1);
+////    }
+////  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
+//    if(idAction != MAX_UINT32)
+//    {
+//      uint32_t z_i = this->indOfClosestCluster(idAction);
+//      if(z_i == this->K_) 
+//      { // start a new cluster
+//        this->ps_.conservativeResize(this->D_,this->K_+1);
+//        this->Ns_.conservativeResize(this->K_+1); 
+//        this->ps_.col(this->K_) = this->spx_->col(idAction);
+//        this->Ns_(z_i) = 1.;
+//        this->K_ ++;
+//      } 
+//      else if(this->Ns_[z_i] == 0)
+//      { // instantiated an old cluster
+//        reInstantiatedOldCluster(this->spx_->col(idAction), z_i);
+//        this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
+//        // computeLabelsGPU to use the cluster;
+//      }
+//    }
+//    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<<endl;
+//  }while(idAction != MAX_UINT32);
+//};
 

@@ -102,8 +102,7 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dyna
   Matrix<T,Dynamic,1> xMean;
   for(uint32_t t=0; t<Tmax; ++t)
   {
-    muR = 0.5*(muR-muR.transpose()); // symmetrize here 
-    muR.diagonal() << 1.,1.,1.;
+//    muR = 0.5*(muR-muR.transpose()); // symmetrize here 
     for(uint32_t i=0; i<Rs.size(); ++i)
       x.col(i) = logMap(muR.transpose()*Rs[i]);
     xMean = x.rowwise().sum()/x.cols();
@@ -124,9 +123,7 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dyna
   Matrix<T,Dynamic,1> xMean;
   for(uint32_t t=0; t<Tmax; ++t)
   {
-    muR = 0.5*(muR-muR.transpose()); // symmetrize here 
-//    muR.diagonal().fill(1.);
-    muR.diagonal() << 1.,1.,1.;
+//    muR = 0.5*(muR-muR.transpose()); // symmetrize here 
     for(uint32_t i=0; i<Rs.size(); ++i)
       x.col(i) = logMap(muR.transpose()*Rs[i])*w(i);
     xMean = x.rowwise().sum()/w.sum();

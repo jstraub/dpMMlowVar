@@ -31,6 +31,7 @@ public:
 
   uint32_t getK(){return K_;};
   uint32_t K(){return K_;};
+  virtual bool converged() = 0;
 
 protected:
   uint32_t K_;

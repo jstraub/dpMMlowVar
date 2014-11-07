@@ -34,7 +34,8 @@ public:
   virtual bool closer(T a, T b);
   virtual uint32_t indOfClosestCluster(int32_t i);
   virtual Matrix<T,Dynamic,1> computeCenter(uint32_t k);
-  
+
+  virtual bool converged() {return false;};
 
 protected:
   Sphere<T> S_;  // TODO this should not be here - needed for the empty cluster

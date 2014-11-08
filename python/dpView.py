@@ -46,7 +46,7 @@ parser = argparse.ArgumentParser(description = 'DpMM modeling and viewer')
 parser.add_argument('-s','--start', type=int, default=0, help='start image Nr')
 parser.add_argument('-e','--end', type=int, default=0, help='end image Nr')
 parser.add_argument('-K0', type=int, default=1, help='initial number of MFs')
-parser.add_argument('-b','--base', default='DpNiwSphereFull', help='base distribution/algorithm')
+parser.add_argument('-b','--base', default='DPvMFmeans', help='base distribution/algorithm')
 parser.add_argument('-nyu', action='store_true', help='switch to process the NYU dataset')
 args = parser.parse_args()
 
@@ -82,7 +82,7 @@ mode = ['multiFromFile']
 mode = ['multi']
 mode = ['single','disp']
 
-reRun = True
+reRun = False
 printCmd = True
 
 if args.nyu:
@@ -141,9 +141,12 @@ for ind in rndInds:
   cfg['dataPath'] = names[ind]
 
   cfg['outName'] = cfg['outputPath']+cfg['dataPath']+'_'+Config2String(cfg).toString()
-  if not reRun and 'multiFromFile' in mode and os.path.isfile(cfg['outName']):
+  if not reRun and 'multiFromFile' in mode and os.path.isfile(cfg['outName']+'_measures.csv'):
     print 'skipping '+cfg['outName']+' since it is already existing'
     continue;
+  if not reRun and not os.path.isfile(cfg['outName']+'_measures.csv'):
+    print 'rerun False but '+cfg['outName'] + '_measures.csv not existing => run inference!'
+    reRun = True;
   
   print 'processing '+cfg['rootPath']+cfg['dataPath']
   rgbd = RgbdFrame(460.0) # correct: 540

@@ -2,6 +2,14 @@ import numpy as np
 import cv2
 import os, copy
 import fnmatch
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+#paper
+mpl.rc('font',size=30) 
+mpl.rc('lines',linewidth=4.)
+figSize = (14, 5.5)
+figSize = (14, 12)
 
 cfg=dict()
 cfg['path'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2'
@@ -9,11 +17,14 @@ cfg['base'] = ['DpNiw' , 'DpNiwSphereFull', 'spkm'];
 cfg['base'] = ['DPvMFmeans','spkm']; 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(6,7) ]
 
+cfg['outName'] = '../results/nyuEval'
+
 baseKs = {'spkm':[k for k in range(6,7) ], 'DPvMFmeans':[1]}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
+reIndex = False;
 reIndex = True;
 
 nFiles = 0
@@ -26,19 +37,23 @@ if reIndex:
   for i,name in enumerate(index):
     name =name[:-1]
     found = []; #[None for base in cfg['base']]
+    candidates = []
     for file in os.listdir(cfg['path']):
-      if fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
-        for j,base in enumerate(cfg['base']):
-          for k,K in enumerate(baseKs[base]):
-            if fnmatch.fnmatch(file, '{}*K_{}*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
-              found.append(file)
+      if fnmatch.fnmatch(file, '{}*[0-9]_measures.csv'.format(name)):
+        candidates.append(file)
+    for j,base in enumerate(cfg['base']):
+      for k,K in enumerate(baseKs[base]):
+        for candidate in candidates:
+          if fnmatch.fnmatch(candidate, '{}*K_{}*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
+            found.append(candidate)
 #            print file
     if len(found) == nFiles : #found[0] is None and not found[1] is None:
       print found
       cfctFiles.append(found)
   with open('./cfctFiles.txt','w') as f:
     for cfctFile in cfctFiles:
-      f.writelines(cfctFile)
+      for cfctF in cfctFile:
+        f.write(cfctF+'\n')
 else:
   with open('./cfctFiles.txt','r') as f:
     cfctFiles =[]
@@ -71,38 +86,42 @@ for i,cfctFile in enumerate(cfctFiles):
 #if np.sum(cs == 0.0) > 0:
 #  print "warning there were zeros in the eval!"
 print "Sils eval"
-print np.mean(Sils,axis=0)
-print np.std(Sils,axis=0)
+print 'mean',np.mean(Sils,axis=0)
+print 'std',np.std(Sils,axis=0)
 
 print "Ks eval"
-print np.mean(Ks,axis=0)
-print np.std(Ks,axis=0)
+print 'mean',np.mean(Ks,axis=0)
+print 'std',np.std(Ks,axis=0)
+print Ks
 
-exit(0);
-# --------------------------- images -------------------------------------
-for i,name in enumerate(index):
-#  print name
-  name =name[:-1]
-  found = [None for base in cfg['base']]
-  for file in os.listdir(cfg['path']):
-    if not fnmatch.fnmatch(file, '*lbls.png'):
-      continue
-#    print file
-    for j,base in enumerate(cfg['base']):
-#      print  '{}*{}*.png'.format(name,base)
-      if fnmatch.fnmatch(file, '{}*{}-*.png'.format(name,base)):
-        found[j] = file
-#        print file
-  if not any(f is None for f in found): #found[0] is None and not found[1] is None:
-    print found
-    I = cv2.imread(os.path.join(cfg['path'],found[0]))
-    for f in found[1::]:
-      I = np.r_[I,cv2.imread(os.path.join(cfg['path'],f))]
-#    print found
-#    I0 = cv2.imread(os.path.join(cfg['path'],found[0]))
-#    I1 = cv2.imread(os.path.join(cfg['path'],found[1]))
-#    print I0.shape
-#    print np.c_[I0,I1].shape
-#    print np.r_[I0,I1].shape
-    cv2.imshow(' vs. '.join(cfg['base']),I)
-    cv2.waitKey()
+I = 2
+fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
+# histogram over the number of clusters for all frames
+plt.hist(Ks[:,0],np.max(Ks[:,0]), alpha =0.7)
+#plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
+plt.title("histogram over the number of clusters")
+plt.xlabel('number of clusters')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.savefig(cfg['outName']+'_histNClusters.png',figure=fig)
+
+fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
+ax = plt.subplot(111)
+ind = np.arange(2)
+width = 0.8
+# histogram over the number of clusters for all frames
+ax.bar(ind, np.mean(Sils,axis=0), width, color='r', alpha = 0.7)
+(_,caps,_) = ax.errorbar(ind+width/2., np.mean(Sils,axis=0), np.std(Sils,axis=0), color=(0,0,0),fmt ='.', capsize=10)
+for cap in caps:
+  cap.set_markeredgewidth(4)
+
+#plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
+ax.set_ylabel('silhouette')
+ax.set_xticks(ind+width/2)
+ax.set_xticklabels(('DP-vMF-means','spkm'))
+plt.legend(loc='best')
+plt.tight_layout()
+plt.savefig(cfg['outName']+'_silhouette.png',figure=fig)
+
+plt.show()
+

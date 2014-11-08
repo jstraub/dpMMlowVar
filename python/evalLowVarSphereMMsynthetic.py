@@ -156,8 +156,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = True
 reRun = False
+reRun = True
 
 cfg['T'] = 100
 cfg['nRun'] = 10

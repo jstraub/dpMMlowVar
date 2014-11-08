@@ -35,13 +35,13 @@ def mutualInfo(z,zGt):
   N = float(z.size)
   Kgt = int(np.max(zGt)+1)
   K = int(np.max(z)+1)
-#  print Kgt, K
+  print Kgt, K
   mi = 0.0
   for j in range(K):
     for k in range(Kgt):
-      Njk = np.logical_and(z==j,zGt==k).sum()
-      Nj = (z==j).sum()
-      Nk = (zGt==k).sum()
+      Njk = float(np.logical_and(z==j,zGt==k).sum())
+      Nj = float((z==j).sum())
+      Nk = float((zGt==k).sum())
       if Njk > 0:
 #        print '{} {} {} {} {} -> += {}'.format(N, Njk,Nj,Nk, N*Njk/(Nj*Nk), Njk/N * np.log(N*Njk/(Nj*Nk)))
         mi += Njk/N * np.log(N*Njk/(Nj*Nk))
@@ -52,7 +52,7 @@ def entropy(z):
   K = int(np.max(z)+1)
   H = 0.0
   for k in range(K):
-    Nk = (z==k).sum()
+    Nk = float((z==k).sum())
     if Nk > 0:
 #        print '{} {} {} {} {} -> += {}'.format(N, Njk,Nj,Nk, N*Njk/(Nj*Nk), Njk/N * np.log(N*Njk/(Nj*Nk)))
       H -= Nk/N * np.log(Nk/N)
@@ -72,6 +72,7 @@ def run(cfg,reRun):
     '--base '+cfg['base'],
     '-i {}'.format(cfg['rootPath']+cfg['dataPath']),
     '-o {}'.format(cfg['outName']+'.lbl'),
+    '--shuffle',
     '--silhouette',
     '--params '+' '.join([str(p) for p in params])]
 
@@ -198,7 +199,6 @@ for i,base in enumerate(bases):
       for t in range(cfg['nRun']):
         cfg['runId'] = t;
         z,measures = run(cfg,reRun)
-        ipdb.set_trace()
         # compute MI and entropies - if not already computed and stored 
         Sils[base][j,t] = measures
         MI[j,t] = mutualInfo(z[-1,:],zGt)
@@ -212,6 +212,7 @@ for i,base in enumerate(bases):
     np.savetxt(cfg['outName']+'_Sil.csv',Sils[base]);
     np.savetxt(cfg['outName']+'_Ns.csv',Ns[base]);
 
+  ipdb.set_trace()
   mis[base] = MI
 #  for t in range(cfg['T']):
 #    for j in range(paramBase[base]):

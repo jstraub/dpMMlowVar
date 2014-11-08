@@ -25,6 +25,7 @@ def run(cfg,reRun):
     '--base '+cfg['base'],
     '-i {}'.format(cfg['rootPath']+cfg['dataPath']+'_normals.csv'),
     '-o {}'.format(cfg['outName']+'.lbl'),
+    '--shuffle',
     '--silhouette']
   if cfg['base'] == 'DPvMFmeans':
     args.append('--params {}'.format(cfg['lambda']))

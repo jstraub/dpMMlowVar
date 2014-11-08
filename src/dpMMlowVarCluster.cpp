@@ -43,6 +43,7 @@ int main(int argc, char **argv)
     ("mlInds", "output ml indices")
     ("centroids", "output centroids of clusters")
     ("silhouette", "output average silhouette")
+    ("shuffle", "shuffle the data before processing")
     ;
 
   po::variables_map vm;
@@ -89,11 +90,11 @@ int main(int argc, char **argv)
   cout<<"loading data from "<<pathIn<<endl;
   ifstream fin(pathIn.data(),ifstream::in);
 //  fin >> D,N;
+
   vector<uint32_t> ind(N);
   for (uint32_t i=0; i<N; ++i)
     ind[i] = i;
-  std::random_shuffle(ind.begin(),ind.end());
-
+  if(vm.count("shuffle")) std::random_shuffle(ind.begin(),ind.end());
   for (uint32_t j=0; j<D; ++j)
     for (uint32_t i=0; i<N; ++i)
       fin>>x(j,ind[i]);
@@ -156,8 +157,8 @@ int main(int argc, char **argv)
 
     const VectorXu& z = clusterer->z();
     for (uint32_t i=0; i<z.size()-1; ++i) 
-      fout<<z(i)<<" ";
-    fout<<z(z.size()-1)<<endl;
+      fout<<z(ind[i])<<" ";
+    fout<<z(ind[z.size()-1])<<endl;
     double deviation = clusterer->avgIntraClusterDeviation();
 
     cout<<"   K="<<clusterer->getK()<<" " <<z.size()<<endl;

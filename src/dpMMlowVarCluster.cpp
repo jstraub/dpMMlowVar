@@ -89,9 +89,14 @@ int main(int argc, char **argv)
   cout<<"loading data from "<<pathIn<<endl;
   ifstream fin(pathIn.data(),ifstream::in);
 //  fin >> D,N;
+  vector<uint32_t> ind(N);
+  for (uint32_t i=0; i<N; ++i)
+    ind[i] = i;
+  std::random_shuffle(ind.begin(),ind.end());
+
   for (uint32_t j=0; j<D; ++j)
     for (uint32_t i=0; i<N; ++i)
-      fin>>x(j,i);
+      fin>>x(j,ind[i]);
     //cout<<x<<endl;
 
   // which base distribution

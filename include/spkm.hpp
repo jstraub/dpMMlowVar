@@ -23,10 +23,13 @@ public:
   virtual ~SphericalKMeans();
 
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
+  virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
 //  virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   virtual Matrix<T,Dynamic,1> computeCenter(uint32_t k);
+  virtual Matrix<T,Dynamic,Dynamic> computeSums();
 
+  virtual T silhouette();
 };
 
 //template<class T>
@@ -62,6 +65,13 @@ T SphericalKMeans<T>::dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,
 };
 
 template<class T>
+T SphericalKMeans<T>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
+{
+  return acos(min(1.0,max(-1.0,(a.transpose()*b)(0)))); // angular similarity
+//  return a.transpose()*b; // cosine similarity 
+};
+
+template<class T>
 bool SphericalKMeans<T>::closer(T a, T b)
 {
 //  return a<b; // if dist a is greater than dist b a is closer than b (angular dist)
@@ -82,6 +92,55 @@ Matrix<T,Dynamic,1> SphericalKMeans<T>::computeCenter(uint32_t k)
     }
   return mean_k/mean_k.norm();
 }
+
+template<class T>
+Matrix<T,Dynamic,Dynamic> SphericalKMeans<T>::computeSums(void)
+{
+  Matrix<T,Dynamic,Dynamic> xSums = Matrix<T,Dynamic,Dynamic>::Zero(this->D_, this->K_);
+#pragma omp parallel for
+  for(uint32_t k=0; k<this->K_; ++k)
+    for(uint32_t i=0; i<this->N_; ++i)
+      if(this->z_(i) == k)
+      {
+        xSums.col(k) += this->spx_->col(i); 
+      }
+  return xSums;
+}
+
+template<class T>
+T SphericalKMeans<T>::silhouette()
+{ 
+  if(this->K_<2) return -1.0;
+  assert(this->Ns_.sum() == this->N_);
+  Matrix<T,Dynamic,Dynamic> xSums = computeSums();
+  Matrix<T,Dynamic,1> sil(this->N_);
+//#pragma omp parallel for
+  for(uint32_t i=0; i<this->N_; ++i)
+  {
+    Matrix<T,Dynamic,1> b = Matrix<T,Dynamic,1>::Zero(this->K_);
+    for(uint32_t k=0; k<this->K_; ++k)
+      if (k == this->z_(i))
+        b(k) = 1. -(this->spx_->col(i).transpose()*(xSums.col(k) - this->spx_->col(i)))(0)/static_cast<T>(this->Ns_(k));
+      else
+        b(k) = 1. -(this->spx_->col(i).transpose()*xSums.col(k))(0)/static_cast<T>(this->Ns_(k));
+    T a_i = b(this->z_(i)); // average dist to own cluster
+    T b_i = this->z_(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+    for(uint32_t k=0; k<this->K_; ++k)
+      if(k != this->z_(i) && b(k) == b(k) && b(k) < b_i && this->Ns_(k) > 0)
+      {
+        b_i = b(k);
+      }
+    if(a_i < b_i)
+      sil(i) = 1.- a_i/b_i;
+    else if(a_i > b_i)
+      sil(i) = b_i/a_i - 1.;
+    else
+      sil(i) = 0.;
+    if(sil(i) <-1 || sil(i) > 1)
+      cout<<"sil. out of bounds "<<sil(i)<< " a="<<a_i<<" b="<<b_i<<endl;
+  }
+  return sil.sum()/static_cast<T>(this->N_);
+};
 
 //template<class T>
 //uint32_t SphericalKMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)

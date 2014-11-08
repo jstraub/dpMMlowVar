@@ -29,12 +29,18 @@ public:
   const VectorXu& counts() const {return Ns_;};
   const Matrix<T,Dynamic,Dynamic>& centroids() const {return ps_;};
 
+  // natural distance to be used by the algorithm
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
+  // closer in the sense of distance defined above
   virtual bool closer(T a, T b) = 0;
+  // measure of disimilarity between two points (not necessarily the distance)
+  virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
 
   virtual uint32_t getK(){return K_;};
   virtual uint32_t K(){return K_;}; 
-  virtual bool converged(T eps=1e-6){cout<<cost_<<" "<<prevCost_<<" "<<fabs(cost_-prevCost_)<<endl ; return fabs(cost_-prevCost_)<eps;}; 
+  virtual bool converged(T eps=1e-6){
+//    cout<<cost_<<" "<<prevCost_<<" "<<fabs(cost_-prevCost_)<<endl ; 
+    return fabs(cost_-prevCost_)<eps;}; 
   virtual T cost(){return cost_;}; 
 
   virtual T silhouette();
@@ -77,34 +83,22 @@ T Clusterer<T>::silhouette()
     for(uint32_t j=0; j<N_; ++j)
       if(j != i)
       {
-        b(z_(j)) += dist(spx_->col(i),spx_->col(j));
+        b(z_(j)) += dissimilarity(spx_->col(i),spx_->col(j));
       }
     b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
     T a_i = b(z_(i)); // average dist to own cluster
     T b_i = z_(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
-//    cout<<b_i<<" ";
     for(uint32_t k=0; k<K_; ++k)
-      if(k != z_(i) && b(k) == b(k) && closer(b(k),b_i) && Ns_(k) > 0)
+      if(k != z_(i) && b(k) == b(k) && b(k) < b_i && Ns_(k) > 0)
       {
         b_i = b(k);
-//    cout<<b_i<<" ";
       }
-//    cout<<endl;
     if(a_i < b_i)
       sil(i) = 1.- a_i/b_i;
     else if(a_i > b_i)
       sil(i) = b_i/a_i - 1.;
     else
       sil(i) = 0.;
-
-//    if(sil(i) == INFINITY || sil(i) == -INFINITY)
-//    {
-//      cout<<i<<" "<<sil(i)<<"\t"<<a_i<<"\t"<<b_i<<endl; //"\t"<<b.transpose()<<"\t"<<Ns_.transpose()<<endl;
-//      for(uint32_t k=0; k<K_; ++k)
-//        if(b(k)!= b(k))
-//          cout<<k<<" "<<b(k)<<" "<<Ns_(k)<<endl;
-//    }
   }
-//  cout<<sil.transpose()<< " N="<<static_cast<T>(N_)<<" Ns "<<Ns_.transpose()<<endl;
   return sil.sum()/static_cast<T>(N_);
 };

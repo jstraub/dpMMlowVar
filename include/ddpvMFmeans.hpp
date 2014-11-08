@@ -40,7 +40,10 @@ public:
 //  virtual T avgIntraClusterDeviation();
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
 
+  virtual T silhouette();
+
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
+  virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
   
 protected:
@@ -167,9 +170,7 @@ void DDPvMFMeans<T>::updateLabelsSerial()
     this->z_(i) = z_i;
   }
 
-  for(uint32_t k=0; k<this->K_; ++k)
-        this->Ns_(k) =0;
-
+  this->Ns_.fill(0);
 #pragma omp parallel for
   for(uint32_t k=0; k<this->K_; ++k)
     for(uint32_t i=0; i<this->N_; ++i)
@@ -240,6 +241,7 @@ void DDPvMFMeans<T>::updateLabels()
     if(this->Ns_(k) == 1.) cost += this->lambda_;
 
   //TODO get counts from GPU
+  this->Ns_.fill(0);
 #pragma omp parallel for reduction(+:cost)
   for(uint32_t k=0; k<this->K_; ++k)
     for(uint32_t i=0; i<this->N_; ++i)
@@ -433,6 +435,50 @@ bool DDPvMFMeans<T>::closer(T a, T b)
   return a>b; // if dist a is greater than dist b a is closer than b (cosine dist)
 };
 
+
+template<class T>
+T DDPvMFMeans<T>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
+{
+  return acos(min(1.0,max(-1.0,(a.transpose()*b)(0)))); // angular similarity
+//  return a.transpose()*b; // cosine similarity 
+};
+
+template<class T>
+T DDPvMFMeans<T>::silhouette()
+{ 
+  if(this->K_<2) return -1.0;
+  cout<<"Ns "<<this->Ns_.transpose()<< " "<<this->Ns_.sum()<<" "<<this->N_<<endl;
+  assert(this->Ns_.sum() == this->N_);
+  computeSums();//TODO maybe unnecessary
+  Matrix<T,Dynamic,1> sil(this->N_);
+#pragma omp parallel for
+  for(uint32_t i=0; i<this->N_; ++i)
+  {
+    Matrix<T,Dynamic,1> b = Matrix<T,Dynamic,1>::Zero(this->K_);
+    // use 1 - dot(a,b) as dissimilarity measure (needs to be positive and larger for more dissimilar)
+    for(uint32_t k=0; k<this->K_; ++k)
+      if (k == this->z_(i))
+        b(k) =1. -(this->spx_->col(i).transpose()*(xSums_.col(k) - this->spx_->col(i)))(0)/static_cast<T>(this->Ns_(k));
+      else
+        b(k) = 1. -(this->spx_->col(i).transpose()*xSums_.col(k))(0)/static_cast<T>(this->Ns_(k));
+    T a_i = b(this->z_(i)); // average dist to own cluster
+    T b_i = this->z_(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+    for(uint32_t k=0; k<this->K_; ++k)
+      if(k != this->z_(i) && b(k) == b(k) && b(k) < b_i && this->Ns_(k) > 0)
+      {
+        b_i = b(k);
+      }
+    if(a_i < b_i)
+      sil(i) = 1.- a_i/b_i;
+    else if(a_i > b_i)
+      sil(i) = b_i/a_i - 1.;
+    else
+      sil(i) = 0.;
+    if(sil(i) <-1 || sil(i) > 1)
+      cout<<"sil. out of bounds "<<sil(i)<< " a="<<a_i<<" b="<<b_i<<endl;
+  }
+  return sil.sum()/static_cast<T>(this->N_);
+};
 
 
 template<class T>

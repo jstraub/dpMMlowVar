@@ -31,6 +31,7 @@ public:
   virtual T avgIntraClusterDeviation();
 
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
+  virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
@@ -75,6 +76,12 @@ KMeans<T>::~KMeans()
 
 template<class T>
 T KMeans<T>::dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
+{
+  return (a-b).norm();
+};
+
+template<class T>
+T KMeans<T>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
   return (a-b).norm();
 };

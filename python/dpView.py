@@ -77,7 +77,6 @@ if cfg['base'] == 'DPvMFmeans':
 #  cfg['K'] = 12
 
 seed = 214522
-reRun = True
 algo = 'guy' #'sobel'#'guy'
 #mode = ['multi']
 mode = ['multiFromFile']

@@ -39,6 +39,7 @@ IF(BOOST_OLD)
   link_directories(
 #    $ENV{WORKSPACE_HOME}/3rdparty/lib
     /usr/lib
+    /usr/local/cuda-5.5/targets/x86_64-linux/lib/
     )
   # no sampling from chi_squared
   cuda_add_library(dpMMlowVar SHARED

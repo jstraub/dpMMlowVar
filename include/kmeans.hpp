@@ -32,7 +32,8 @@ public:
 
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
-  virtual uint32_t indOfClosestCluster(int32_t i);
+
+  virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   virtual Matrix<T,Dynamic,1> computeCenter(uint32_t k);
 
   virtual bool converged() {return false;};
@@ -86,9 +87,9 @@ bool KMeans<T>::closer(T a, T b)
 
 
 template<class T>
-uint32_t KMeans<T>::indOfClosestCluster(int32_t i)
+uint32_t KMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
-  T sim_closest = dist(this->ps_.col(0), this->spx_->col(i));
+  sim_closest = dist(this->ps_.col(0), this->spx_->col(i));
   uint32_t z_i = 0;
   for(uint32_t k=1; k<this->K_; ++k)
   {
@@ -105,11 +106,16 @@ uint32_t KMeans<T>::indOfClosestCluster(int32_t i)
 template<class T>
 void KMeans<T>::updateLabels()
 {
-#pragma omp parallel for 
+  T cost = 0.;
+#pragma omp parallel for reduction(+:cost)
   for(uint32_t i=0; i<this->N_; ++i)
   {
-    this->z_(i) = indOfClosestCluster(i);
+    T sim = 0;
+    this->z_(i) = indOfClosestCluster(i,sim);
+    cost += sim;
   }
+  this->prevCost_ = this->cost_;
+  this->cost_ = cost;
 }
 
 template<class T>

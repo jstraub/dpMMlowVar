@@ -33,7 +33,7 @@ public:
   virtual void nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
   virtual void updateState(); // after converging for a single time instant
 
-  virtual uint32_t indOfClosestCluster(int32_t i);
+  virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   Matrix<T,Dynamic,Dynamic> prevCentroids(){ return psPrev_;};
 
 protected:
@@ -73,10 +73,10 @@ DDPMeans<T>::~DDPMeans()
 {}
 
 template<class T>
-uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i)
+uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
-  T sim_closest = this->lambda_;
+  sim_closest = this->lambda_;
 //  cout<<"K="<<this->K_<<" Ns:"<<this->Ns_.transpose()<<endl;
 //  cout<<"cluster dists "<<i<<": "<<this->lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
@@ -103,14 +103,13 @@ uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i)
 template<class T>
 void DDPMeans<T>::updateLabels()
 {
-  // reset cluster counts -> all uninstantiated
-//  for (uint32_t k=0; k<this->K_; ++k)
-//    this->Ns_(k) = 0; 
-//#pragma omp parallel for 
-// TODO not sure how to parallelize
+  this->prevCost_ = this->cost_;
+  this->cost_ = 0.; // TODO:  does this take into account that creating a cluster costs
   for(uint32_t i=0; i<this->N_; ++i)
   {
-    uint32_t z_i = indOfClosestCluster(i);
+    T sim = 0.;
+    uint32_t z_i = indOfClosestCluster(i,sim);
+    this->cost_ += sim;
     if(z_i == this->K_) 
     { // start a new cluster
       Matrix<T,Dynamic,Dynamic> psNew(this->D_,this->K_+1);

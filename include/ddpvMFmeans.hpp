@@ -30,7 +30,7 @@ public:
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
-  virtual void updateLabelsParallel();
+  virtual void updateLabelsSerial();
   virtual void updateLabels();
   virtual void updateCenters();
   virtual void nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
@@ -38,7 +38,7 @@ public:
 //  virtual MatrixXu mostLikelyInds(uint32_t n, 
 //     Matrix<T,Dynamic,Dynamic>& deviates);
 //  virtual T avgIntraClusterDeviation();
-  virtual uint32_t indOfClosestCluster(int32_t i);
+  virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
 
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
@@ -89,10 +89,10 @@ DDPvMFMeans<T>::~DDPvMFMeans()
 {}
 
 template<class T>
-uint32_t DDPvMFMeans<T>::indOfClosestCluster(int32_t i)
+uint32_t DDPvMFMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
-  T sim_closest = this->lambda_+1.;
+  sim_closest = this->lambda_+1.;
   T sim_k = 0.;
 //  cout<<"cluster dists "<<i<<": "<< sim_closest;
   for (uint32_t k=0; k<this->K_; ++k)
@@ -140,15 +140,14 @@ T DDPvMFMeans<T>::distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, uint32_t 
 }
 
 template<class T>
-void DDPvMFMeans<T>::updateLabels()
+void DDPvMFMeans<T>::updateLabelsSerial()
 {
- return updateLabelsParallel();
-
 // TODO not sure how to parallelize
 //#pragma omp parallel for 
   for(uint32_t i=0; i<this->N_; ++i)
   {
-    uint32_t z_i = indOfClosestCluster(i);
+    T sim = 0.;
+    uint32_t z_i = indOfClosestCluster(i,sim);
     if(z_i == this->K_) 
     { // start a new cluster
       this->ps_.conservativeResize(this->D_,this->K_+1);
@@ -188,7 +187,8 @@ uint32_t DDPvMFMeans<T>::optimisticLabelsAssign(uint32_t i0)
 #pragma omp parallel for 
   for(uint32_t i=i0; i<this->N_; ++i)
   {
-    uint32_t z_i = indOfClosestCluster(i);
+    T sim = 0.;
+    uint32_t z_i = indOfClosestCluster(i,sim);
 #pragma omp critical
     {
       if(z_i == this->K_ || this->Ns_[z_i] == 0) 
@@ -203,7 +203,7 @@ uint32_t DDPvMFMeans<T>::optimisticLabelsAssign(uint32_t i0)
 };
 
 template<class T>
-void DDPvMFMeans<T>::updateLabelsParallel()
+void DDPvMFMeans<T>::updateLabels()
 {
   uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
@@ -213,7 +213,8 @@ void DDPvMFMeans<T>::updateLabelsParallel()
 //  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
     if(idAction != UNASSIGNED)
     {
-      uint32_t z_i = this->indOfClosestCluster(idAction);
+      T sim = 0.;
+      uint32_t z_i = this->indOfClosestCluster(idAction,sim);
       if(z_i == this->K_) 
       { // start a new cluster
         this->ps_.conservativeResize(this->D_,this->K_+1);
@@ -232,100 +233,25 @@ void DDPvMFMeans<T>::updateLabelsParallel()
     }
     cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<<endl;
   }while(idAction != UNASSIGNED);
+
+  // TODO: this cost only works for a single time slice
+  T cost =  0.0;
+  for(uint32_t k=0; k<this->K_; ++k)
+    if(this->Ns_(k) == 1.) cost += this->lambda_;
+
   //TODO get counts from GPU
-#pragma omp parallel for
+#pragma omp parallel for reduction(+:cost)
   for(uint32_t k=0; k<this->K_; ++k)
     for(uint32_t i=0; i<this->N_; ++i)
       if(this->z_(i) == k)
       {
         this->Ns_(k) ++; 
+        T sim_closest = dist(this->ps_.col(k), this->spx_->col(i));
+        cost += sim_closest;
       }
+  this->prevCost_ = this->cost_;
+  this->cost_ = cost;
 };
-
-
-//template<class T>
-//void DDPvMFMeans<T>::updateLabelsParallel()
-//{
-//  
-//  Matrix<T,Dynamic,1> psNew(this->D_,1);
-//  psNew.fill(0);
-//  int32_t iNew = -1;
-//  uint32_t reInstantiateOld = 0;
-//  Matrix<T,Dynamic,1> reInstantiateFrom(this->D_,1);
-//  reInstantiateFrom.fill(0);
-//  int32_t iReinstantiate = -1;
-//  cout<<"::updateLabelsParallel"<<endl;
-//  uint32_t i0=0;
-//  do{
-//    iNew = -1;
-//    iReinstantiate = -1;
-//#pragma omp parallel for 
-//    for(uint32_t i=i0; i<this->N_; ++i)
-//    {
-//      uint32_t z_i = indOfClosestCluster(i);
-//#pragma omp critical
-//      {
-//        if(z_i == this->K_) 
-//        { // start a new cluster
-//          if(iNew < 0)
-//          {
-//            psNew = this->spx_->col(i);
-//            iNew = i;
-//          }
-//        } else {
-//          if(this->Ns_[z_i] == 0 && iReinstantiate < 0)
-//          { // instantiated an old cluster
-//            reInstantiateOld = z_i;
-//            reInstantiateFrom =  this->spx_->col(i); 
-//            iReinstantiate = i;
-//          }
-//          //        this->Ns_(z_i) ++;
-//        }
-//      }
-//      //    if(this->z_(i) != UNASSIGNED) this->Ns_(this->z_(i)) --;
-//      this->z_(i) = z_i;
-//    }
-//    cout<<iReinstantiate<<" "<<iNew<<endl;
-//
-//    if(iReinstantiate >= 0 && iNew >= 0)
-//    {
-//      if(iNew < iReinstantiate)
-//      {
-//        this->ps_.conservativeResize(this->D_,this->K_+1);
-//        this->Ns_.conservativeResize(this->K_+1); 
-//        this->ps_.col(this->K_) = psNew;
-//        this->Ns_(this->K_) = 1.;
-//        this->K_ ++;
-//        i0 = iNew;
-//      }else{
-//        reInstantiatedOldCluster(reInstantiateFrom, reInstantiateOld);
-//        i0 = iReinstantiate;
-//      }
-//    }else if(iReinstantiate < 0 && iNew >= 0)
-//    {
-//      this->ps_.conservativeResize(this->D_,this->K_+1);
-//      this->Ns_.conservativeResize(this->K_+1); 
-//      this->ps_.col(this->K_) = psNew;
-//      this->Ns_(this->K_) = 1.;
-//      this->K_ ++;
-//      i0 = iNew;
-//    }else if(iReinstantiate >= 0 && iNew < 0)
-//    {
-//      reInstantiatedOldCluster(reInstantiateFrom, reInstantiateOld);
-//        i0 = iReinstantiate;
-//    }
-//  }while(iReinstantiate >= 0 || iNew >= 0);
-//
-//  //TODO get counts from GPU
-//#pragma omp parallel for
-//  for(uint32_t k=0; k<this->K_; ++k)
-//    for(uint32_t i=0; i<this->N_; ++i)
-//      if(this->z_(i) == k)
-//      {
-//        this->Ns_(k) ++; 
-//      }
-//
-//};
 
 template<class T>
 void DDPvMFMeans<T>::reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k)

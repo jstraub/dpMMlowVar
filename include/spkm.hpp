@@ -22,16 +22,9 @@ public:
     boost::mt19937* pRndGen);
   virtual ~SphericalKMeans();
 
-//  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
-
-//  virtual void updateLabels();
-//  virtual void updateCenters();
-//  virtual MatrixXu mostLikelyInds(uint32_t n, Matrix<T,Dynamic,Dynamic>& deviates);
-//  virtual T avgIntraClusterDeviation();
-
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
-  virtual uint32_t indOfClosestCluster(int32_t i);
+//  virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   virtual Matrix<T,Dynamic,1> computeCenter(uint32_t k);
 
 };
@@ -64,15 +57,15 @@ SphericalKMeans<T>::~SphericalKMeans()
 template<class T>
 T SphericalKMeans<T>::dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
-  return acos(min(1.0,max(-1.0,(a.transpose()*b)(0)))); // angular similarity
-//  return a.transpose()*b; // cosine similarity 
+//  return acos(min(1.0,max(-1.0,(a.transpose()*b)(0)))); // angular similarity
+  return a.transpose()*b; // cosine similarity 
 };
 
 template<class T>
 bool SphericalKMeans<T>::closer(T a, T b)
 {
-  return a<b; // if dist a is greater than dist b a is closer than b (angular dist)
-//  return a>b; // if dist a is greater than dist b a is closer than b (cosine dist)
+//  return a<b; // if dist a is greater than dist b a is closer than b (angular dist)
+  return a>b; // if dist a is greater than dist b a is closer than b (cosine dist)
 };
 
 template<class T>
@@ -90,23 +83,36 @@ Matrix<T,Dynamic,1> SphericalKMeans<T>::computeCenter(uint32_t k)
   return mean_k/mean_k.norm();
 }
 
-template<class T>
-uint32_t SphericalKMeans<T>::indOfClosestCluster(int32_t i)
-{
-  // use cosine similarity because it is faster since acos is not computed
-  T sim_closest = this->ps_.col(0).transpose() * this->spx_->col(i);
-  uint32_t z_i = 0;
-  for(uint32_t k=1; k<this->K_; ++k)
-  {
-    T sim_k = this->ps_.col(k).transpose()* this->spx_->col(i);
-    if( sim_k > sim_closest) // because of cosine distance
-    {
-      sim_closest = sim_k;
-      z_i = k;
-    }
-  }
-  return z_i;
-};
+//template<class T>
+//uint32_t SphericalKMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
+//{
+//  // use cosine similarity because it is faster since acos is not computed
+//  sim_closest = this->ps_.col(0).transpose() * this->spx_->col(i);
+//  uint32_t z_i = 0;
+//  for(uint32_t k=1; k<this->K_; ++k)
+//  {
+//    T sim_k = this->ps_.col(k).transpose()* this->spx_->col(i);
+//    if( sim_k > sim_closest) // because of cosine distance
+//    {
+//      sim_closest = sim_k;
+//      z_i = k;
+//    }
+//  }
+//  return z_i;
+//};
+  
+//template<class T>
+//virtual T SphericalKMeans<T>::silhouette()
+//{ 
+//  Matrix<T,Dynamic,Dynamic> xSum(D_,K_);
+//#pragma omp parallel for
+//  for(uint32_t k=0; k<K_; ++k)
+//  for(uint32_t i=0; i<N_; ++i)
+//    if(z_(i) == k)
+//  {
+//    xSum.col(k) = 
+//  }
+//}
 
 //template<class T>
 //void SphericalKMeans<T>::initialize(const Matrix<T,Dynamic,Dynamic>& x)

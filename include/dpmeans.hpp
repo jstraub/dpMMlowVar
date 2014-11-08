@@ -25,7 +25,7 @@ public:
   virtual void updateLabels();
   virtual void updateCenters();
 
-  virtual uint32_t indOfClosestCluster(int32_t i);
+  virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   
 protected:
   double lambda_;
@@ -43,10 +43,10 @@ DPMeans<T>::~DPMeans()
 {}
 
 template<class T>
-uint32_t DPMeans<T>::indOfClosestCluster(int32_t i)
+uint32_t DPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
-  T sim_closest = lambda_;
+  sim_closest = lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
     T sim_k = dist(this->ps_.col(k), this->spx_->col(i));
@@ -64,9 +64,13 @@ void DPMeans<T>::updateLabels()
 {
 //#pragma omp parallel for 
 // TODO not sure how to parallelize
+  this->prevCost_ = this->cost_;
+  this->cost_ = 0.;
   for(uint32_t i=0; i<this->N_; ++i)
   {
-    uint32_t z_i = indOfClosestCluster(i);
+    T sim = 0.;
+    uint32_t z_i = indOfClosestCluster(i,sim);
+    this->cost_ += sim;
 
     if(z_i == this->K_) 
     {

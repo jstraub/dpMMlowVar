@@ -40,6 +40,9 @@ int main(int argc, char **argv)
     ("output,o", po::value<string>(), 
       "path to output labels .csv file (rows: time; cols: different "
       "datapoints)")
+    ("mlInds", "output ml indices")
+    ("centroids", "output centroids of clusters")
+    ("silhouette", "output average silhouette")
     ;
 
   po::variables_map vm;
@@ -120,7 +123,6 @@ int main(int argc, char **argv)
     }
 //    clusterer = new DPvMFMeans<double>(spx, K, lambda, &rndGen);
     clusterer = new DDPvMFMeans<double>(spx, lambda, 1. , 0. , &rndGen);
-//    clusterer->nextTimeStep(spx);
   }else if(!base.compare("spkm")){
     clusterer = new SphericalKMeans<double>(spx, K, &rndGen);
 //  }else if(!base.compare("spkmKarcher")){
@@ -156,34 +158,49 @@ int main(int argc, char **argv)
     cout<<"   K="<<clusterer->getK()<<" " <<z.size()<<endl;
     if(clusterer->getK()>0)
     {
-    cout<<"  counts=   "<<counts<double,uint32_t>(z,clusterer->getK()).transpose();
-    cout<<" avg deviation "<<deviation<<endl;
+      cout<<"  counts=   "<<counts<double,uint32_t>(z,clusterer->getK()).transpose();
+      cout<<" avg deviation  "<<deviation<<endl;
     }
     foutJointLike<<deviation<<endl;
 
     watch.tic();
     clusterer->updateLabels();
     watch.toctic("-- updateLabels");
+    cout<<" cost fct value "<<clusterer->cost()<< "\tconverged? "<<clusterer->converged()<<endl;
+    if(clusterer->converged()) break;
   }
   //TODO do I need updateState for DPvMF means here??
   fout.close();
 
-  MatrixXd deviates;
-  MatrixXu inds = clusterer->mostLikelyInds(10,deviates);
-  cout<<"most likely indices"<<endl;
-  cout<<inds<<endl;
-  cout<<"----------------------------------------"<<endl;
+  if(vm.count("silhouette")) 
+  {
+    double silhouette = clusterer->silhouette();
+    cout<<"silhouette = "<<silhouette<<" saved to "<<(pathOut+"_measures.csv")<<endl;
+    fout.open((pathOut+"_measures.csv").data(),ofstream::out);
+    fout<<silhouette<<endl;
+    fout.close();
+  }
 
-  fout.open((pathOut+"mlInds.csv").data(),ofstream::out);
-  fout<<inds<<endl;
-  fout.close();
-  fout.open((pathOut+"mlLogLikes.csv").data(),ofstream::out);
-  fout<<deviates<<endl;
-  fout.close();
-
-  ofstream foutMeans((pathOut+"_means.csv").data(),ofstream::out);
-  foutMeans << clusterer->centroids()<<endl;
-  foutMeans.close();
+  if(vm.count("mlInds")) 
+  {
+    MatrixXd deviates;
+    MatrixXu inds = clusterer->mostLikelyInds(10,deviates);
+    cout<<"most likely indices"<<endl;
+    cout<<inds<<endl;
+    cout<<"----------------------------------------"<<endl;
+    fout.open((pathOut+"mlInds.csv").data(),ofstream::out);
+    fout<<inds<<endl;
+    fout.close();
+    fout.open((pathOut+"mlLogLikes.csv").data(),ofstream::out);
+    fout<<deviates<<endl;
+    fout.close();
+  }
+  if(vm.count("centroids")) 
+  {
+    ofstream foutMeans((pathOut+"_means.csv").data(),ofstream::out);
+    foutMeans << clusterer->centroids()<<endl;
+    foutMeans.close();
+  }
 
 };
 

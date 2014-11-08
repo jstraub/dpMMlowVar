@@ -9,7 +9,7 @@ from matplotlib.patches import Ellipse
 
 import ipdb, re
 import os.path
-import time
+import time, copy
 
 from js.utils.plot.colors import colorScheme
 from js.utils.config import Config2String
@@ -159,7 +159,7 @@ reRun = False
 reRun = True
 
 cfg['T'] = 100
-cfg['nRun'] = 1
+cfg['nRun'] = 10
 
 mis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 nmis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
@@ -167,13 +167,14 @@ vMeasures = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans'
 Ns = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 Sils = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 
+cfg0 = copy.deepcopy(cfg)
 for i,base in enumerate(bases):
+  cfg = copy.deepcopy(cfg0)
   cfg['base']=base
-  print i,cfg
-  print Config2String(cfg).toString()
-
   cfg['outName'],_ = os.path.splitext(cfg['rootPath']+cfg['dataPath'])
   cfg['outName'] += '_'+Config2String(cfg).toString()
+  print cfg['outName']
+#  ipdb.set_trace()
   if not reRun and os.path.exists('./'+cfg['outName']+'_MI.csv'):
     MI = np.loadtxt(cfg['outName']+'_MI.csv')
     Hgt = np.loadtxt(cfg['outName']+'_Hgt.csv')
@@ -212,7 +213,7 @@ for i,base in enumerate(bases):
     np.savetxt(cfg['outName']+'_Sil.csv',Sils[base]);
     np.savetxt(cfg['outName']+'_Ns.csv',Ns[base]);
 
-  ipdb.set_trace()
+#  ipdb.set_trace()
   mis[base] = MI
 #  for t in range(cfg['T']):
 #    for j in range(paramBase[base]):
@@ -255,8 +256,8 @@ def plotOverParams(values,name):
   base = 'spkm'
   Nmean = Ns[base].mean(axis=1)
   ax1.plot(values[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
-  iKtrue = np.argmin(np.abs(Nmean-30))
-  ipdb.set_trace()
+  iKtrue = np.where(np.abs(Nmean-30)<2)
+#  ipdb.set_trace()
   ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=(1,0,0))
   ax1.set_ylabel(paramName[base])  
   ax1.invert_yaxis()
@@ -266,7 +267,7 @@ def plotOverParams(values,name):
   base = 'DPvMFmeans'
   Nmean = Ns[base].mean(axis=1)
   ax2.plot(values[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(1+1)*255/I])
-  iKtrue = np.argmin(np.abs(Nmean-30))
+  iKtrue = np.where(np.abs(Nmean-30)<2)
   ax2.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=(1,0,0))
   ax2.set_ylabel(paramName[base])  
   ax2.legend(loc='best')

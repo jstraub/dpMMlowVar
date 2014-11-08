@@ -55,7 +55,7 @@ cfg['rootPath'] = '/home/jstraub/workspace/research/vpCluster/data/nyu2/'
 cfg['rootPath'] = '/home/jstraub/workspace/research/vpCluster/data/'
 cfg['rootPath'] = '~/workspace/research/vpCluster/data/'
 cfg['outputPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/'
-cfg['rootPath'] = '/data/vision/scratch/fisher/jstraub/dpMM/nyu2/'
+cfg['rootPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
 #cfg['base'] = 'DpNiwSphereFull';
 #cfg['base'] = 'spkm';
 #cfg['base'] = 'DpNiw';
@@ -119,7 +119,7 @@ elif 'multiFromFile' in mode:
   cfg['evalEnd'] = args.end
   indexPath = '/data/vision/fisher/data1/nyu_depth_v2/index.txt'
   cfg['rootPath'] = '/data/vision/fisher/data1/nyu_depth_v2/extracted/'
-  cfg['outputPath'] = '/data/vision/scratch/fisher/jstraub/dpMM/nyu2/'
+  cfg['outputPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
   names =[]
   with open(indexPath) as f:
     allNames = f.read().splitlines() #readlines()

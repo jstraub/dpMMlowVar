@@ -6,30 +6,34 @@ import fnmatch
 cfg=dict()
 cfg['path'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2'
 cfg['base'] = ['DpNiw' , 'DpNiwSphereFull', 'spkm'];
-cfg['base'] = ['DPvMFmeans']; 
-cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
+cfg['base'] = ['DPvMFmeans','spkm']; 
+#cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(6,7) ]
+
+baseKs = {'spkm':[k for k in range(6,7) ], 'DPvMFmeans':[1]}
+
+#cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
 reIndex = True;
 
+nFiles = 0
+for base in cfg['base']:
+  nFiles += len(baseKs[base])
 # --------------------------- final cost function value -------------------- 
 if reIndex:
   cfctFiles = []
   index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
   for i,name in enumerate(index):
-  #  print name
     name =name[:-1]
-    found = [None for base in cfg['base']]
+    found = []; #[None for base in cfg['base']]
     for file in os.listdir(cfg['path']):
-      if not fnmatch.fnmatch(file, '*_jointLikelihood.csv'):
-        continue
-  #    print file
-      for j,base in enumerate(cfg['base']):
-  #      print  '{}*{}*.png'.format(name,base) 
-        if fnmatch.fnmatch(file, '{}*{}*T_{}*_measures.csv'.format(name,base,cfg['T'])):
-          found[j] = file
-  #        print file
-    if not any(f is None for f in found): #found[0] is None and not found[1] is None:
+      if fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
+        for j,base in enumerate(cfg['base']):
+          for k,K in enumerate(baseKs[base]):
+            if fnmatch.fnmatch(file, '{}*K_{}*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
+              found.append(file)
+#            print file
+    if len(found) == nFiles : #found[0] is None and not found[1] is None:
       print found
       cfctFiles.append(found)
   with open('./cfctFiles.txt','w') as f:
@@ -51,23 +55,28 @@ else:
         break
       cfctFiles.append(copy.deepcopy(cfctFile))
 
-cs = np.zeros((len(cfctFiles),len(cfg['base'])))
+Sils = np.zeros((len(cfctFiles),len(cfg['base'])))
+Ks = np.zeros((len(cfctFiles),len(cfg['base'])))
 for i,cfctFile in enumerate(cfctFiles):
    for j,f in enumerate(cfctFile):
      print f
      if os.path.isfile(os.path.join(cfg['path'],f)):
-       c = np.loadtxt(os.path.join(cfg['path'],f))
-       if c.size > 0:
-         print c,i,j, cs.shape, c[-1] 
-         cs[i,j] = c[-1]
-         print cs[i,j], f
+       measure = np.loadtxt(os.path.join(cfg['path'],f))
+       if measure.size > 0:
+         Ks[i,j] = int(measure[0])
+         Sils[i,j] = measure[1]
      else:
        raise ValueError
-print np.sum(cs == 0.0, axis=0)
-if np.sum(cs == 0.0) > 0:
-  print "warning there were zeros in the eval!"
-print np.mean(cs,axis=0)
-print np.std(cs,axis=0)
+#print np.sum(cs == 0.0, axis=0)
+#if np.sum(cs == 0.0) > 0:
+#  print "warning there were zeros in the eval!"
+print "Sils eval"
+print np.mean(Sils,axis=0)
+print np.std(Sils,axis=0)
+
+print "Ks eval"
+print np.mean(Ks,axis=0)
+print np.std(Ks,axis=0)
 
 exit(0);
 # --------------------------- images -------------------------------------

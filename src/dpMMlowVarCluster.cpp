@@ -59,6 +59,7 @@ int main(int argc, char **argv)
   if(vm.count("seed"))
     seed = static_cast<uint64_t>(vm["seed"].as<int>());
   boost::mt19937 rndGen(seed);
+  std::srand(seed);
   uint32_t K=5;
   if (vm.count("K")) K = vm["K"].as<int>();
   // number of iterations
@@ -94,7 +95,11 @@ int main(int argc, char **argv)
   vector<uint32_t> ind(N);
   for (uint32_t i=0; i<N; ++i)
     ind[i] = i;
-  if(vm.count("shuffle")) std::random_shuffle(ind.begin(),ind.end());
+  if(vm.count("shuffle"))
+  {
+    cout<<"shuffling input"<<endl;
+    std::random_shuffle(ind.begin(),ind.end());
+  }
   for (uint32_t j=0; j<D; ++j)
     for (uint32_t i=0; i<N; ++i)
       fin>>x(j,ind[i]);

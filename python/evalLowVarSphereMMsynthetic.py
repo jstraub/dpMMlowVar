@@ -25,9 +25,10 @@ mpl.rc('lines',linewidth=4.)
 figSize = (12, 14)
 
 #paper
-mpl.rc('font',size=25) 
+mpl.rc('font',size=30) 
 mpl.rc('lines',linewidth=4.)
 figSize = (14, 5.5)
+figSize = (14, 12)
 
 
 def mutualInfo(z,zGt):
@@ -146,7 +147,7 @@ bases = ['DPvMFmeans','spkm']
 
 cfg['nParms'] = 30;
 paramBase = {'spkm':np.floor(np.linspace(100,1,cfg['nParms'])).astype(int),
-  'DPvMFmeans':[ang for ang in np.linspace(5.,40.,cfg['nParms'])]}
+  'DPvMFmeans':np.array([ang for ang in np.linspace(6.,45.,cfg['nParms'])])}
 paramName =  {'spkm':"K",'DPvMFmeans':"$\lambda$"}
 
 print paramBase
@@ -155,8 +156,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = False
 reRun = True
+reRun = False
 
 cfg['T'] = 100
 cfg['nRun'] = 10
@@ -174,7 +175,6 @@ for i,base in enumerate(bases):
   cfg['outName'],_ = os.path.splitext(cfg['rootPath']+cfg['dataPath'])
   cfg['outName'] += '_'+Config2String(cfg).toString()
   print cfg['outName']
-#  ipdb.set_trace()
   if not reRun and os.path.exists('./'+cfg['outName']+'_MI.csv'):
     MI = np.loadtxt(cfg['outName']+'_MI.csv')
     Hgt = np.loadtxt(cfg['outName']+'_Hgt.csv')
@@ -206,14 +206,12 @@ for i,base in enumerate(bases):
         Hz[j,t] = entropy(z[-1,:])
         Hgt[j,t] = entropy(zGt)
         Ns[base][j,t] = int(np.max(z[-1,:])+1)
-#    ipdb.set_trace()
     np.savetxt(cfg['outName']+'_MI.csv',MI);
     np.savetxt(cfg['outName']+'_Hgt.csv',Hgt);
     np.savetxt(cfg['outName']+'_Hz.csv',Hz);
     np.savetxt(cfg['outName']+'_Sil.csv',Sils[base]);
     np.savetxt(cfg['outName']+'_Ns.csv',Ns[base]);
 
-#  ipdb.set_trace()
   mis[base] = MI
 #  for t in range(cfg['T']):
 #    for j in range(paramBase[base]):
@@ -250,14 +248,19 @@ I = len(bases) +1
 #plt.tight_layout()
 
 def plotOverParams(values,name):
-
   fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
   ax1 = plt.subplot(111)
   base = 'spkm'
   Nmean = Ns[base].mean(axis=1)
-  ax1.plot(values[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
+  valMean = values[base].mean(axis=1)
+  valStd = values[base].std(axis=1)
+  print name,base,valMean
+  print name,base,valStd
+  ax1.plot(valMean,paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
+  ax1.plot(valMean-valStd,paramBase[base],'--',label=baseMap[base],c=cl[(0+1)*255/I],lw=2,alpha=0.7)
+  ax1.plot(valMean+valStd,paramBase[base],'--',label=baseMap[base],c=cl[(0+1)*255/I],lw=2,alpha=0.7)
+  ax1.fill_betweenx(paramBase[base],valMean-valStd , valMean+valStd, color=cl[(0+1)*255/I], alpha=0.3)
   iKtrue = np.where(np.abs(Nmean-30)<2)
-#  ipdb.set_trace()
   ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=(1,0,0))
   ax1.set_ylabel(paramName[base])  
   ax1.invert_yaxis()
@@ -266,7 +269,14 @@ def plotOverParams(values,name):
   ax2 = ax1.twinx()
   base = 'DPvMFmeans'
   Nmean = Ns[base].mean(axis=1)
+  valMean = values[base].mean(axis=1)
+  valStd = values[base].std(axis=1)
+  print name,base,valMean
+  print name,base,valStd
   ax2.plot(values[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(1+1)*255/I])
+  ax2.plot(valMean-valStd,paramBase[base],'--',label=baseMap[base],c=cl[(1+1)*255/I],lw=2,alpha=0.7)
+  ax2.plot(valMean+valStd,paramBase[base],'--',label=baseMap[base],c=cl[(1+1)*255/I],lw=2,alpha=0.7)
+  ax2.fill_betweenx(paramBase[base],valMean-valStd , valMean+valStd, color=cl[(1+1)*255/I], alpha=0.3)
   iKtrue = np.where(np.abs(Nmean-30)<2)
   ax2.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=(1,0,0))
   ax2.set_ylabel(paramName[base])  

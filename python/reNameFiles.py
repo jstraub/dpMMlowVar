@@ -8,7 +8,8 @@ cfg = dict()
 cfg['path'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
 
 for file in os.listdir(cfg['path']):
-  if True or fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
+  if not re.search('-N_[0-9]+',file) is None:
+#  if True or fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
     foutName = re.sub('-N_\d+','',file)
 #    print foutName
 

@@ -156,8 +156,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = False
 reRun = True
+reRun = False
 
 cfg['T'] = 100
 cfg['nRun'] = 10
@@ -246,6 +246,18 @@ I = len(bases) +1
 #  plt.ylim([0,1])
 #  plt.legend(loc='lower right')
 #plt.tight_layout()
+
+ipdb.set_trace()
+
+indSpkm = np.ones(len(paramBase['spkm']),dtype=bool)
+indSpkm[Ns['spkm'].mean(axis=1) < Ns['DPvMFmeans'].min()] = False
+indSpkm[Ns['spkm'].mean(axis=1) > Ns['DPvMFmeans'].max()] = False
+
+paramBase['spkm'] = paramBase['spkm'][indSpkm]
+nmis['spkm'] = nmis['spkm'][indSpkm,:]
+mis['spkm'] = mis['spkm'][indSpkm,:]
+Ns['spkm'] = Ns['spkm'][indSpkm,:]
+Sils['spkm'] = Sils['spkm'][indSpkm,:]
 
 def plotOverParams(values,name):
   fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')

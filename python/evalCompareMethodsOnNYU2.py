@@ -5,6 +5,7 @@ import fnmatch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from js.utils.plot.colors import colorScheme
+from js.utils.config import Config2String
 
 #paper
 mpl.rc('font',size=35) 
@@ -39,6 +40,36 @@ if reIndex:
     if fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
       candidates.append(file)
   print '# candidates = {}'.format(len(candidates))
+  
+  import re, ipdb
+  counts = dict()
+  files = dict()
+  for candidate in candidates:
+    keyM = re.search('^[a-z]+_\d+_\d+',candidate)
+    if keyM is None:
+      keyM = re.search('^[a-z]+_[a-z]+_\d+_\d+',candidate)
+    if keyM is None:
+      ipdb.set_trace()
+    else:
+      key = keyM.group()
+    cfgStr = candidate[len(key)+1:-15]
+    print cfgStr
+#    ipdb.set_trace()
+    cfg2str = Config2String(dict())
+    cfg2str.fromString(cfgStr)
+    print cfg2str.config
+
+    if key in counts.keys():
+      counts[key] += 1
+      files[key].append(candidate)
+    else:
+      counts[key] = 1
+      files[key] = [candidate]
+  print len(counts)
+  nRuns = np.array(counts.values())
+  print np.bincount(nRuns)
+  raw_input()
+
   cfctFiles = []
   index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
   for i,name in enumerate(index):

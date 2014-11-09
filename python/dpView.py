@@ -166,8 +166,6 @@ for ind in rndInds:
     print '  ** rerun False but '+cfg['outName'] + '_measures.csv not existing => run inference!'
     reRun = True;
 
-  raw_input()
-  
   print 'processing '+cfg['rootPath']+cfg['dataPath']
   rgbd = RgbdFrame(460.0) # correct: 540
   rgbd.load(cfg['rootPath']+cfg['dataPath'])

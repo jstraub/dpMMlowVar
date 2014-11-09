@@ -145,8 +145,8 @@ bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
 bases = ['DPvMFmeans','spkm']
 
-cfg['nParms'] = 30 #50;
-paramBase = {'spkm':np.floor(np.linspace(70,12,cfg['nParms'])).astype(int), # 60,2
+cfg['nParms'] = 50;
+paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
   'DPvMFmeans':np.array([ang for ang in np.linspace(10.,45.,cfg['nParms'])])}
 paramName =  {'spkm':"K",'DPvMFmeans':"$\lambda$"}
 
@@ -160,7 +160,7 @@ reRun = False
 reRun = True
 
 cfg['T'] = 100
-cfg['nRun'] = 1 #10
+cfg['nRun'] = 10
 
 mis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 nmis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}

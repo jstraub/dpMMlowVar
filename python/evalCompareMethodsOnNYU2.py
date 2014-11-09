@@ -34,15 +34,16 @@ for base in cfg['base']:
 print nFiles
 # --------------------------- final cost function value -------------------- 
 if reIndex:
+  candidates = []
+  for file in os.listdir(cfg['path']):
+    if fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
+      candidates.append(file)
+  print '# candidates = {}'.format(len(candidates))
   cfctFiles = []
   index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
   for i,name in enumerate(index):
     name =name[:-1]
     found = []; #[None for base in cfg['base']]
-    candidates = []
-    for file in os.listdir(cfg['path']):
-      if fnmatch.fnmatch(file, '{}*[0-9]_measures.csv'.format(name)):
-        candidates.append(file)
     for j,base in enumerate(cfg['base']):
       for K in baseKs[base]:
         for candidate in candidates:
@@ -56,6 +57,28 @@ if reIndex:
     for cfctFile in cfctFiles:
       for cfctF in cfctFile:
         f.write(cfctF+'\n')
+#  cfctFiles = []
+#  index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
+#  for i,name in enumerate(index):
+#    name =name[:-1]
+#    found = []; #[None for base in cfg['base']]
+#    candidates = []
+#    for file in os.listdir(cfg['path']):
+#      if fnmatch.fnmatch(file, '{}*[0-9]_measures.csv'.format(name)):
+#        candidates.append(file)
+#    for j,base in enumerate(cfg['base']):
+#      for K in baseKs[base]:
+#        for candidate in candidates:
+#          if fnmatch.fnmatch(candidate, '{}*-K_{}-*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
+#            found.append(candidate)
+#            break
+#    if len(found) == nFiles : #found[0] is None and not found[1] is None:
+#      print found
+#      cfctFiles.append(found)
+#  with open('./cfctFiles.txt','w') as f:
+#    for cfctFile in cfctFiles:
+#      for cfctF in cfctFile:
+#        f.write(cfctF+'\n')
 else:
   with open('./cfctFiles.txt','r') as f:
     cfctFiles =[]

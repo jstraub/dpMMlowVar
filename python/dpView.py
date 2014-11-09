@@ -142,14 +142,14 @@ for ind in rndInds:
 
   cfg['outName'] = cfg['outputPath']+cfg['dataPath']+'_'+Config2String(cfg).toString()
   if not reRun and 'multiFromFile' in mode and os.path.isfile(cfg['outName']+'_measures.csv'):
-    print 'skipping '+cfg['outName']+' since it is already existing'
+    print '  ** skipping '+cfg['outName']+' since it is already existing'
     continue;
   if not reRun and os.path.isfile(cfg['outName']+'_measures.csv'):
     measures = np.loadtxt(cfg['outName']+'_measures.csv')
     if not measures.size == 2:
       reRun = True
   if not reRun and not os.path.isfile(cfg['outName']+'_measures.csv'):
-    print 'rerun False but '+cfg['outName'] + '_measures.csv not existing => run inference!'
+    print '  ** rerun False but '+cfg['outName'] + '_measures.csv not existing => run inference!'
     reRun = True;
   
   print 'processing '+cfg['rootPath']+cfg['dataPath']

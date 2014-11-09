@@ -145,9 +145,9 @@ bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
 bases = ['DPvMFmeans','spkm']
 
-cfg['nParms'] = 30;
-paramBase = {'spkm':np.floor(np.linspace(100,1,cfg['nParms'])).astype(int),
-  'DPvMFmeans':np.array([ang for ang in np.linspace(6.,45.,cfg['nParms'])])}
+cfg['nParms'] = 30 #50;
+paramBase = {'spkm':np.floor(np.linspace(70,12,cfg['nParms'])).astype(int), # 60,2
+  'DPvMFmeans':np.array([ang for ang in np.linspace(10.,45.,cfg['nParms'])])}
 paramName =  {'spkm':"K",'DPvMFmeans':"$\lambda$"}
 
 print paramBase
@@ -160,7 +160,7 @@ reRun = False
 reRun = True
 
 cfg['T'] = 100
-cfg['nRun'] = 10
+cfg['nRun'] = 1 #10
 
 mis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 nmis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
@@ -263,6 +263,7 @@ def plotOverParams(values,name):
   iKtrue = np.where(np.abs(Nmean-30)<2)
   ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=(1,0,0))
   ax1.set_ylabel(paramName[base])  
+  ax1.set_ylim(paramBase[base].min(),paramBase[base].max())
   ax1.invert_yaxis()
   ax1.set_xlabel(name)  
   ax1.legend(loc='best')
@@ -280,12 +281,14 @@ def plotOverParams(values,name):
   iKtrue = np.where(np.abs(Nmean-30)<2)
   ax2.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=(1,0,0))
   ax2.set_ylabel(paramName[base])  
+  ax2.set_ylim(paramBase[base].min(),paramBase[base].max())
   ax2.legend(loc='best')
   plt.tight_layout()
   plt.savefig(cfg['outName']+'_{}.png'.format(name),figure=fig)
 
 plotOverParams(mis,'MI')
 plotOverParams(nmis,'NMI')
+plotOverParams(Ns,'numberOfClusters')
 plotOverParams(Sils,'silhouette')
 
 #fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')

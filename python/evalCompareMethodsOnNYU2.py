@@ -24,8 +24,8 @@ baseKs = {'spkm':[k for k in range(6,7) ], 'DPvMFmeans':[1]}
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = False;
 reIndex = True;
+reIndex = False;
 
 nFiles = 0
 for base in cfg['base']:
@@ -97,7 +97,8 @@ print Ks
 I = 2
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 # histogram over the number of clusters for all frames
-plt.hist(Ks[:,0],np.max(Ks[:,0]), alpha =0.7)
+plt.hist(Ks[:,0],bins=np.arange(0,Ks[:,0].max()+1)+.5, alpha =0.7)
+plt.xlim(0,Ks[:,0].max()+1)
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 plt.title("histogram over the number of clusters")
 plt.xlabel('number of clusters')

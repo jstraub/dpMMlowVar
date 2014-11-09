@@ -19,17 +19,18 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-baseKs = {'spkm':[k for k in range(6,7) ], 'DPvMFmeans':[1]}
+baseKs = {'spkm':[4,6,7], 'DPvMFmeans':[1]}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = True;
 reIndex = False;
+reIndex = True;
 
 nFiles = 0
 for base in cfg['base']:
   nFiles += len(baseKs[base])
+print nFiles
 # --------------------------- final cost function value -------------------- 
 if reIndex:
   cfctFiles = []
@@ -42,11 +43,11 @@ if reIndex:
       if fnmatch.fnmatch(file, '{}*[0-9]_measures.csv'.format(name)):
         candidates.append(file)
     for j,base in enumerate(cfg['base']):
-      for k,K in enumerate(baseKs[base]):
+      for K in baseKs[base]:
         for candidate in candidates:
-          if fnmatch.fnmatch(candidate, '{}*K_{}*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
+          if fnmatch.fnmatch(candidate, '{}*-K_{}-*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
             found.append(candidate)
-#            print file
+            break
     if len(found) == nFiles : #found[0] is None and not found[1] is None:
       print found
       cfctFiles.append(found)
@@ -60,7 +61,7 @@ else:
     cfctFile = []
     while 42:
       cfctFile = []
-      for base in cfg['base']:
+      for i in range(nFiles):
         fil = f.readline()[:-1]
         if fil == '': 
           break
@@ -70,11 +71,11 @@ else:
         break
       cfctFiles.append(copy.deepcopy(cfctFile))
 
-Sils = np.zeros((len(cfctFiles),len(cfg['base'])))
-Ks = np.zeros((len(cfctFiles),len(cfg['base'])))
+Sils = np.zeros((len(cfctFiles),nFiles))
+Ks = np.zeros((len(cfctFiles),nFiles))
 for i,cfctFile in enumerate(cfctFiles):
    for j,f in enumerate(cfctFile):
-     print f
+     print j,f
      if os.path.isfile(os.path.join(cfg['path'],f)):
        measure = np.loadtxt(os.path.join(cfg['path'],f))
        if measure.size > 0:
@@ -94,7 +95,7 @@ print 'mean',np.mean(Ks,axis=0)
 print 'std',np.std(Ks,axis=0)
 print Ks
 
-I = 2
+I = nFiles
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 # histogram over the number of clusters for all frames
 plt.hist(Ks[:,0],bins=np.arange(0,Ks[:,0].max()+1)+.5, alpha =0.7)
@@ -108,7 +109,7 @@ plt.savefig(cfg['outName']+'_histNClusters.png',figure=fig)
 
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 ax = plt.subplot(111)
-ind = np.arange(2)
+ind = np.arange(nFiles)
 width = 0.8
 # histogram over the number of clusters for all frames
 ax.bar(ind, np.mean(Sils,axis=0), width, color='r', alpha = 0.7)
@@ -119,7 +120,7 @@ for cap in caps:
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 ax.set_ylabel('silhouette')
 ax.set_xticks(ind+width/2)
-ax.set_xticklabels(('DP-vMF-means','spkm'))
+ax.set_xticklabels(('DP-vMF-means','spkm $K=4$','spkm $K=5$','spkm $K=6$'))
 plt.legend(loc='best')
 plt.tight_layout()
 plt.savefig(cfg['outName']+'_silhouette.png',figure=fig)

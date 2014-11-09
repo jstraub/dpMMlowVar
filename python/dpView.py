@@ -42,6 +42,13 @@ def run(cfg,reRun):
   sil = np.loadtxt(cfg['outName']+'.lbl_measures.csv',delimiter=" ")
   return z,sil
 
+def config2Str(cfg):
+  use = ['K','base','T','delta','nu','lambda']
+  st = use[0]+'_'+str(cfg[use[0]])
+  for key in use[1::]:
+    st += '-'+key+'_'+str(cfg[key])
+  return st
+
 parser = argparse.ArgumentParser(description = 'DpMM modeling and viewer')
 parser.add_argument('-s','--start', type=int, default=0, help='start image Nr')
 parser.add_argument('-e','--end', type=int, default=0, help='end image Nr')
@@ -68,6 +75,8 @@ cfg['delta'] = 12. #18.
 cfg['nu'] =   3 + 10000.0 
 if cfg['base'] == 'DPvMFmeans':
   cfg['lambda'] = np.cos(90*np.pi/180.0)-1.
+else:
+  cfg['lambda'] = 0.0
 #if cfg['base'] == 'DPvMFmeans':
 #  cfg['lambDeg'] = 30.
 #  cfg['T'] = 10
@@ -136,7 +145,7 @@ if 'disp' in mode:
 #  figm1 = mlab.figure(bgcolor=(1,1,1))
   fig0 = plt.figure()
 
-rndInds = np.random.permutation(len(names))
+rndInds = range(len(names)) # np.random.permutation(len(names))
 for ind in rndInds:
   cfg['dataPath'] = names[ind]
   if 'N' in cfg.keys():
@@ -145,7 +154,7 @@ for ind in rndInds:
     del cfg['N']
     del cfg['D']
 
-  cfg['outName'] = cfg['outputPath']+cfg['dataPath']+'_'+Config2String(cfg).toString()
+  cfg['outName'] = cfg['outputPath']+cfg['dataPath']+'_'+config2Str(cfg)
   if not reRun and 'multiFromFile' in mode and os.path.isfile(cfg['outName']+'_measures.csv'):
     print '  ** skipping '+cfg['outName']+' since it is already existing'
     continue;
@@ -156,6 +165,8 @@ for ind in rndInds:
   if not reRun and not os.path.isfile(cfg['outName']+'_measures.csv'):
     print '  ** rerun False but '+cfg['outName'] + '_measures.csv not existing => run inference!'
     reRun = True;
+
+  raw_input()
   
   print 'processing '+cfg['rootPath']+cfg['dataPath']
   rgbd = RgbdFrame(460.0) # correct: 540

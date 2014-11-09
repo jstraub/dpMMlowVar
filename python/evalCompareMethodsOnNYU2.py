@@ -20,7 +20,7 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-baseKs = {'spkm':[4,5,6,7,8], 'DPvMFmeans':[1]}
+baseKs = {'spkm':[3,4,5,6,7,8,9], 'DPvMFmeans':[1]}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
@@ -130,7 +130,7 @@ for cap in caps:
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 ax.set_ylabel('silhouette')
 ax.set_xticks(ind+width/2)
-ax.set_xticklabels(('DP-vMF-means','spkm $K=4$','spkm $K=5$','spkm $K=6$'),rotation=30)
+ax.set_xticklabels(('DP-vMF-means','spkm $K=3$','spkm $K=4$','spkm $K=5$','spkm $K=6$','spkm $K=7$','spkm $K=8$','spkm $K=9$'),rotation=30)
 plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)

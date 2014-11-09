@@ -139,6 +139,11 @@ if 'disp' in mode:
 rndInds = np.random.permutation(len(names))
 for ind in rndInds:
   cfg['dataPath'] = names[ind]
+  if 'N' in cfg.keys():
+    import ipdb
+    ipdb.set_trace()
+    del cfg['N']
+    del cfg['D']
 
   cfg['outName'] = cfg['outputPath']+cfg['dataPath']+'_'+Config2String(cfg).toString()
   if not reRun and 'multiFromFile' in mode and os.path.isfile(cfg['outName']+'_measures.csv'):
@@ -162,6 +167,7 @@ for ind in rndInds:
   n = nAll[rgbd.mask,:].T
   cfg['D'] = n.shape[0]
   cfg['N'] = n.shape[1]
+  print cfg
   dataPath = cfg['rootPath']+cfg['dataPath']+'_normals.csv'
   np.savetxt(dataPath,n)
 
@@ -201,4 +207,5 @@ for ind in rndInds:
     mlab.clf(figm1)
   
   plt.close(figL)
+
 

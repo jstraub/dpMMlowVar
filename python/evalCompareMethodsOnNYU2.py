@@ -4,9 +4,10 @@ import os, copy
 import fnmatch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from js.utils.plot.colors import colorScheme
 
 #paper
-mpl.rc('font',size=30) 
+mpl.rc('font',size=35) 
 mpl.rc('lines',linewidth=4.)
 figSize = (14, 5.5)
 figSize = (14, 12)
@@ -93,26 +94,32 @@ print 'std',np.std(Sils,axis=0)
 print "Ks eval"
 print 'mean',np.mean(Ks,axis=0)
 print 'std',np.std(Ks,axis=0)
-print Ks
+
+colA = colorScheme('labelMap')['orange']
+colB = colorScheme('labelMap')['turquoise']
 
 I = nFiles
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 # histogram over the number of clusters for all frames
-plt.hist(Ks[:,0],bins=np.arange(0,Ks[:,0].max()+1)+.5, alpha =0.7)
-plt.xlim(0,Ks[:,0].max()+1)
+plt.hist(Ks[:,0],bins=np.arange(0,Ks[:,0].max()+1)+.5, alpha =0.7,color=colB)
+plt.xlim(2,Ks[:,0].max()+1)
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
-plt.title("histogram over the number of clusters")
+#plt.title("histogram over the number of clusters")
 plt.xlabel('number of clusters')
 plt.legend(loc='best')
 plt.tight_layout()
-plt.savefig(cfg['outName']+'_histNClusters.png',figure=fig)
+plt.subplots_adjust(right=0.6,bottom=0.3)
+plt.savefig(cfg['outName']+'_histNClusters.pdf',figure=fig)
 
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 ax = plt.subplot(111)
 ind = np.arange(nFiles)
-width = 0.8
+width = 0.95
 # histogram over the number of clusters for all frames
-ax.bar(ind, np.mean(Sils,axis=0), width, color='r', alpha = 0.7)
+rects = ax.bar(ind, np.mean(Sils,axis=0), width, color='r', alpha = 0.7)
+rects[0].set_color(colB)
+for rect in rects[1::]:
+  rect.set_color(colA)
 (_,caps,_) = ax.errorbar(ind+width/2., np.mean(Sils,axis=0), np.std(Sils,axis=0), color=(0,0,0),fmt ='.', capsize=10)
 for cap in caps:
   cap.set_markeredgewidth(4)
@@ -120,10 +127,11 @@ for cap in caps:
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 ax.set_ylabel('silhouette')
 ax.set_xticks(ind+width/2)
-ax.set_xticklabels(('DP-vMF-means','spkm $K=4$','spkm $K=5$','spkm $K=6$'))
+ax.set_xticklabels(('DP-vMF-means','spkm $K=4$','spkm $K=5$','spkm $K=6$'),rotation=30)
 plt.legend(loc='best')
 plt.tight_layout()
-plt.savefig(cfg['outName']+'_silhouette.png',figure=fig)
+plt.subplots_adjust(right=0.6,bottom=0.3)
+plt.savefig(cfg['outName']+'_silhouette.pdf',figure=fig)
 
 plt.show()
 

@@ -151,7 +151,7 @@ bases = ['DPvMFmeans','spkm']
 cfg['nParms'] = 50;
 paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
   'DPvMFmeans':np.array([ang for ang in np.linspace(10.,45.,cfg['nParms'])])}
-paramName =  {'spkm':"$K$",'DPvMFmeans':"$\lambda$"}
+paramName =  {'spkm':"$K$",'DPvMFmeans':"$\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
   'DpNiw':'DP-GMM','DpNiwSphere':'DpSNIW opt','DpNiwSphereFull':'DP-TGMM', \
   'DPvMFmeans':'DP-vMF-means'}
@@ -166,7 +166,7 @@ reRun = True
 reRun = False
 
 cfg['T'] = 100
-cfg['nRun'] = 10
+cfg['nRun'] =  10 #30
 
 mis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 nmis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
@@ -294,7 +294,6 @@ def plotOverParams(values,name,showLeg=None):
 #  ax1.legend(loc='best')
   ax1.set_xlabel(name)  
   if name == 'NMI':
-    ipdb.set_trace()
     tiks = ax1.get_xticks()
     tikLbl = []
     for tik in tiks[::2]:
@@ -326,7 +325,6 @@ def plotOverParams(values,name,showLeg=None):
   ax2.set_yticklabels(tikLbl)
   ax2.set_ylim(paramBase[base].min(),paramBase[base].max())
   if name == 'NMI':
-    ipdb.set_trace()
     tiks = ax2.get_xticks()
     tikLbl = []
     for tik in tiks[::2]:
@@ -338,7 +336,7 @@ def plotOverParams(values,name,showLeg=None):
     labs = [leg.get_label() for leg in legs]
     ax2.legend(legs,labs,loc='best',prop={'size':legendSize})
   plt.tight_layout()
-  plt.subplots_adjust(right=0.85)
+  plt.subplots_adjust(right=0.85,bottom=0.3)
   plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',name)),figure=fig)
  
 

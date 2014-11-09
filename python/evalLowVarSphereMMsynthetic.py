@@ -166,7 +166,7 @@ reRun = True
 reRun = False
 
 cfg['T'] = 100
-cfg['nRun'] =  10 #30
+cfg['nRun'] =  50
 
 mis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
 nmis = {'spkm':np.zeros((len(paramBase['spkm']),cfg['nRun'])), 'DPvMFmeans':np.zeros((len(paramBase['DPvMFmeans']),cfg['nRun']))}
@@ -293,7 +293,7 @@ def plotOverParams(values,name,showLeg=None):
   ax1.set_yticklabels(tikLbl)
 #  ax1.legend(loc='best')
   ax1.set_xlabel(name)  
-  if name == 'NMI':
+  if False and name == 'NMI':
     tiks = ax1.get_xticks()
     tikLbl = []
     for tik in tiks[::2]:
@@ -324,7 +324,7 @@ def plotOverParams(values,name,showLeg=None):
   tikLbl += [str(tik) for tik in tiks[1:]] 
   ax2.set_yticklabels(tikLbl)
   ax2.set_ylim(paramBase[base].min(),paramBase[base].max())
-  if name == 'NMI':
+  if False and name == 'NMI':
     tiks = ax2.get_xticks()
     tikLbl = []
     for tik in tiks[::2]:

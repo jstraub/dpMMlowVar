@@ -20,13 +20,13 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-baseKs = {'spkm':[4,6,7], 'DPvMFmeans':[1]}
+baseKs = {'spkm':[4,5,6,7,8], 'DPvMFmeans':[1]}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = True;
 reIndex = False;
+reIndex = True;
 
 nFiles = 0
 for base in cfg['base']:
@@ -97,7 +97,6 @@ print "Ks eval"
 print 'mean',np.mean(Ks,axis=0)
 print 'std',np.std(Ks,axis=0)
 print ' --------------------------------'
-
 
 colA = colorScheme('labelMap')['orange']
 colB = colorScheme('labelMap')['turquoise']

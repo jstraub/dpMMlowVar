@@ -25,8 +25,8 @@ baseKs = {'spkm':[4,6,7], 'DPvMFmeans':[1]}
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = False;
 reIndex = True;
+reIndex = False;
 
 nFiles = 0
 for base in cfg['base']:
@@ -87,6 +87,8 @@ for i,cfctFile in enumerate(cfctFiles):
 #print np.sum(cs == 0.0, axis=0)
 #if np.sum(cs == 0.0) > 0:
 #  print "warning there were zeros in the eval!"
+print ' --------------------------------'
+print 'number of scenes used for eval: {}'.format(Ks.shape[0])
 print "Sils eval"
 print 'mean',np.mean(Sils,axis=0)
 print 'std',np.std(Sils,axis=0)
@@ -94,6 +96,8 @@ print 'std',np.std(Sils,axis=0)
 print "Ks eval"
 print 'mean',np.mean(Ks,axis=0)
 print 'std',np.std(Ks,axis=0)
+print ' --------------------------------'
+
 
 colA = colorScheme('labelMap')['orange']
 colB = colorScheme('labelMap')['turquoise']

@@ -140,8 +140,8 @@ rndInds = np.random.permutation(len(names))
 for ind in rndInds:
   cfg['dataPath'] = names[ind]
   if 'N' in cfg.keys():
-    import ipdb
-    ipdb.set_trace()
+#    import ipdb
+#    ipdb.set_trace()
     del cfg['N']
     del cfg['D']
 

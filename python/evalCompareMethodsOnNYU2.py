@@ -53,11 +53,11 @@ if reIndex:
     else:
       key = keyM.group()
     cfgStr = candidate[len(key)+1:-15]
-    print cfgStr
-#    ipdb.set_trace()
-    cfg2str = Config2String(dict())
-    cfg2str.fromString(cfgStr)
-    print cfg2str.config
+#    print cfgStr
+##    ipdb.set_trace()
+#    cfg2str = Config2String(dict())
+#    cfg2str.fromString(cfgStr)
+#    print cfg2str.config
 
     if key in counts.keys():
       counts[key] += 1

@@ -41,34 +41,34 @@ if reIndex:
       candidates.append(file)
   print '# candidates = {}'.format(len(candidates))
   
-  import re, ipdb
-  counts = dict()
-  files = dict()
-  for candidate in candidates:
-    keyM = re.search('^[a-z]+_\d+_\d+',candidate)
-    if keyM is None:
-      keyM = re.search('^[a-z]+_[a-z]+_\d+_\d+',candidate)
-    if keyM is None:
-      ipdb.set_trace()
-    else:
-      key = keyM.group()
-    cfgStr = candidate[len(key)+1:-15]
-#    print cfgStr
-##    ipdb.set_trace()
-#    cfg2str = Config2String(dict())
-#    cfg2str.fromString(cfgStr)
-#    print cfg2str.config
-
-    if key in counts.keys():
-      counts[key] += 1
-      files[key].append(candidate)
-    else:
-      counts[key] = 1
-      files[key] = [candidate]
-  print len(counts)
-  nRuns = np.array(counts.values())
-  print np.bincount(nRuns)
-  raw_input()
+#  import re, ipdb
+#  counts = dict()
+#  files = dict()
+#  for candidate in candidates:
+#    keyM = re.search('^[a-z]+_\d+_\d+',candidate)
+#    if keyM is None:
+#      keyM = re.search('^[a-z]+_[a-z]+_\d+_\d+',candidate)
+#    if keyM is None:
+#      ipdb.set_trace()
+#    else:
+#      key = keyM.group()
+#    cfgStr = candidate[len(key)+1:-15]
+##    print cfgStr
+###    ipdb.set_trace()
+##    cfg2str = Config2String(dict())
+##    cfg2str.fromString(cfgStr)
+##    print cfg2str.config
+#
+#    if key in counts.keys():
+#      counts[key] += 1
+#      files[key].append(candidate)
+#    else:
+#      counts[key] = 1
+#      files[key] = [candidate]
+#  print len(counts)
+#  nRuns = np.array(counts.values())
+#  print np.bincount(nRuns)
+#  raw_input()
 
   cfctFiles = []
   index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
@@ -78,7 +78,7 @@ if reIndex:
     for j,base in enumerate(cfg['base']):
       for K in baseKs[base]:
         for candidate in candidates:
-          if fnmatch.fnmatch(candidate, '{}*-K_{}-*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
+          if fnmatch.fnmatch(candidate, '{}*K_{}-*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
             found.append(candidate)
             break
     if len(found) == nFiles : #found[0] is None and not found[1] is None:

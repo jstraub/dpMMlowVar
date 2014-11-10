@@ -3,14 +3,14 @@
 // ---------------------------------------------------------------------------
 
 template<typename T>
-Cat<T>::Cat(const Matrix<T,Dynamic,1>& pdf, boost::mt19937 *pRndGen)
+Cat<T>::Cat(const Matrix<T,Dynamic,1>& pdf, mt19937 *pRndGen)
 : Distribution<T>(pRndGen), K_(pdf.size()), pdf_(pdf)
 {
   updateCdf();
 };
 
 template<typename T>
-Cat<T>::Cat(const VectorXu& z, boost::mt19937 *pRndGen)
+Cat<T>::Cat(const VectorXu& z, mt19937 *pRndGen)
 : Distribution<T>(pRndGen), K_(z.maxCoeff()+1)
 {
   pdf_ = counts<T,uint32_t>(z,K_);

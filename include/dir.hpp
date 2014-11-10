@@ -18,7 +18,9 @@ using std::vector;
 
 #ifdef BOOST_OLD
 using boost::gamma_distribution;
+#define mt19937 boost::mt19937
 #else
+using boost::mt19937;
 using boost::random::gamma_distribution;
 #endif
 
@@ -29,7 +31,7 @@ public:
   uint32_t K_;
   Matrix<T,Dynamic,1> alpha_;
 
-  Dir(const Matrix<T,Dynamic,1>& alpha, boost::mt19937 *pRndGen);
+  Dir(const Matrix<T,Dynamic,1>& alpha, mt19937 *pRndGen);
   Dir(const Dir& other);
   ~Dir();
 

@@ -2,7 +2,7 @@
 
 // ----------------------------------------------------------------------------
 template<class Disc, typename T>
-Dir<Disc,T>::Dir(const Matrix<T,Dynamic,1>& alpha, boost::mt19937* pRndGen) 
+Dir<Disc,T>::Dir(const Matrix<T,Dynamic,1>& alpha, mt19937* pRndGen) 
   : Distribution<T>(pRndGen), K_(alpha.size()), alpha_(alpha), 
   counts_(Matrix<T,Dynamic,1>::Zero(K_))
 {

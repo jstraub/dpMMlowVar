@@ -2,13 +2,13 @@
 
 // ------------------------ impl ---------------------------------------------
 template<typename T>
-Sampler<T>::Sampler(boost::mt19937* pRndGen)
+Sampler<T>::Sampler(mt19937* pRndGen)
   : pRndGen_(pRndGen), selfManaged_(false)
 {
   if(pRndGen_ == NULL)
   {
     selfManaged_ = true;
-    pRndGen_ = new boost::mt19937(time(0));
+    pRndGen_ = new mt19937(time(0));
   }
 };
 
@@ -85,7 +85,7 @@ template class Sampler<float>;
 #ifdef CUDA
 // ----------------------------------------------------------------------------
 template<typename T>
-SamplerGpu<T>::SamplerGpu(uint32_t N, uint32_t K, boost::mt19937* pRndGen)
+SamplerGpu<T>::SamplerGpu(uint32_t N, uint32_t K, mt19937* pRndGen)
   : Sampler<T>(pRndGen), pdfs_(new GpuMatrix<T>(N,K)), logNormalizers_(N,1),
   z_(N), r_(N)
 {};

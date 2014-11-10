@@ -19,7 +19,8 @@ using std::cout;
 using std::endl;
 
 #ifdef BOOST_OLD
-using boost::mt19937;
+//using boost::mt19937;
+#define mt19937 boost::mt19937
 #else
 using boost::mt19937;
 #endif

@@ -14,6 +14,13 @@
 using namespace Eigen;
 using std::cout;
 using std::endl;
+ 
+#ifdef BOOST_OLD
+//using boost::mt19937;
+#define mt19937 boost::mt19937
+#else
+using boost::mt19937;
+#endif
 
 template<typename T>
 class Cat : public Distribution<T>
@@ -24,9 +31,9 @@ public:
   Matrix<T,Dynamic,1> cdf_;
 
   /* constructor from pdf */
-  Cat(const Matrix<T,Dynamic,1>& pdf, boost::mt19937 *pRndGen);
+  Cat(const Matrix<T,Dynamic,1>& pdf, mt19937 *pRndGen);
   /* constructor from indicators - estimates from counts */
-  Cat(const VectorXu& z, boost::mt19937 *pRndGen);
+  Cat(const VectorXu& z, mt19937 *pRndGen);
   /* copy constructor */
   Cat(const Cat& other);
   virtual ~Cat();

@@ -32,7 +32,7 @@ template<class T>
 class DDPvMFMeansCUDA : public DDPvMFMeans<T>
 {
 public:
-  DDPvMFMeansCUDA(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
+  DDPvMFMeansCUDA(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
       T lambda, T beta, T w, boost::mt19937* pRndGen);
   virtual ~DDPvMFMeansCUDA();
 
@@ -41,7 +41,7 @@ public:
   virtual void updateLabelsParallel();
   virtual void updateLabels();
 //  virtual void updateCenters();
-  virtual void nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
+  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
   virtual void nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 //  virtual void updateState(); // after converging for a single time instant
 //  virtual uint32_t indOfClosestCluster(int32_t i);
@@ -72,7 +72,7 @@ protected:
 
 template<class T>
 DDPvMFMeansCUDA<T>::DDPvMFMeansCUDA(
-    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T beta, T w, 
+    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T beta, T w, 
     boost::mt19937* pRndGen)
   : DDPvMFMeans<T>(spx,lambda,beta,w,pRndGen), d_x_(spx), d_z_(this->N_),
   d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
@@ -120,7 +120,7 @@ void DDPvMFMeansCUDA<T>::computeSums(void)
 }
 
 template<class T>
-void DDPvMFMeansCUDA<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+void DDPvMFMeansCUDA<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
   DDPvMFMeans<T>::nextTimeStep(spx);
 //  cout<<"copy x"<<endl;

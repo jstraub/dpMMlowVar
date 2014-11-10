@@ -63,6 +63,7 @@ protected:
   GpuMatrix<uint32_t> d_Ns_;
   GpuMatrix<T> d_p_;
 
+  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual void computeSums(uint32_t k0, uint32_t K); 
   virtual void computeSums(void); // updates internal xSums_ 
   uint32_t computeLabelsGPU(uint32_t i0);

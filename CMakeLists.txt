@@ -27,8 +27,6 @@ find_package (CUDA REQUIRED)
 
 message(${EIGEN3_INCLUDE_DIR})
 
-set(BOOST_OLD 1)
-
 IF(BOOST_OLD)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DBOOST_OLD")
   include_directories(

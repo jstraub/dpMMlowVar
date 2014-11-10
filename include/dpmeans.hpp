@@ -17,7 +17,7 @@ class DPMeans : public KMeans<T>
 {
 public:
   DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K0,
-    double lambda, boost::mt19937* pRndGen);
+    double lambda, mt19937* pRndGen);
   virtual ~DPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -34,7 +34,7 @@ protected:
 // -------------------------------- impl ----------------------------------
 template<class T>
 DPMeans<T>::DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-    uint32_t K0, double lambda, boost::mt19937* pRndGen)
+    uint32_t K0, double lambda, mt19937* pRndGen)
   : KMeans<T>(spx,K0,pRndGen), lambda_(lambda)
 {}
 

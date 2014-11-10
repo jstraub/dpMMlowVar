@@ -19,7 +19,7 @@ class SphericalKMeans : public KMeans<T>
 {
 public:
   SphericalKMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    boost::mt19937* pRndGen);
+    mt19937* pRndGen);
   virtual ~SphericalKMeans();
 
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
@@ -37,7 +37,7 @@ public:
 //{
 //public:
 //  SphericalKMeansKarcher(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-//      uint32_t K, boost::mt19937* pRndGen);
+//      uint32_t K, mt19937* pRndGen);
 //  ~SphericalKMeansKarcher();
 //
 ////  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -49,7 +49,7 @@ public:
 template<class T>
 SphericalKMeans<T>::SphericalKMeans(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    boost::mt19937* pRndGen)
+    mt19937* pRndGen)
   : KMeans<T>(spx,K, pRndGen)
 {}
 
@@ -182,7 +182,7 @@ T SphericalKMeans<T>::silhouette()
 //template<class T>
 //SphericalKMeansKarcher<T>::SphericalKMeansKarcher(
 //    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-//    boost::mt19937* pRndGen)
+//    mt19937* pRndGen)
 //  : SphericalKMeans<T>(spx,K,pRndGen)
 //{}
 //

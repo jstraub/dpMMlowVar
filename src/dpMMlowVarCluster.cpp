@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   uint64_t seed = time(0);
   if(vm.count("seed"))
     seed = static_cast<uint64_t>(vm["seed"].as<int>());
-  boost::mt19937 rndGen(seed);
+  mt19937 rndGen(seed);
   std::srand(seed);
   uint32_t K=5;
   if (vm.count("K")) K = vm["K"].as<int>();

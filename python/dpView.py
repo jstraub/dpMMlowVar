@@ -53,6 +53,7 @@ parser = argparse.ArgumentParser(description = 'DpMM modeling and viewer')
 parser.add_argument('-s','--start', type=int, default=0, help='start image Nr')
 parser.add_argument('-e','--end', type=int, default=0, help='end image Nr')
 parser.add_argument('-K0', type=int, default=1, help='initial number of MFs')
+parser.add_argument('-l','--lamb', type=float, default=90., help='lambda parameter in degree for DPvMFmeans')
 parser.add_argument('-b','--base', default='DPvMFmeans', help='base distribution/algorithm')
 parser.add_argument('-nyu', action='store_true', help='switch to process the NYU dataset')
 args = parser.parse_args()
@@ -74,7 +75,7 @@ cfg['T'] = 100
 cfg['delta'] = 12. #18.
 cfg['nu'] =   3 + 10000.0 
 if cfg['base'] == 'DPvMFmeans':
-  cfg['lambda'] = np.cos(90*np.pi/180.0)-1.
+  cfg['lambda'] = np.cos(args.lamb*np.pi/180.0)-1.
 else:
   cfg['lambda'] = 0.0
 #if cfg['base'] == 'DPvMFmeans':

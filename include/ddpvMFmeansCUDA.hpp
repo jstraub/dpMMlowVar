@@ -33,7 +33,7 @@ class DDPvMFMeansCUDA : public DDPvMFMeans<T>
 {
 public:
   DDPvMFMeansCUDA(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
-      T lambda, T beta, T w, boost::mt19937* pRndGen);
+      T lambda, T beta, T w, mt19937* pRndGen);
   virtual ~DDPvMFMeansCUDA();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -74,7 +74,7 @@ protected:
 template<class T>
 DDPvMFMeansCUDA<T>::DDPvMFMeansCUDA(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T beta, T w, 
-    boost::mt19937* pRndGen)
+    mt19937* pRndGen)
   : DDPvMFMeans<T>(spx,lambda,beta,w,pRndGen), d_x_(spx), d_z_(this->N_),
   d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
 {}

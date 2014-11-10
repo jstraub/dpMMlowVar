@@ -1,6 +1,4 @@
-#include "normal.hpp"
-
-
+//#include "normal.hpp"
 // ---------------------------------------------------------------------------
 
 template<typename T>
@@ -124,5 +122,5 @@ void Normal<T>::print() const
   cout<<Sigma_<<endl;
 }
 
-template class Normal<double>;
-template class Normal<float>;
+//template class Normal<double>;
+//template class Normal<float>;

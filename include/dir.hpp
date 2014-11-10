@@ -85,3 +85,4 @@ typedef Dir<Cat<double>, double> DirCatd;
 typedef Dir<Cat<float>, float> DirCatf;
 //typedef Dir<Mult<double>, double> DirMultd;
 //typedef Dir<Mult<float>, float> DirMultf;
+#include <dir.cpp>

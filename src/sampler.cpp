@@ -1,4 +1,4 @@
-#include "sampler.hpp"
+//#include "sampler.hpp"
 
 // ------------------------ impl ---------------------------------------------
 template<typename T>
@@ -78,9 +78,9 @@ void Sampler<T>::sampleDiscPdf(const Matrix<T,Dynamic,Dynamic>& pdfs, VectorXu& 
   }
 };
 
-template class Sampler<double>;
-template class Sampler<float>;
-
+//template class Sampler<double>;
+//template class Sampler<float>;
+//
 
 #ifdef CUDA
 // ----------------------------------------------------------------------------
@@ -213,7 +213,7 @@ void SamplerGpu<T>::addTopLevel(const Matrix<T,Dynamic,1>& pi,uint32_t dk)
       pdfs_->rows());
 };
 
-template class SamplerGpu<double>;
-template class SamplerGpu<float>;
+//template class SamplerGpu<double>;
+//template class SamplerGpu<float>;
 
 #endif 

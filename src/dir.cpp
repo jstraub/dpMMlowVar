@@ -1,4 +1,4 @@
-#include "dir.hpp"
+//#include "dir.hpp"
 
 // ----------------------------------------------------------------------------
 template<class Disc, typename T>
@@ -163,7 +163,7 @@ void Dir<Disc,T>::computeMergedSS( const Dir<Disc,T>& dirA,
   NsM = dirA.counts() + dirB.counts();
 };
 
-template class Dir<Cat<double>, double>;
-template class Dir<Cat<float>, float>;
+//template class Dir<Cat<double>, double>;
+//template class Dir<Cat<float>, float>;
 //template class Dir<Mult<double>, double>;
 //template class Dir<Mult<float>, float>;

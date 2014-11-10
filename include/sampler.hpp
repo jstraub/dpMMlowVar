@@ -150,3 +150,4 @@ public:
 };
 #endif
 
+#include <sampler.cpp>

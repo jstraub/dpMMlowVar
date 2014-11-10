@@ -96,3 +96,4 @@ inline Matrix<T,Dynamic,Dynamic> sampleClusters(
   return mus;
 };
 
+#include <normal.cpp>

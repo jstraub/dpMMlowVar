@@ -146,6 +146,8 @@ INSTALL(TARGETS dpMMlowVar dpMMlowVarCluster #dpStickGMM dpDirMM
   COMPONENT compLib
   )
 
+install(DIRECTORY src/ DESTINATION src/                                 
+  FILES_MATCHING PATTERN "*.cpp")                                         
 install(DIRECTORY include/ DESTINATION include/                                 
   FILES_MATCHING PATTERN "*.h")                                         
 install(DIRECTORY cuda/ DESTINATION include/                                 

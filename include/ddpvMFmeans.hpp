@@ -19,12 +19,18 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+#ifdef BOOST_OLD
+#define mt19937 boost::mt19937
+#else
+using boost::mt19937;
+#endif
+
 template<class T>
 class DDPvMFMeans : public DDPMeans<T>
 {
 public:
   DDPvMFMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
-      T lambda, T beta, T Q, boost::mt19937* pRndGen);
+      T lambda, T beta, T Q, mt19937* pRndGen);
   virtual ~DDPvMFMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -71,7 +77,7 @@ protected:
 
 template<class T>
 DDPvMFMeans<T>::DDPvMFMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-    T lambda, T beta, T Q, boost::mt19937* pRndGen)
+    T lambda, T beta, T Q, mt19937* pRndGen)
   : DDPMeans<T>(spx,lambda,0.,0.,pRndGen), beta_(beta), Q_(Q)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean

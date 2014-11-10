@@ -20,17 +20,24 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+
+#ifdef BOOST_OLD
+#define mt19937 boost::mt19937
+#else
+using boost::mt19937;
+#endif
+
 /* Sampler for CPU */
 template<typename T=double>
 class Sampler
 {
 protected:
-  boost::mt19937* pRndGen_;
+  mt19937* pRndGen_;
   bool selfManaged_;
   boost::uniform_01<> unif_;
 
 public:
-  Sampler(boost::mt19937* pRndGen=NULL);
+  Sampler(mt19937* pRndGen=NULL);
   virtual ~Sampler();
 
   virtual void sampleUnif(Matrix<T,Dynamic,1>& r);
@@ -101,7 +108,7 @@ class SamplerGpu : public Sampler<T>
   GpuMatrix<T> r_; // unif random numbers
 
 public:
-  SamplerGpu(uint32_t N, uint32_t K, boost::mt19937* pRndGen=NULL);
+  SamplerGpu(uint32_t N, uint32_t K, mt19937* pRndGen=NULL);
   ~SamplerGpu();
 
   void sampleUnif(Matrix<T,Dynamic,1>& r);

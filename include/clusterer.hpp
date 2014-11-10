@@ -9,12 +9,19 @@
 
 using namespace Eigen;
 
+
+#ifdef BOOST_OLD
+#define mt19937 boost::mt19937
+#else
+using boost::mt19937;
+#endif
+
 template<class T>
 class Clusterer
 {
 public:
   Clusterer(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    boost::mt19937* pRndGen);
+    mt19937* pRndGen);
   virtual ~Clusterer();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -54,14 +61,14 @@ protected:
   Matrix<T,Dynamic,Dynamic> ps_; // centroids on the sphere
   VectorXu Ns_; // counts for each cluster
   VectorXu z_; // labels
-  boost::mt19937* pRndGen_;
+  mt19937* pRndGen_;
 };
 
 // ----------------------------- impl -----------------------------------------
 template<class T>
 Clusterer<T>::Clusterer(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    boost::mt19937* pRndGen)
+    mt19937* pRndGen)
   : K_(K), D_(spx->rows()), N_(spx->cols()), cost_(INFINITY), prevCost_(INFINITY),
   spx_(spx), ps_(D_,K_), Ns_(K_), z_(N_), pRndGen_(pRndGen)
 {};

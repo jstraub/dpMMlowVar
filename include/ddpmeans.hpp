@@ -16,6 +16,12 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+#ifdef BOOST_OLD
+#define mt19937 boost::mt19937
+#else
+using boost::mt19937;
+#endif
+
 #define UNASSIGNED 4294967295
 
 template<class T>
@@ -23,7 +29,7 @@ class DDPMeans : public DPMeans<T>
 {
 public:
   DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
-      T lambda, T Q, T tau, boost::mt19937* pRndGen);
+      T lambda, T Q, T tau, mt19937* pRndGen);
   virtual ~DDPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -50,7 +56,7 @@ protected:
 // -------------------------------- impl ----------------------------------
 template<class T>
 DDPMeans<T>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-    T lambda, T Q, T tau, boost::mt19937* pRndGen)
+    T lambda, T Q, T tau, mt19937* pRndGen)
   : DPMeans<T>(spx,0,lambda,pRndGen), Q_(Q), tau_(tau)
 {
   // compute initial counts for weight initialization

@@ -38,7 +38,7 @@ public:
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
 
-  virtual void updateLabelsParallel();
+//  virtual void updateLabelsParallel();
   virtual void updateLabels();
 //  virtual void updateCenters();
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);

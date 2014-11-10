@@ -18,7 +18,7 @@ template<class T>
 class SphericalKMeans : public KMeans<T>
 {
 public:
-  SphericalKMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+  SphericalKMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     boost::mt19937* pRndGen);
   virtual ~SphericalKMeans();
 
@@ -36,7 +36,7 @@ public:
 //class SphericalKMeansKarcher : public SphericalKMeans<T>
 //{
 //public:
-//  SphericalKMeansKarcher(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
+//  SphericalKMeansKarcher(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
 //      uint32_t K, boost::mt19937* pRndGen);
 //  ~SphericalKMeansKarcher();
 //
@@ -48,7 +48,7 @@ public:
 // --------------------------------- impl -------------------------------------
 template<class T>
 SphericalKMeans<T>::SphericalKMeans(
-    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     boost::mt19937* pRndGen)
   : KMeans<T>(spx,K, pRndGen)
 {}
@@ -181,7 +181,7 @@ T SphericalKMeans<T>::silhouette()
 //
 //template<class T>
 //SphericalKMeansKarcher<T>::SphericalKMeansKarcher(
-//    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+//    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
 //    boost::mt19937* pRndGen)
 //  : SphericalKMeans<T>(spx,K,pRndGen)
 //{}

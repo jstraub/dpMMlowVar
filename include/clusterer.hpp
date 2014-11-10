@@ -13,7 +13,7 @@ template<class T>
 class Clusterer
 {
 public:
-  Clusterer(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+  Clusterer(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     boost::mt19937* pRndGen);
   virtual ~Clusterer();
 
@@ -50,7 +50,7 @@ protected:
   const uint32_t D_;
   uint32_t N_;
   T cost_, prevCost_;
-  boost::shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
+  shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
   Matrix<T,Dynamic,Dynamic> ps_; // centroids on the sphere
   VectorXu Ns_; // counts for each cluster
   VectorXu z_; // labels
@@ -60,7 +60,7 @@ protected:
 // ----------------------------- impl -----------------------------------------
 template<class T>
 Clusterer<T>::Clusterer(
-    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     boost::mt19937* pRndGen)
   : K_(K), D_(spx->rows()), N_(spx->cols()), cost_(INFINITY), prevCost_(INFINITY),
   spx_(spx), ps_(D_,K_), Ns_(K_), z_(N_), pRndGen_(pRndGen)

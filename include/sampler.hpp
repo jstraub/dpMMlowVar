@@ -9,8 +9,12 @@
 //#include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_01.hpp>
 
-#include "global.hpp"
 #include "distribution.hpp"
+#include "global.hpp"
+
+#ifdef CUDA
+#include "gpuMatrix.hpp"
+#endif
 
 using namespace Eigen;
 using std::cout;
@@ -91,7 +95,7 @@ extern void logAddTopLevelGpu(double* d_logPdf, double* d_logNormalizer,
 template<typename T=float>
 class SamplerGpu : public Sampler<T>
 {
-  boost::shared_ptr<GpuMatrix<T> > pdfs_; // one pdf per row
+  shared_ptr<GpuMatrix<T> > pdfs_; // one pdf per row
   GpuMatrix<T> logNormalizers_; // one pdf per row
   GpuMatrix<uint32_t> z_; // samples from pdfs
   GpuMatrix<T> r_; // unif random numbers
@@ -108,7 +112,7 @@ public:
     return u;
   };
 
-  virtual void setPdfs(const boost::shared_ptr<GpuMatrix<T> >& pdfs, bool logScale);
+  virtual void setPdfs(const shared_ptr<GpuMatrix<T> >& pdfs, bool logScale);
 
   virtual void sampleDiscLogPdfUnNormalized(
       const Matrix<T,Dynamic,Dynamic>& pdfs, VectorXu& z);

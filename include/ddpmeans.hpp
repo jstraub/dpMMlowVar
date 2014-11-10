@@ -22,7 +22,7 @@ template<class T>
 class DDPMeans : public DPMeans<T>
 {
 public:
-  DDPMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
+  DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
       T lambda, T Q, T tau, boost::mt19937* pRndGen);
   virtual ~DDPMeans();
 
@@ -30,7 +30,7 @@ public:
   virtual void updateLabels();
   virtual void updateCenters();
   
-  virtual void nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
+  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
@@ -49,7 +49,7 @@ protected:
 
 // -------------------------------- impl ----------------------------------
 template<class T>
-DDPMeans<T>::DDPMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
+DDPMeans<T>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T Q, T tau, boost::mt19937* pRndGen)
   : DPMeans<T>(spx,0,lambda,pRndGen), Q_(Q), tau_(tau)
 {
@@ -156,7 +156,7 @@ void DDPMeans<T>::updateCenters()
 };
 
 template<class T>
-void DDPMeans<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+void DDPMeans<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
   assert(this->D_ == spx->rows());
   this->spx_ = spx; // update the data

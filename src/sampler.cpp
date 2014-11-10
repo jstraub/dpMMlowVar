@@ -95,7 +95,7 @@ SamplerGpu<T>::~SamplerGpu()
 {};
 
 template<typename T>
-void SamplerGpu<T>::setPdfs(const boost::shared_ptr<GpuMatrix<T> >& pdfs, bool logScale)
+void SamplerGpu<T>::setPdfs(const shared_ptr<GpuMatrix<T> >& pdfs, bool logScale)
 {
   pdfs_ = pdfs;
   z_.resize(pdfs_->rows(),1);

@@ -23,7 +23,7 @@ template<class T>
 class DDPvMFMeans : public DDPMeans<T>
 {
 public:
-  DDPvMFMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
+  DDPvMFMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
       T lambda, T beta, T Q, boost::mt19937* pRndGen);
   virtual ~DDPvMFMeans();
 
@@ -33,7 +33,7 @@ public:
   virtual void updateLabelsSerial();
   virtual void updateLabels();
   virtual void updateCenters();
-  virtual void nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
+  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
   virtual void updateState(); // after converging for a single time instant
 //  virtual MatrixXu mostLikelyInds(uint32_t n, 
 //     Matrix<T,Dynamic,Dynamic>& deviates);
@@ -70,7 +70,7 @@ protected:
 // --------------------------- impl -------------------------------------------
 
 template<class T>
-DDPvMFMeans<T>::DDPvMFMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
+DDPvMFMeans<T>::DDPvMFMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T beta, T Q, boost::mt19937* pRndGen)
   : DDPMeans<T>(spx,lambda,0.,0.,pRndGen), beta_(beta), Q_(Q)
 {
@@ -321,7 +321,7 @@ void DDPvMFMeans<T>::updateCenters()
 };
 
 template<class T>
-void DDPvMFMeans<T>::nextTimeStep(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+void DDPvMFMeans<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
   this->psPrev_ = this->ps_;
   this->Kprev_ = this->K_;

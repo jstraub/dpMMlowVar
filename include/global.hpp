@@ -4,7 +4,11 @@
 #include <boost/shared_ptr.hpp>
 
 //using namespace boost;
-using boost::shared_ptr;
+#ifdef BOOST_OLD
+#  define shared_ptr boost::shared_ptr
+#else
+  using boost::shared_ptr;
+#endif
 
 typedef Eigen::Matrix<uint32_t,Eigen::Dynamic,1> VectorXu;
 typedef Eigen::Matrix<uint32_t,Eigen::Dynamic,Eigen::Dynamic> MatrixXu;

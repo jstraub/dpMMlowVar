@@ -19,7 +19,7 @@ template<class T>
 class KMeans : public Clusterer<T>
 {
 public:
-  KMeans(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+  KMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     boost::mt19937* pRndGen);
   virtual ~KMeans();
 
@@ -47,7 +47,7 @@ protected:
 
 template<class T>
 KMeans<T>::KMeans(
-    const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
+    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     boost::mt19937* pRndGen)
   : Clusterer<T>(spx,K, pRndGen), S_(this->D_) 
 {

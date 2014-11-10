@@ -415,7 +415,7 @@ Matrix<T,Dynamic,Dynamic> Sphere<T>::Exp_p(const Matrix<T,Dynamic,1>& p,
 }
 
 template <typename T>
-Matrix<T,Dynamic,1> Sphere<T>::sampleUnif(boost::mt19937* pRndGen)
+Matrix<T,Dynamic,1> Sphere<T>::sampleUnif(mt19937* pRndGen)
 {
 //  Matrix<T,Dynamic,Dynamic> Sigma(Dd,Dd);
 //  Sigma.setZero(Dd,Dd);

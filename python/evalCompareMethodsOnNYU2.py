@@ -151,7 +151,7 @@ ind = np.arange(nFiles)
 width = 0.95
 # histogram over the number of clusters for all frames
 rects = ax.bar(ind, np.mean(Sils,axis=0), width, color=colB, alpha = 0.7)
-for rect in rects[4::]:
+for rect in rects[7::]:
   rect.set_color(colA)
 (_,caps,_) = ax.errorbar(ind+width/2., np.mean(Sils,axis=0), np.std(Sils,axis=0), color=(0,0,0),fmt ='.', capsize=10)
 for cap in caps:
@@ -160,7 +160,8 @@ for cap in caps:
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 ax.set_ylabel('silhouette')
 ax.set_xticks(ind+width/2)
-ax.set_xticklabels(('DP-vMF-means 70','DP-vMF-means 90','DP-vMF-means 110','DP-vMF-means 130','spkm $K=3$','spkm $K=4$','spkm $K=5$','spkm $K=6$','spkm $K=7$','spkm $K=8$','spkm $K=9$'),rotation=30)
+#70.,90.,100.,110.,115.,120.,130
+ax.set_xticklabels(('DP-vMF-means 70','DP-vMF-means 90','DP-vMF-means 100','DP-vMF-means 110','DP-vMF-means 115','DP-vMF-means 120','DP-vMF-means 130','spkm $K=3$','spkm $K=4$','spkm $K=5$','spkm $K=6$','spkm $K=7$','spkm $K=8$','spkm $K=9$'),rotation=30)
 plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)

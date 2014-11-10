@@ -33,6 +33,7 @@ struct GpuMatrix
   GpuMatrix(uint32_t rows, uint32_t cols=1);
   GpuMatrix(const Matrix<T,Dynamic,Dynamic> & data);
   GpuMatrix(const Matrix<T,Dynamic,1> & data);
+  GpuMatrix(const std::vector<T> & data);
   GpuMatrix(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& data);
   GpuMatrix(const shared_ptr<Matrix<T,Dynamic,1> > & data);
   ~GpuMatrix();
@@ -111,6 +112,15 @@ GpuMatrix<T>::GpuMatrix(const Matrix<T,Dynamic,Dynamic> & data)
 template <class T>
 GpuMatrix<T>::GpuMatrix(const Matrix<T,Dynamic,1> & data)
   : rows_(data.rows()), cols_(1), initialized_(false)
+{
+//  cout<<rows_<<"x"<<cols_<<"="<<rows_*cols_<<endl;
+  checkCudaErrors(cudaMalloc((void **)&data_, rows_*cols_*sizeof(T))); 
+  set(data);
+};
+
+template <class T>
+GpuMatrix<T>::GpuMatrix(const std::vector<T> & data)
+  : rows_(data.size()), cols_(1), initialized_(false)
 {
 //  cout<<rows_<<"x"<<cols_<<"="<<rows_*cols_<<endl;
   checkCudaErrors(cudaMalloc((void **)&data_, rows_*cols_*sizeof(T))); 

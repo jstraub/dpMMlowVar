@@ -1,5 +1,4 @@
-#include "sphere.hpp"
-
+//#include "sphere.hpp"
 
 // ---------------------------------- impl ------------------------------------
 
@@ -429,7 +428,5 @@ Matrix<T,Dynamic,1> Sphere<T>::sampleUnif(mt19937* pRndGen)
   return q/q.norm();
 };
 
-
-
-template class Sphere<double>;
-template class Sphere<float>;
+//template class Sphere<double>;
+//template class Sphere<float>;

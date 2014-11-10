@@ -62,3 +62,4 @@ private:
 typedef Cat<float> Catf;
 typedef Cat<double> Catd;
 
+#include <cat.cpp>

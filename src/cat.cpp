@@ -1,4 +1,4 @@
-#include "cat.hpp"
+//#include "cat.hpp"
 
 // ---------------------------------------------------------------------------
 
@@ -60,5 +60,5 @@ void Cat<T>::print() const
   cout<<"pi="<<pdf_.transpose()<<endl;
 }
 
-template class Cat<double>;
-template class Cat<float>;
+//template class Cat<double>;
+//template class Cat<float>;

@@ -33,6 +33,7 @@ IF(BOOST_OLD)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DBOOST_OLD")
   include_directories(
     ./include
+    ./src
     ./cuda
     ${EIGEN3_INCLUDE_DIR}
     /usr/include
@@ -45,11 +46,11 @@ IF(BOOST_OLD)
     )
   # no sampling from chi_squared
   cuda_add_library(dpMMlowVar SHARED
-    ./src/cat.cpp
+#    ./src/cat.cpp
     ./src/sampler.cpp
     ./src/dir.cpp
     ./src/normal.cpp
-    ./src/sphere.cpp
+#    ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
     ./cuda/copy_kernel.cu
@@ -63,6 +64,7 @@ IF(BOOST_OLD)
 ELSE(BOOST_OLD)
   include_directories(
     ./include
+    ./src
     ./cuda
     ${EIGEN3_INCLUDE_DIR}
     /usr/include
@@ -73,11 +75,11 @@ ELSE(BOOST_OLD)
     $ENV{WORKSPACE_HOME}/3rdparty/lib
     )
   cuda_add_library(dpMMlowVar SHARED
-    ./src/cat.cpp
+#    ./src/cat.cpp
     ./src/sampler.cpp
     ./src/dir.cpp
     ./src/normal.cpp
-    ./src/sphere.cpp
+#    ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
     ./cuda/copy_kernel.cu

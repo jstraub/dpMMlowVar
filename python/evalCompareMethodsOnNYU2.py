@@ -21,7 +21,7 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-baseKs = {'spkm':[3,4,5,6,7,8,9], 'DPvMFmeans':[1]}
+baseKs = {'spkm':[3,4,5,6,7,8,9], 'DPvMFmeans':[np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,90.,110.,130.]]}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
@@ -40,35 +40,6 @@ if reIndex:
     if fnmatch.fnmatch(file, '*[0-9]_measures.csv'):
       candidates.append(file)
   print '# candidates = {}'.format(len(candidates))
-  
-#  import re, ipdb
-#  counts = dict()
-#  files = dict()
-#  for candidate in candidates:
-#    keyM = re.search('^[a-z]+_\d+_\d+',candidate)
-#    if keyM is None:
-#      keyM = re.search('^[a-z]+_[a-z]+_\d+_\d+',candidate)
-#    if keyM is None:
-#      ipdb.set_trace()
-#    else:
-#      key = keyM.group()
-#    cfgStr = candidate[len(key)+1:-15]
-##    print cfgStr
-###    ipdb.set_trace()
-##    cfg2str = Config2String(dict())
-##    cfg2str.fromString(cfgStr)
-##    print cfg2str.config
-#
-#    if key in counts.keys():
-#      counts[key] += 1
-#      files[key].append(candidate)
-#    else:
-#      counts[key] = 1
-#      files[key] = [candidate]
-#  print len(counts)
-#  nRuns = np.array(counts.values())
-#  print np.bincount(nRuns)
-#  raw_input()
 
   cfctFiles = []
   index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
@@ -77,13 +48,19 @@ if reIndex:
     found = []; #[None for base in cfg['base']]
     for j,base in enumerate(cfg['base']):
       for K in baseKs[base]:
+        if base == 'spkm':
+          searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,K,base,cfg['T'],0.)
+        else:
+          searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,1,base,cfg['T'],K)
         for candidate in candidates:
-          if fnmatch.fnmatch(candidate, '{}*K_{}-*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
+          if fnmatch.fnmatch(candidate, searchStr):
             found.append(candidate)
             break
+          
     if len(found) == nFiles : #found[0] is None and not found[1] is None:
       print found
       cfctFiles.append(found)
+        
   with open('./cfctFiles.txt','w') as f:
     for cfctFile in cfctFiles:
       for cfctF in cfctFile:
@@ -173,9 +150,8 @@ ax = plt.subplot(111)
 ind = np.arange(nFiles)
 width = 0.95
 # histogram over the number of clusters for all frames
-rects = ax.bar(ind, np.mean(Sils,axis=0), width, color='r', alpha = 0.7)
-rects[0].set_color(colB)
-for rect in rects[1::]:
+rects = ax.bar(ind, np.mean(Sils,axis=0), width, color=colB, alpha = 0.7)
+for rect in rects[4::]:
   rect.set_color(colA)
 (_,caps,_) = ax.errorbar(ind+width/2., np.mean(Sils,axis=0), np.std(Sils,axis=0), color=(0,0,0),fmt ='.', capsize=10)
 for cap in caps:
@@ -184,7 +160,7 @@ for cap in caps:
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 ax.set_ylabel('silhouette')
 ax.set_xticks(ind+width/2)
-ax.set_xticklabels(('DP-vMF-means','spkm $K=3$','spkm $K=4$','spkm $K=5$','spkm $K=6$','spkm $K=7$','spkm $K=8$','spkm $K=9$'),rotation=30)
+ax.set_xticklabels(('DP-vMF-means 70','DP-vMF-means 90','DP-vMF-means 110','DP-vMF-means 130','spkm $K=3$','spkm $K=4$','spkm $K=5$','spkm $K=6$','spkm $K=7$','spkm $K=8$','spkm $K=9$'),rotation=30)
 plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)

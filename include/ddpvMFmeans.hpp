@@ -439,7 +439,7 @@ bool DDPvMFMeans<T>::closer(T a, T b)
 template<class T>
 T DDPvMFMeans<T>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
-  return acos(min(1.0,max(-1.0,(a.transpose()*b)(0)))); // angular similarity
+  return acos(min(static_cast<T>(1.0),max(static_cast<T>(-1.0),static_cast<T>((a.transpose()*b)(0))))); // angular similarity
 //  return a.transpose()*b; // cosine similarity 
 };
 

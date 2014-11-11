@@ -49,6 +49,9 @@ public:
 //  virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
 //  virtual bool closer(T a, T b);
   
+  // TODO approximate !
+  virtual bool converged(T eps=1e-6) {return (prevNs-this->Ns_).sum() == 0;};
+
   void getZfromGpu(){this->z_.resize(d_z_.rows()); d_z_.get(this->z_);};
   uint32_t* d_z(){ return d_z_.data();};
   
@@ -63,6 +66,9 @@ protected:
   GpuMatrix<T> d_ws_;
   GpuMatrix<uint32_t> d_Ns_;
   GpuMatrix<T> d_p_;
+
+
+  VectorXu prevNs_;
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual void computeSums(uint32_t k0, uint32_t K); 
@@ -110,6 +116,8 @@ void DDPvMFMeansCUDA<T>::computeSums(uint32_t k0, uint32_t K)
 template<class T>
 void DDPvMFMeansCUDA<T>::computeSums(void)
 {
+  prevNs_ =  this->Ns_;
+
   this->xSums_ = Matrix<T,Dynamic,Dynamic>::Zero(this->D_, this->K_);
   uint32_t k0 = 0;
   if(this->K_ <= 6)
@@ -214,6 +222,7 @@ uint32_t DDPvMFMeansCUDA<T>::optimisticLabelsAssign(uint32_t i0)
   return computeLabelsGPU(0); // TODO make passing i0 work!
 };
 
+
 template<class T>
 void DDPvMFMeansCUDA<T>::updateLabels()
 {
@@ -243,7 +252,7 @@ void DDPvMFMeansCUDA<T>::updateLabels()
       }
       i0 = idAction;
     }
-    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< "i0="<<i0<<endl;
+    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0<<endl;
   }while(idAction != UNASSIGNED);
 //  this->z_.resize(this->N_);
 //  d_z_.set(this->z_); // TODO i dont think I need to copy back

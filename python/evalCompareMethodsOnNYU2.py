@@ -28,8 +28,8 @@ baseKs = {'spkm':[2,3,4,5,6,7,8,9], 'DPvMFmeans':[np.cos(lamb*np.pi/180.0)-1. fo
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = False;
 reIndex = True;
+reIndex = False;
 
 nFiles = 0
 for base in cfg['base']:
@@ -168,6 +168,10 @@ plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)
 plt.savefig(cfg['outName']+'_silhouette.pdf',figure=fig)
+
+values = {'spkm': Sils[:,0:8], 'DPvMFmeans': Sils[:,8::]}
+name = 'silhouette'
+plotOverParams(values,name,showLeg=True)
 
 plt.show()
 

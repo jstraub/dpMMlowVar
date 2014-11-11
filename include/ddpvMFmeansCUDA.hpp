@@ -51,8 +51,8 @@ public:
   
   // TODO approximate !
   virtual bool converged(T eps=1e-6) {
-    cout<<"prev: "<< prevNs_.transpose()<<" Ns="<<this->Ns_.transpose()<<" -> "<<fabs((prevNs_-this->Ns_).sum())<<endl;
-    return fabs((prevNs_-this->Ns_).sum()) == 0;
+    cout<<"prev: "<< prevNs_.transpose()<<" Ns="<<this->Ns_.transpose()<<" -> "<<((prevNs_-this->Ns_) == 0).array().all()<<endl;
+    return ((prevNs_-this->Ns_) == 0).array().all();
   };
 
   void getZfromGpu(){this->z_.resize(d_z_.rows()); d_z_.get(this->z_);};

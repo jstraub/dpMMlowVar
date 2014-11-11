@@ -34,7 +34,7 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
   ax1.plot(valMean+valStd,paramBase[base],'--',label=baseMap[base],c=colA,lw=2,alpha=0.7)
   ax1.fill_betweenx(paramBase[base],valMean-valStd , valMean+valStd, color=colA, alpha=0.3)
   if name == '$K$':
-    leg1 += ax1.plot([30]*len(paramBase[base]), paramBase[base], label="$K_{GT}=30$", c=colorScheme('labelMap')['red'])
+    leg1 += ax1.plot([30]*len(paramBase[base]), paramBase[base], '--', label="$K_{GT}=30$", c=colorScheme('labelMap')['red'])
   ax1.set_ylabel(paramName[base],color=colA)  
   ax1.set_ylim(paramBase[base].min(),paramBase[base].max())
   ax1.invert_yaxis()
@@ -64,7 +64,7 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
   ax2.plot(valMean-valStd,paramBase[base],'--',label=baseMap[base],c=colB,lw=2,alpha=0.7)
   ax2.plot(valMean+valStd,paramBase[base],'--',label=baseMap[base],c=colB,lw=2,alpha=0.7)
   ax2.fill_betweenx(paramBase[base],valMean-valStd , valMean+valStd, color=colB, alpha=0.3)
-  if not name == '$K$' and not Ns is None:
+  if not Ns is None: # and not name == '$K$':
     xlim = ax2.get_xlim()
     # first to spkm
     base = 'spkm'
@@ -72,16 +72,20 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
 #    iKtrue = np.where(np.abs(Nmean-30)<2)
 #    ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
     iKtrue = np.argmin(np.abs(Nmean-30))
+    ax1.plot([xlim[0],values[base].mean(axis=1)[iKtrue]], [paramBase[base][iKtrue], paramBase[base][iKtrue]],'-',mew=4,ms=15,label=baseMap[base]+' \
+        $K={}$'.format(Nmean[iKtrue]),c=colA, alpha=0.7)
     ax1.plot([xlim[0],values[base].mean(axis=1)[iKtrue]], [paramBase[base][iKtrue], paramBase[base][iKtrue]],'--',mew=4,ms=15,label=baseMap[base]+' \
-        $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
+        $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'], alpha=1.)
     # then do DPvMFmeans
     base = 'DPvMFmeans'
     Nmean = Ns[base].mean(axis=1)
 #    iKtrue = np.where(np.abs(Nmean-30)<2)
 #    ax2.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
     iKtrue = np.argmin(np.abs(Nmean-30))
-    ax1.plot([values[base].mean(axis=1)[iKtrue],xlim[1]], [paramBase[base][iKtrue], paramBase[base][iKtrue]],'--',mew=4,ms=15,label=baseMap[base]+' \
-        $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
+    ax2.plot([values[base].mean(axis=1)[iKtrue],xlim[1]], [paramBase[base][iKtrue], paramBase[base][iKtrue]],'-',mew=4,ms=15,label=baseMap[base]+' \
+        $K={}$'.format(Nmean[iKtrue]),c=colB, alpha = 0.7)
+    ax2.plot([values[base].mean(axis=1)[iKtrue],xlim[1]], [paramBase[base][iKtrue], paramBase[base][iKtrue]],'--',mew=4,ms=15,label=baseMap[base]+' \
+        $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'], alpha = 1.)
     ax1.set_xlim(xlim)
     ax2.set_xlim(xlim)
   ax2.set_ylabel(paramName[base],color=colB)  

@@ -173,7 +173,7 @@ template<class T>
 void DDPvMFMeansCUDA<T>::updateLabels()
 {
   DDPvMFMeans<T>::updateLabels();
-  d_z_.set(this->z_);
+//  d_z_.set(this->z_); // TODO i dont think I need to copy back
 };
 
 
@@ -214,6 +214,59 @@ uint32_t DDPvMFMeansCUDA<T>::optimisticLabelsAssign(uint32_t i0)
   return computeLabelsGPU(0); // TODO make passing i0 work!
 };
 
+template<class T>
+void DDPvMFMeansCUDA<T>::updateLabels()
+{
+  uint32_t idAction = UNASSIGNED;
+  uint32_t i0 = 0;
+//  cout<<"::updateLabelsParallel"<<endl;
+  do{
+    idAction = optimisticLabelsAssign(i0);
+//  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
+    if(idAction != UNASSIGNED)
+    {
+      T sim = 0.;
+      uint32_t z_i = this->indOfClosestCluster(idAction,sim);
+      if(z_i == this->K_) 
+      { // start a new cluster
+        this->ps_.conservativeResize(this->D_,this->K_+1);
+        this->Ns_.conservativeResize(this->K_+1); 
+        this->ps_.col(this->K_) = this->spx_->col(idAction);
+        this->Ns_(z_i) = 1.;
+        this->K_ ++;
+      } 
+      else if(this->Ns_[z_i] == 0)
+      { // instantiated an old cluster
+        reInstantiatedOldCluster(this->spx_->col(idAction), z_i);
+        this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
+        // computeLabelsGPU to use the cluster;
+      }
+      i0 = idAction;
+    }
+    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< "i0="<<i0<<endl;
+  }while(idAction != UNASSIGNED);
+  cout<<"ps = "<<this->ps_<<endl;
+
+//  // TODO: this cost only works for a single time slice
+//  T cost =  0.0;
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    if(this->Ns_(k) == 1.) cost += this->lambda_;
+//
+//  //TODO get counts from GPU
+//  this->Ns_.fill(0);
+//#pragma omp parallel for reduction(+:cost)
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    for(uint32_t i=0; i<this->N_; ++i)
+//      if(this->z_(i) == k)
+//      {
+//        this->Ns_(k) ++; 
+//        T sim_closest = dist(this->ps_.col(k), this->spx_->col(i));
+//        cost += sim_closest;
+//      }
+//  this->prevCost_ = this->cost_;
+//  this->cost_ = cost;
+};
+
 //template<class T>
 //void DDPvMFMeansCUDA<T>::updateLabelsParallel()
 //{
@@ -249,3 +302,4 @@ uint32_t DDPvMFMeansCUDA<T>::optimisticLabelsAssign(uint32_t i0)
 //  }while(idAction != MAX_UINT32);
 //};
 
+ 

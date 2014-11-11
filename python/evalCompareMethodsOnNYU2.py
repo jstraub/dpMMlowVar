@@ -21,7 +21,7 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-baseKs = {'spkm':[3,4,5,6,7,8,9], 'DPvMFmeans':[np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,90.,100.,110.,115.,120.,130.]]}
+baseKs = {'spkm':[2,3,4,5,6,7,8,9], 'DPvMFmeans':[np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,90.,100.,110.,115.,120.,130.]]}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100

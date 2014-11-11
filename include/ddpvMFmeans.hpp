@@ -240,7 +240,7 @@ void DDPvMFMeans<T>::updateLabels()
     }
     cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<<endl;
   }while(idAction != UNASSIGNED);
-  cout<<"ps = "<<this->ps_<<endl;
+//  cout<<"ps = "<<this->ps_<<endl;
 
   // TODO: this cost only works for a single time slice
   T cost =  0.0;

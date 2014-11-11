@@ -117,6 +117,7 @@ dataPath = '././rndSphereminAngle_10.0-K_60-N_60000-delta_25.0-nu_21.0-D_20.csv'
 
 # DP-vMF-means
 dataPath = './rndSphereDataElipticalCovs4.csv'; # 10k datapoints with 30 classes less spread
+
 dataPath = './rndSphereDataIwUncertain.csv';
 cfg['nParms'] = 50;
 paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
@@ -125,6 +126,11 @@ cfg['T'] = 100
 cfg['nRun'] = 50
 
 dataPath = './rndSphereDataNu10D3N30000NonOverLap.csv' # very isotropic
+cfg['nParms'] = 50;
+paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
+  'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])])}
+cfg['T'] = 100
+cfg['nRun'] =  50
 
 cfg['dataPath'] = dataPath
 
@@ -141,9 +147,6 @@ bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
 bases = ['DPvMFmeans','spkm']
 
-cfg['nParms'] = 50;
-paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
-  'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])])}
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
   'DpNiw':'DP-GMM','DpNiwSphere':'DpSNIW opt','DpNiwSphereFull':'DP-TGMM', \
@@ -158,8 +161,6 @@ D = x.shape[0]
 reRun = True
 reRun = False
 
-cfg['T'] = 100
-cfg['nRun'] =  50
 
 if reRun:
   print cfg

@@ -379,8 +379,8 @@ void DDPvMFMeans<T>::updateState()
       <<"\tN="<<this->Ns_(k)
       <<"\tage="<<this->ts_[k]
       <<"\tdead? "<<this->ts_[k]*Q_<<" < "<<(this->lambda_)<<" => "<<(this->ts_[k]*Q_<this->lambda_)
-      <<"\tweight="<<this->ws_[k]
-      <<"\tcenter: "<<this->ps_.col(k).transpose()<<endl;
+      <<"\tweight="<<this->ws_[k]<<endl;
+//      <<"\tcenter: "<<this->ps_.col(k).transpose()<<endl;
 
     this->ts_[k] ++; // increment all ages
   } 

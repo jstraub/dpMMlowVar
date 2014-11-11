@@ -17,23 +17,7 @@ from js.utils.config import Config2String
 from vpCluster.manifold.karcherMean import karcherMeanSphere_propper
 from vpCluster.manifold.sphere import Sphere
 
-import matplotlib as mpl                                                        
-
 from plots import plotOverParams
-
-#poster
-mpl.rc('font',size=35) 
-mpl.rc('lines',linewidth=4.)
-figSize = (12, 14)
-
-#paper
-mpl.rc('font',size=40) 
-mpl.rc('lines',linewidth=4.)
-figSize = (14, 5.5)
-figSize = (14, 12)
-legendSize = 35
-
-mpl.rc('figure', autolayout=True)
 
 
 def mutualInfo(z,zGt):

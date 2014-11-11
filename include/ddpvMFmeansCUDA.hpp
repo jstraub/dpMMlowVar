@@ -172,9 +172,8 @@ void DDPvMFMeansCUDA<T>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_
     d_z_.setZero(); // to make sure we are initialized
 //    cout<<"set z to Zero"<<endl;
   }
-
-  d_x_.print();
-  d_z_.print();
+//  d_x_.print();
+//  d_z_.print();
 };
 
 //template<class T>

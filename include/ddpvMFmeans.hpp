@@ -381,6 +381,7 @@ void DDPvMFMeans<T>::updateState()
       //TODO
       this->ws_.push_back(xSums_.col(k).norm());//this->Ns_(k));
     }
+    this->ts_[k] ++; // increment all ages
     if(this->ts_[k]*Q_<this->lambda_) toRemove[k] = true;
 
     assert(this->ws_[k] == this->ws_[k]);
@@ -390,8 +391,6 @@ void DDPvMFMeans<T>::updateState()
       <<"\tdead? "<<this->ts_[k]*Q_<<" < "<<(this->lambda_)<<" => "<<(this->ts_[k]*Q_<this->lambda_)
       <<"\tweight="<<this->ws_[k]<<endl;
 //      <<"\tcenter: "<<this->ps_.col(k).transpose()<<endl;
-
-    this->ts_[k] ++; // increment all ages
   } 
   uint32_t nRemoved = 0;
   for(int32_t k=this->K_; k>=0; --k)

@@ -555,10 +555,10 @@ void DDPvMFMeans<T>::solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta,
 template<class T>
 void DDPvMFMeans<T>::dumpStats(std::ofstream& fout)
 {
-  fout<<this->K_<<" ";
+  fout<<this->K_<<" "<<this->cost_<<" ";
   for(uint32_t k=0; k< this->K_; ++k)
     fout<<this->Ns_(k)<<" ";
   for(uint32_t k=0; k< this->K_-1; ++k)
     fout<<this->globalInd_[k]<<" ";
-  fout<<this->globalInd_[k]<<endl;
+  fout<<this->globalInd_[this->K_-1]<<endl;
 };

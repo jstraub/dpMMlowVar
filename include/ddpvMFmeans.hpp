@@ -54,6 +54,8 @@ public:
   virtual bool closer(T a, T b);
 
   virtual void dumpStats(std::ofstream& fout);
+
+  virtual uint32_t globalInd(uint32_t k){ if (k< globalInd_.size()){ return globalInd_[k];} else {return globalMaxInd_;}};
   
 protected:
 //  T lambda_;

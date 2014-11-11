@@ -70,7 +70,6 @@ protected:
   GpuMatrix<uint32_t> d_Ns_;
   GpuMatrix<T> d_p_;
 
-
   VectorXu prevNs_;
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);

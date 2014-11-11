@@ -382,12 +382,14 @@ void DDPvMFMeans<T>::updateState()
       this->ws_.push_back(xSums_.col(k).norm());//this->Ns_(k));
     }
     this->ts_[k] ++; // increment all ages
-    if(this->ts_[k]*Q_<this->lambda_) toRemove[k] = true;
+
+    if(this->ts_[k]*Q_ < this->lambda_) toRemove[k] = true;
 
     assert(this->ws_[k] == this->ws_[k]);
     cout<<"cluster "<<k<< " globalInd="<<globalInd_[k]
       <<"\tN="<<this->Ns_(k)
       <<"\tage="<<this->ts_[k]
+      <<"\tQ="<<Q_
       <<"\tdead? "<<this->ts_[k]*Q_<<" < "<<(this->lambda_)<<" => "<<(this->ts_[k]*Q_<this->lambda_)
       <<"\tweight="<<this->ws_[k]<<endl;
 //      <<"\tcenter: "<<this->ps_.col(k).transpose()<<endl;

@@ -52,9 +52,9 @@ public:
   // TODO approximate !
   virtual bool converged(T eps=1e-6) 
   {
-    VectorXf a = prevNs_.cast<float>();
-    VectorXf b = this->Ns_.cast<float>();
-    bool conv = ((a-b).array().abs() < 1).all();
+    VectorXu a = prevNs_;
+    VectorXu b = this->Ns_;
+    bool conv = (a.array() == b.array()).all();
     cout<<"prev: "<< prevNs_.transpose()<<" Ns="<<this->Ns_.transpose()<<" -> "<<conv<<endl;
     return conv;
   };

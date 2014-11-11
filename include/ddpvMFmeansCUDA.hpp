@@ -50,7 +50,10 @@ public:
 //  virtual bool closer(T a, T b);
   
   // TODO approximate !
-  virtual bool converged(T eps=1e-6) {return (prevNs_-this->Ns_).sum() == 0;};
+  virtual bool converged(T eps=1e-6) {
+    cout<<"prev: "<< prevNs_.transpose()<<" Ns="<<this->Ns_.transpose()<<endl;
+    return (prevNs_-this->Ns_).sum() == 0;
+  };
 
   void getZfromGpu(){this->z_.resize(d_z_.rows()); d_z_.get(this->z_);};
   uint32_t* d_z(){ return d_z_.data();};

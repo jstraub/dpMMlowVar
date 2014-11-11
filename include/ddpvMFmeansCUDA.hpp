@@ -50,6 +50,7 @@ public:
 //  virtual bool closer(T a, T b);
   
   void getZfromGpu(){this->z_.resize(d_z_.rows()); d_z_.get(this->z_);};
+  uint32_t* d_z(){ return d_z_.data();};
   
 protected:
 
@@ -192,13 +193,13 @@ uint32_t DDPvMFMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
 
   assert(this->K_ < 17); // limitation of kernel at this point
 
-//  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
-//  cout<<this->ps_<<endl;
-//  d_x_.print();
-//  d_p_.print();
-//  d_z_.print();
-//  d_ages_.print();
-//  d_Ns_.print();
+  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
+  cout<<this->ps_<<endl;
+  d_x_.print();
+  d_p_.print();
+  d_z_.print();
+  d_ages_.print();
+  d_Ns_.print();
 
   ddpvMFlabels_gpu( d_x_.data(),  d_p_.data(),  d_z_.data(), 
       d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->lambda_, this->beta_, 

@@ -50,10 +50,11 @@ public:
 //  virtual bool closer(T a, T b);
   
   // TODO approximate !
-  virtual bool converged(T eps=1e-6) {
-    VectorXi a = prevNs_.cast<int>();
-    VectorXi b = this->Ns_.cast<int>();
-    bool conv = ((a-b).array() < 1).all();
+  virtual bool converged(T eps=1e-6) 
+  {
+    VectorXf a = prevNs_.cast<float>();
+    VectorXf b = this->Ns_.cast<float>();
+    bool conv = ((a-b).array().abs() < 1).all();
     cout<<"prev: "<< prevNs_.transpose()<<" Ns="<<this->Ns_.transpose()<<" -> "<<conv<<endl;
     return conv;
   };

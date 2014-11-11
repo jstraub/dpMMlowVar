@@ -52,9 +52,7 @@ public:
   // TODO approximate !
   virtual bool converged(T eps=1e-6) 
   {
-    VectorXu a = prevNs_;
-    VectorXu b = this->Ns_;
-    bool conv = (a.array() == b.array()).all();
+    bool conv = this->Ns_.size() > 0 && this->Ns_.size() == prevNs_.size() && (prevNs_.array() == this->Ns_.array()).all();
     cout<<"prev: "<< prevNs_.transpose()<<" Ns="<<this->Ns_.transpose()<<" -> "<<conv<<endl;
     return conv;
   };

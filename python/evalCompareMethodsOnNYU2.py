@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from js.utils.plot.colors import colorScheme
 from js.utils.config import Config2String
 
+from evalLowVarSphereMMsynthetic import plotOverParams
+
 #paper
 mpl.rc('font',size=35) 
 mpl.rc('lines',linewidth=4.)

@@ -193,13 +193,13 @@ uint32_t DDPvMFMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
 
   assert(this->K_ < 17); // limitation of kernel at this point
 
-  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
-  cout<<this->ps_<<endl;
-  d_x_.print();
-  d_p_.print();
-  d_z_.print();
-  d_ages_.print();
-  d_Ns_.print();
+//  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
+//  cout<<this->ps_<<endl;
+//  d_x_.print();
+//  d_p_.print();
+//  d_z_.print();
+//  d_ages_.print();
+//  d_Ns_.print();
 
   ddpvMFlabels_gpu( d_x_.data(),  d_p_.data(),  d_z_.data(), 
       d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->lambda_, this->beta_, 
@@ -245,7 +245,7 @@ void DDPvMFMeansCUDA<T>::updateLabels()
     }
     cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< "i0="<<i0<<endl;
   }while(idAction != UNASSIGNED);
-  cout<<"ps = "<<this->ps_<<endl;
+//  this->z_.resize(this->N_);
 //  d_z_.set(this->z_); // TODO i dont think I need to copy back
 
 //  // TODO: this cost only works for a single time slice

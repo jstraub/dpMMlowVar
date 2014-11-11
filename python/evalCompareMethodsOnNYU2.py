@@ -35,8 +35,8 @@ baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = False;
 reIndex = True;
+reIndex = False;
 
 nFiles = 0
 for base in cfg['base']:
@@ -118,11 +118,11 @@ print ' --------------------------------'
 
 paramBase['DPvMFmeans'] = np.arccos(paramBase['DPvMFmeans'] + 1.)*180./np.pi
 # mean number of clusters
-values = {'DPvMFmeans': Ks[:,0:7].T, 'spkm': Ks[:,7::].T}
+values = {'DPvMFmeans': Ks[:,0:paramBase['DPvMFmeans'].size].T, 'spkm': Ks[:,paramBase['DPvMFmeans'].size::].T}
 fig = plotOverParams(values,'K',paramBase,paramName,baseMap,showLeg=True,Ns=None)
 plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"K")),figure=fig)
 # silhouette plot
-values = {'DPvMFmeans': Sils[:,0:7].T, 'spkm': Sils[:,7::].T}
+values = {'DPvMFmeans': Sils[:,0:paramBase['DPvMFmeans'].size].T, 'spkm': Sils[:,paramBase['DPvMFmeans'].size::].T}
 fig = plotOverParams(values,'silhouette',paramBase,paramName,baseMap,showLeg=True,Ns=None)
 plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
 
@@ -165,3 +165,4 @@ plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)
 plt.savefig(cfg['outName']+'_silhouette.pdf',figure=fig)
+

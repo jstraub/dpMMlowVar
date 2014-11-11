@@ -41,6 +41,7 @@ public:
   virtual void updateCenters();
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
   virtual void updateState(); // after converging for a single time instant
+//  virtual void resetState();
 //  virtual MatrixXu mostLikelyInds(uint32_t n, 
 //     Matrix<T,Dynamic,Dynamic>& deviates);
 //  virtual T avgIntraClusterDeviation();
@@ -400,6 +401,13 @@ void DDPvMFMeans<T>::updateState()
   this->K_ -= nRemoved;
 };
 
+//template<class T>
+//void DDPvMFMeans<T>::resetState()
+//{
+//  for(int32_t k=this->K_; k>=0; --k)
+//      removeCluster(k);
+//  this->K_ = 0;
+//};
 
 template<class T>
 void DDPvMFMeans<T>::removeCluster(uint32_t k)

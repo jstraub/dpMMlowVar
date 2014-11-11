@@ -40,7 +40,7 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
 #    iKtrue = np.where(np.abs(Nmean-30)<2)
 #    ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
     iKtrue = np.argmin(np.abs(Nmean-30))
-    ax1.plot([values[base].mean(axis=1)[iKtrue],], [paramBase[base][iKtrue], ],'x',mew=4,ms=15,label=baseMap[base]+' \
+    ax1.plot([0,values[base].mean(axis=1)[iKtrue]], [paramBase[base][iKtrue], paramBase[base][iKtrue]],':',mew=4,ms=15,label=baseMap[base]+' \
         $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
   ax1.set_ylabel(paramName[base],color=colA)  
   ax1.set_ylim(paramBase[base].min(),paramBase[base].max())
@@ -73,8 +73,11 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
   ax2.fill_betweenx(paramBase[base],valMean-valStd , valMean+valStd, color=colB, alpha=0.3)
   if not name == '$K$' and not Ns is None:
     Nmean = Ns[base].mean(axis=1)
-    iKtrue = np.where(np.abs(Nmean-30)<2)
-    ax2.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
+#    iKtrue = np.where(np.abs(Nmean-30)<2)
+#    ax2.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
+    iKtrue = np.argmin(np.abs(Nmean-30))
+    ax1.plot([values[base].mean(axis=1)[iKtrue],0], [paramBase[base][iKtrue], paramBase[base][iKtrue]],' -',mew=4,ms=15,label=baseMap[base]+' \
+        $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
   ax2.set_ylabel(paramName[base],color=colB)  
   for  tl in ax2.get_yticklabels():
     tl.set_color(colB)

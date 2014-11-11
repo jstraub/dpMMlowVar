@@ -63,6 +63,7 @@ protected:
 
   Matrix<T,Dynamic,Dynamic> xSums_;
   std::vector<uint32_t> globalInd_; // for each non-dead cluster the global id of it;
+  uint32_t globalMaxInd_;
 
   virtual void removeCluster(uint32_t k);
   virtual Matrix<T,Dynamic,1> computeSum(uint32_t k);
@@ -81,7 +82,7 @@ protected:
 template<class T>
 DDPvMFMeans<T>::DDPvMFMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T beta, T Q, mt19937* pRndGen)
-  : DDPMeans<T>(spx,lambda,0.,0.,pRndGen), beta_(beta), Q_(Q)
+  : DDPMeans<T>(spx,lambda,0.,0.,pRndGen), beta_(beta), Q_(Q), globalMaxInd_(0)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean
   this->psPrev_ = this->ps_;
@@ -166,10 +167,7 @@ void DDPvMFMeans<T>::updateLabelsSerial()
       this->Ns_.conservativeResize(this->K_+1); 
       this->ps_.col(this->K_) = this->spx_->col(i);
       this->Ns_(z_i) = 1.;
-        if (this->K_ == 0)
-          this->globalInd_.push_back(0);
-        else
-          this->globalInd_.push_back(this->globalInd_[this->globalInd_.size()-1]+1);
+      this->globalInd_.push_back(this->globalMaxInd_++);
       this->K_ ++;
 //      cout<<" added new cluster center at "<<this->spx_->col(i).transpose()<<endl;
     } else {
@@ -235,10 +233,7 @@ void DDPvMFMeans<T>::updateLabels()
         this->Ns_.conservativeResize(this->K_+1); 
         this->ps_.col(this->K_) = this->spx_->col(idAction);
         this->Ns_(z_i) = 1.; 
-        if (this->K_ == 0)
-          this->globalInd_.push_back(0);
-        else
-          this->globalInd_.push_back(this->globalInd_[this->globalInd_.size()-1]+1);
+        this->globalInd_.push_back(this->globalMaxInd_++);
         this->K_ ++;
       } 
       else if(this->Ns_[z_i] == 0)

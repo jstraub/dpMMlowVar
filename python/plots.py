@@ -37,8 +37,11 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
     leg1 += ax1.plot([30]*len(paramBase[base]), paramBase[base], label="$K_{GT}=30$", c=colorScheme('labelMap')['red'])
   if not name == '$K$' and not Ns is None:
     Nmean = Ns[base].mean(axis=1)
-    iKtrue = np.where(np.abs(Nmean-30)<2)
-    ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
+#    iKtrue = np.where(np.abs(Nmean-30)<2)
+#    ax1.plot(values[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',mew=4,ms=15,label=baseMap[base]+' $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
+    iKtrue = np.argmin(np.abs(Nmean-30))
+    ax1.plot([values[base].mean(axis=1)[iKtrue],], [paramBase[base][iKtrue], ],'x',mew=4,ms=15,label=baseMap[base]+' \
+        $K={}$'.format(Nmean[iKtrue]),c=colorScheme('labelMap')['red'])
   ax1.set_ylabel(paramName[base],color=colA)  
   ax1.set_ylim(paramBase[base].min(),paramBase[base].max())
   ax1.invert_yaxis()

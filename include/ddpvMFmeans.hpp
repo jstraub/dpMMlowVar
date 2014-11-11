@@ -166,7 +166,10 @@ void DDPvMFMeans<T>::updateLabelsSerial()
       this->Ns_.conservativeResize(this->K_+1); 
       this->ps_.col(this->K_) = this->spx_->col(i);
       this->Ns_(z_i) = 1.;
-      globalInd_.push_back(globalInd_[globalInd_.size()-1]+1);
+        if (this->K_ == 0)
+          this->globalInd_.push_back(0);
+        else
+          this->globalInd_.push_back(this->globalInd_[this->globalInd_.size()-1]+1);
       this->K_ ++;
 //      cout<<" added new cluster center at "<<this->spx_->col(i).transpose()<<endl;
     } else {
@@ -232,7 +235,10 @@ void DDPvMFMeans<T>::updateLabels()
         this->Ns_.conservativeResize(this->K_+1); 
         this->ps_.col(this->K_) = this->spx_->col(idAction);
         this->Ns_(z_i) = 1.; 
-        globalInd_.push_back(globalInd_[globalInd_.size()-1]+1);
+        if (this->K_ == 0)
+          this->globalInd_.push_back(0);
+        else
+          this->globalInd_.push_back(this->globalInd_[this->globalInd_.size()-1]+1);
         this->K_ ++;
       } 
       else if(this->Ns_[z_i] == 0)

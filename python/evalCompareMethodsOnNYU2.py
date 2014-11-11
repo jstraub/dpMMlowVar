@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import os, copy
+import os, copy, re
 import fnmatch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -24,17 +24,21 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-baseKs = {'spkm':[2,3,4,5,6,7,8,9], 'DPvMFmeans':[np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,90.,100.,110.,115.,120.,130.]]}
+paramBase = {'spkm':np.array([2,3,4,5,6,7,8,9]), 'DPvMFmeans':np.array([np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,90.,100.,110.,115.,120.,130.]])}
+paramName =  {'spkm':"$K$",'DPvMFmeans':"$\lambda$ [deg]"}
+baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
+  'DpNiw':'DP-GMM','DpNiwSphere':'DpSNIW opt','DpNiwSphereFull':'DP-TGMM', \
+  'DPvMFmeans':'DP-vMF-means'}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = True;
 reIndex = False;
+reIndex = True;
 
 nFiles = 0
 for base in cfg['base']:
-  nFiles += len(baseKs[base])
+  nFiles += len(paramBase[base])
 print nFiles
 # --------------------------- final cost function value -------------------- 
 if reIndex:
@@ -50,7 +54,7 @@ if reIndex:
     name =name[:-1]
     found = []; #[None for base in cfg['base']]
     for j,base in enumerate(cfg['base']):
-      for K in baseKs[base]:
+      for K in paramBase[base]:
         if base == 'spkm':
           searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,K,base,cfg['T'],0.)
         else:
@@ -68,28 +72,6 @@ if reIndex:
     for cfctFile in cfctFiles:
       for cfctF in cfctFile:
         f.write(cfctF+'\n')
-#  cfctFiles = []
-#  index = open('/data/vision/fisher/data1/nyu_depth_v2/index.txt')
-#  for i,name in enumerate(index):
-#    name =name[:-1]
-#    found = []; #[None for base in cfg['base']]
-#    candidates = []
-#    for file in os.listdir(cfg['path']):
-#      if fnmatch.fnmatch(file, '{}*[0-9]_measures.csv'.format(name)):
-#        candidates.append(file)
-#    for j,base in enumerate(cfg['base']):
-#      for K in baseKs[base]:
-#        for candidate in candidates:
-#          if fnmatch.fnmatch(candidate, '{}*-K_{}-*{}*T_{}*[0-9]_measures.csv'.format(name,K,base,cfg['T'])):
-#            found.append(candidate)
-#            break
-#    if len(found) == nFiles : #found[0] is None and not found[1] is None:
-#      print found
-#      cfctFiles.append(found)
-#  with open('./cfctFiles.txt','w') as f:
-#    for cfctFile in cfctFiles:
-#      for cfctF in cfctFile:
-#        f.write(cfctF+'\n')
 else:
   with open('./cfctFiles.txt','r') as f:
     cfctFiles =[]
@@ -170,9 +152,10 @@ plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)
 plt.savefig(cfg['outName']+'_silhouette.pdf',figure=fig)
 
-values = {'spkm': Sils[:,0:8], 'DPvMFmeans': Sils[:,8::]}
-name = 'silhouette'
-plotOverParams(values,name,showLeg=True)
+values = {'DPvMFmeans': Sils[:,0:7].T, 'spkm': Sils[:,7::].T}
+paramBase['DPvMFmeans'] = np.arccos(paramBase['DPvMFmeans'] + 1.)*180./np.pi
+fig = plotOverParams(values,'silhouette',paramBase,paramName,baseMap,showLeg=True,Ns=None)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
 
 plt.show()
 

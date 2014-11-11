@@ -359,8 +359,8 @@ void DDPvMFMeans<T>::updateState()
         + beta_*this->ts_[k]*cos(phi)
         + xSums_.col(k).norm()*cos(eta);
 
-      cout<<this->ws_[k]<<" : "<<theta<<" "<<phi<<" "<<eta
-        <<" "<< xSums_.col(k).norm()<<endl;
+//      cout<<this->ws_[k]<<" : "<<theta<<" "<<phi<<" "<<eta
+//        <<" "<< xSums_.col(k).norm()<<endl;
 
 //      this->ws_[k] = this->ws_[k]*cos(theta) + beta_*this->ts_[k]*cos(phi) 
 //        + xSums_.col(k).norm()*cos(eta);

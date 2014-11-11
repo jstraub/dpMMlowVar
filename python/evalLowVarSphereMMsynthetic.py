@@ -155,8 +155,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = False
 reRun = True
+reRun = False
 
 cfg['T'] = 100
 cfg['nRun'] =  50
@@ -259,10 +259,17 @@ Ns['spkm'] = Ns['spkm'][indSpkm,:]
 Sils['spkm'] = Sils['spkm'][indSpkm,:]
  
 
-plotOverParams(mis,'MI',showLeg=False)
-plotOverParams(nmis,'NMI',showLeg=False)
-plotOverParams(Ns,'$K$',showLeg=True)
-plotOverParams(Sils,'silhouette',showLeg=False)
+fig = plotOverParams(mis,'MI',paramBase,paramName,baseMap, Ns=Ns,showLeg=False)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"MI")),figure=fig)
+
+fig = plotOverParams(nmis,'NMI',paramBase,paramName,baseMap,Ns=Ns,showLeg=False)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"NMI")),figure=fig)
+
+fig = plotOverParams(Ns,'$K$',paramBase,paramName,baseMap,Ns=Ns,showLeg=True)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"K")),figure=fig)
+
+fig = plotOverParams(Sils,'silhouette',paramBase,paramName,baseMap,Ns=Ns,showLeg=False)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
 
 plt.show()
 

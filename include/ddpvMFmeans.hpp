@@ -60,6 +60,7 @@ protected:
   T Q_; //TODO!
 
   Matrix<T,Dynamic,Dynamic> xSums_;
+  std::vector<uint32_t> globalInd_; // for each non-dead cluster the global id of it;
 
   virtual void removeCluster(uint32_t k);
   virtual Matrix<T,Dynamic,1> computeSum(uint32_t k);
@@ -163,6 +164,7 @@ void DDPvMFMeans<T>::updateLabelsSerial()
       this->Ns_.conservativeResize(this->K_+1); 
       this->ps_.col(this->K_) = this->spx_->col(i);
       this->Ns_(z_i) = 1.;
+      globalInd_.push_back(this->K_);
       this->K_ ++;
 //      cout<<" added new cluster center at "<<this->spx_->col(i).transpose()<<endl;
     } else {
@@ -228,6 +230,7 @@ void DDPvMFMeans<T>::updateLabels()
         this->Ns_.conservativeResize(this->K_+1); 
         this->ps_.col(this->K_) = this->spx_->col(idAction);
         this->Ns_(z_i) = 1.;
+        globalInd_.push_back(this->K_);
         this->K_ ++;
       } 
       else if(this->Ns_[z_i] == 0)
@@ -375,7 +378,7 @@ void DDPvMFMeans<T>::updateState()
     if(this->ts_[k]*Q_<this->lambda_) toRemove[k] = true;
 
     assert(this->ws_[k] == this->ws_[k]);
-    cout<<"cluster "<<k
+    cout<<"cluster "<<k<< " globalInd="<<globalInd_[k]
       <<"\tN="<<this->Ns_(k)
       <<"\tage="<<this->ts_[k]
       <<"\tdead? "<<this->ts_[k]*Q_<<" < "<<(this->lambda_)<<" => "<<(this->ts_[k]*Q_<this->lambda_)
@@ -399,6 +402,8 @@ template<class T>
 void DDPvMFMeans<T>::removeCluster(uint32_t k)
 {
   cout<<" removeCluster "<<k<<endl;
+
+  globalInd_.erase(globalInd_.begin()+k);
 //  for(uint32_t k=0; k<this->ws_.size(); ++k)
 //    cout<<this->ws_[k]<<endl;
   //this->ws_;

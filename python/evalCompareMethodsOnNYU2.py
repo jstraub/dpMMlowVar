@@ -25,6 +25,8 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 cfg['outName'] = '../results/nyuEval'
 
 paramBase = {'spkm':np.array([2,3,4,5,6,7,8,9]), 'DPvMFmeans':np.array([np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,90.,100.,110.,115.,120.,130.]])}
+# TODO waiting for 70, 80, 140, 150
+
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
   'DpNiw':'DP-GMM','DpNiwSphere':'DpSNIW opt','DpNiwSphereFull':'DP-TGMM', \
@@ -33,8 +35,8 @@ baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = False;
 reIndex = True;
+reIndex = False;
 
 nFiles = 0
 for base in cfg['base']:
@@ -114,14 +116,24 @@ print 'mean',np.mean(Ks,axis=0)
 print 'std',np.std(Ks,axis=0)
 print ' --------------------------------'
 
+paramBase['DPvMFmeans'] = np.arccos(paramBase['DPvMFmeans'] + 1.)*180./np.pi
+# mean number of clusters
+values = {'DPvMFmeans': Ks[:,0:7].T, 'spkm': Ks[:,7::].T}
+fig = plotOverParams(values,'K',paramBase,paramName,baseMap,showLeg=True,Ns=None)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"K")),figure=fig)
+# silhouette plot
+values = {'DPvMFmeans': Sils[:,0:7].T, 'spkm': Sils[:,7::].T}
+fig = plotOverParams(values,'silhouette',paramBase,paramName,baseMap,showLeg=True,Ns=None)
+plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
+
 colA = colorScheme('labelMap')['orange']
 colB = colorScheme('labelMap')['turquoise']
+idMax = np.argmax(np.mean(values['DPvMFmeans'],axis=1))
 
-I = nFiles
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 # histogram over the number of clusters for all frames
-plt.hist(Ks[:,0],bins=np.arange(0,Ks[:,0].max()+1)+.5, alpha =0.7,color=colB)
-plt.xlim(2,Ks[:,0].max()+1)
+plt.hist(Ks[:,idMax],bins=np.arange(0,Ks[:,idMax].max()+1)+.5, alpha =0.7,color=colB)
+plt.xlim(2,Ks[:,idMax].max()+1)
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 #plt.title("histogram over the number of clusters")
 plt.xlabel('number of clusters')
@@ -129,6 +141,9 @@ plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)
 plt.savefig(cfg['outName']+'_histNClusters.pdf',figure=fig)
+
+plt.show()
+
 
 fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 ax = plt.subplot(111)
@@ -141,7 +156,6 @@ for rect in rects[7::]:
 (_,caps,_) = ax.errorbar(ind+width/2., np.mean(Sils,axis=0), np.std(Sils,axis=0), color=(0,0,0),fmt ='.', capsize=10)
 for cap in caps:
   cap.set_markeredgewidth(4)
-
 #plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 ax.set_ylabel('silhouette')
 ax.set_xticks(ind+width/2)
@@ -151,11 +165,3 @@ plt.legend(loc='best')
 plt.tight_layout()
 plt.subplots_adjust(right=0.6,bottom=0.3)
 plt.savefig(cfg['outName']+'_silhouette.pdf',figure=fig)
-
-values = {'DPvMFmeans': Sils[:,0:7].T, 'spkm': Sils[:,7::].T}
-paramBase['DPvMFmeans'] = np.arccos(paramBase['DPvMFmeans'] + 1.)*180./np.pi
-fig = plotOverParams(values,'silhouette',paramBase,paramName,baseMap,showLeg=True,Ns=None)
-plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
-
-plt.show()
-

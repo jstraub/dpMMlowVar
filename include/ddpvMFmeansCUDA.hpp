@@ -241,6 +241,7 @@ void DDPvMFMeansCUDA<T>::updateLabels()
         this->Ns_.conservativeResize(this->K_+1); 
         this->ps_.col(this->K_) = this->spx_->col(idAction);
         this->Ns_(z_i) = 1.;
+        this->globalInd_.push_back(this->K_);
         this->K_ ++;
       } 
       else if(this->Ns_[z_i] == 0)

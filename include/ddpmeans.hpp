@@ -50,6 +50,7 @@ protected:
   T tau_; // tau parameter 
   T Kprev_; // K before updateLabels()
   Matrix<T,Dynamic,Dynamic> psPrev_; // centroids from last set of datapoints
+
  
 };
 

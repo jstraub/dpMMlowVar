@@ -51,6 +51,8 @@ public:
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
   virtual bool closer(T a, T b);
+
+  virtual void dumpStats(std::ofstream& fout);
   
 protected:
 //  T lambda_;
@@ -164,7 +166,7 @@ void DDPvMFMeans<T>::updateLabelsSerial()
       this->Ns_.conservativeResize(this->K_+1); 
       this->ps_.col(this->K_) = this->spx_->col(i);
       this->Ns_(z_i) = 1.;
-      globalInd_.push_back(this->K_);
+      globalInd_.push_back(globalInd_[globalInd_.size()-1]+1);
       this->K_ ++;
 //      cout<<" added new cluster center at "<<this->spx_->col(i).transpose()<<endl;
     } else {
@@ -229,8 +231,8 @@ void DDPvMFMeans<T>::updateLabels()
         this->ps_.conservativeResize(this->D_,this->K_+1);
         this->Ns_.conservativeResize(this->K_+1); 
         this->ps_.col(this->K_) = this->spx_->col(idAction);
-        this->Ns_(z_i) = 1.;
-        globalInd_.push_back(this->K_);
+        this->Ns_(z_i) = 1.; 
+        globalInd_.push_back(globalInd_[globalInd_.size()-1]+1);
         this->K_ ++;
       } 
       else if(this->Ns_[z_i] == 0)
@@ -548,4 +550,15 @@ void DDPvMFMeans<T>::solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta,
 
   theta = asin(beta_/w *sin(phi));
   eta = asin(beta_/L2xSum *sin(phi));
+};
+
+template<class T>
+void DDPvMFMeans<T>::dumpStats(std::ofstream& fout)
+{
+  fout<<this->K_<<" ";
+  for(uint32_t k=0; k< this->K_; ++k)
+    fout<<this->Ns_(k)<<" ";
+  for(uint32_t k=0; k< this->K_-1; ++k)
+    fout<<this->globalInd_[k]<<" ";
+  fout<<this->globalInd_[k]<<endl;
 };

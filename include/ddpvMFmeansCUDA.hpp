@@ -169,12 +169,12 @@ void DDPvMFMeansCUDA<T>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_
   d_z_.print();
 };
 
-template<class T>
-void DDPvMFMeansCUDA<T>::updateLabels()
-{
-  DDPvMFMeans<T>::updateLabels();
-//  d_z_.set(this->z_); // TODO i dont think I need to copy back
-};
+//template<class T>
+//void DDPvMFMeansCUDA<T>::updateLabels()
+//{
+//  DDPvMFMeans<T>::updateLabels();
+////  d_z_.set(this->z_); // TODO i dont think I need to copy back
+//};
 
 
 template<class T>
@@ -246,6 +246,7 @@ void DDPvMFMeansCUDA<T>::updateLabels()
     cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< "i0="<<i0<<endl;
   }while(idAction != UNASSIGNED);
   cout<<"ps = "<<this->ps_<<endl;
+//  d_z_.set(this->z_); // TODO i dont think I need to copy back
 
 //  // TODO: this cost only works for a single time slice
 //  T cost =  0.0;

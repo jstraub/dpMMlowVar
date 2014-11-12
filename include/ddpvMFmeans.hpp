@@ -438,6 +438,7 @@ void DDPvMFMeans<T>::removeCluster(uint32_t k)
   this->ps_.middleCols(k,this->ps_.cols()-k-1) = this->ps_.rightCols(this->ps_.cols()-k-1);
   this->ps_.conservativeResize(this->ps_.rows(),this->ps_.cols()-1);
 
+  cout<<this->psPrev_<<endl;
   this->psPrev_.middleCols(k,this->psPrev_.cols()-k-1) = this->psPrev_.rightCols(this->psPrev_.cols()-k-1);
   this->psPrev_.conservativeResize(this->psPrev_.rows(),this->psPrev_.cols()-1);
   cout<<this->ps_<<endl;

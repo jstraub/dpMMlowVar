@@ -415,6 +415,7 @@ void DDPvMFMeans<T>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
     {
       cout<<"rotating "<<k<<endl;
       this->ps_.col(k) = dR*this->ps_.col(k);
+      this->psPrev_.col(k) = dR*this->psPrev_.col(k);
     }
 };
 

@@ -416,6 +416,8 @@ template<class T>
 void DDPvMFMeans<T>::removeCluster(uint32_t k)
 {
   cout<<" removeCluster "<<k<<endl;
+  cout<<this->ws_.size()<<endl;
+  cout<<this->ts_.size()<<endl;
 
   globalInd_.erase(globalInd_.begin()+k);
 //  for(uint32_t k=0; k<this->ws_.size(); ++k)

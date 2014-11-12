@@ -416,40 +416,40 @@ template<class T>
 void DDPvMFMeans<T>::removeCluster(uint32_t k)
 {
   cout<<" removeCluster "<<k<<endl;
-  cout<<this->ws_.size()<<endl;
-  cout<<this->ts_.size()<<endl;
+//  cout<<this->ws_.size()<<endl;
+//  cout<<this->ts_.size()<<endl;
 
   globalInd_.erase(globalInd_.begin()+k);
-  for(uint32_t k=0; k<this->ws_.size(); ++k)
-    cout<<this->ws_[k]<<endl;
-  this->ws_;
+//  for(uint32_t k=0; k<this->ws_.size(); ++k)
+//    cout<<this->ws_[k]<<endl;
+//  this->ws_;
   this->ws_.erase(this->ws_.begin()+k);
-  for(uint32_t k=0; k<this->ws_.size(); ++k)
-    cout<<this->ws_[k]<<endl;
-  this->ts_;
+//  for(uint32_t k=0; k<this->ws_.size(); ++k)
+//    cout<<this->ws_[k]<<endl;
+//  this->ts_;
   this->ts_.erase(this->ts_.begin()+k);
   //this->Ns_;
-  cout<<"Ns before remove "<<this->Ns_.transpose()<<endl;
+//  cout<<"Ns before remove "<<this->Ns_.transpose()<<endl;
   this->Ns_.middleRows(k,this->Ns_.rows()-k-1) = this->Ns_.bottomRows(this->Ns_.rows()-k-1);
   this->Ns_.conservativeResize(this->Ns_.rows()-1);
-  cout<<"Ns after remove "<<this->Ns_.transpose()<<endl;
-  //this->ps_;
-  cout<<this->ps_<<endl;
+//  cout<<"Ns after remove "<<this->Ns_.transpose()<<endl;
+//  //this->ps_;
+//  cout<<this->ps_<<endl;
   this->ps_.middleCols(k,this->ps_.cols()-k-1) = this->ps_.rightCols(this->ps_.cols()-k-1);
   this->ps_.conservativeResize(this->ps_.rows(),this->ps_.cols()-1);
 
   if(k < this->psPrev_.cols())
   {
-    cout<<this->psPrev_<<endl;
+//    cout<<this->psPrev_<<endl;
     this->psPrev_.middleCols(k,this->psPrev_.cols()-k-1) = this->psPrev_.rightCols(this->psPrev_.cols()-k-1);
     this->psPrev_.conservativeResize(this->psPrev_.rows(),this->psPrev_.cols()-1);
   }
   //this->xSums_;
-  cout<<this->xSums_<<endl;
+//  cout<<this->xSums_<<endl;
   this->xSums_.middleCols(k,this->xSums_.cols()-k-1) = this->xSums_.rightCols(this->xSums_.cols()-k-1);
   this->xSums_.conservativeResize(this->xSums_.rows(),this->xSums_.cols()-1);
-  cout<<this->xSums_<<endl;
-  cout<<"removed k"<<endl;
+//  cout<<this->xSums_<<endl;
+//  cout<<"removed "<<k<<endl;
 }
 
 

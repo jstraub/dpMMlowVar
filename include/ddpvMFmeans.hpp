@@ -47,6 +47,8 @@ public:
 //  virtual T avgIntraClusterDeviation();
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
 
+  virtual void rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR);
+
   virtual T silhouette();
 
   virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
@@ -402,6 +404,17 @@ void DDPvMFMeans<T>::updateState()
       nRemoved ++;
     }
   this->K_ -= nRemoved;
+};
+
+
+template<class T>
+void DDPvMFMeans<T>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
+{
+  for(int32_t k=0; k<this->K_; ++k)
+    if( this->Ns_(k) == 0)
+    {
+      this->ps_.col(k) = dR*this->ps_.col(k);
+    }
 };
 
 //template<class T>

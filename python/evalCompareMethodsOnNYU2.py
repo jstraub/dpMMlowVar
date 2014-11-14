@@ -35,8 +35,8 @@ baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = True;
 reIndex = False;
+reIndex = True;
 
 nFiles = 0
 for base in cfg['base']:
@@ -139,7 +139,7 @@ plt.xlim(2,Ks[:,idMax].max()+1)
 plt.xlabel('number of clusters')
 plt.legend(loc='best')
 plt.tight_layout()
-plt.subplots_adjust(right=0.6,bottom=0.3)
+plt.subplots_adjust(right=0.5,bottom=0.3)
 plt.savefig(cfg['outName']+'_histNClusters.pdf',figure=fig)
 
 plt.show()

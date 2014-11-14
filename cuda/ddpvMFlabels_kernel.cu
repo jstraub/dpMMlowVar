@@ -27,6 +27,7 @@ __device__ inline T distToUninstantiated( T zeta, T age, T beta, T w, T Q, T thr
     T dPhi = f/df;
 
     phi = phi - dPhi; // Newton iteration
+    printf("i=%d: dPhi=%f",i,dPhi);
     if(fabs(dPhi) < thresh) break;
   }
 

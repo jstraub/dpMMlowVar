@@ -16,6 +16,7 @@ __device__ inline T distToUninstantiated( T zeta, T age, T beta, T w, T Q, T thr
   // for phi and theta
 
   T phi =  0.0;
+  T dPhi = 0.0;
   for (uint32_t i=0; i< I; ++i)
   {
     T sinPhi = sin(phi);
@@ -26,10 +27,12 @@ __device__ inline T distToUninstantiated( T zeta, T age, T beta, T w, T Q, T thr
     T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi) 
       + (beta*cosPhi)/sqrt(w*w - beta*beta*sinPhi*sinPhi); 
 
-    T dPhi = f/df;
+    T phiPrev = phi;
+    T dPhiPrev = dPhi;
 
+    dPhi = f/df;
     phi = phi - dPhi; // Newton iteration
-    printf("i=%d: dPhi=%f phi=%f zeta=%f; w=%f; Q=%f; f=%f; df=%f; sinPhi=%f; %f %f \n",i,dPhi,phi,zeta,w,Q,f,df,sinPhi,a,b);
+    printf("i=%d: prev: dPhi=%; phi=%f; curr: dPhi=%f phi=%f zeta=%f; w=%f; Q=%f; f=%f; df=%f; sinPhi=%f; beta=%f %f %f \n",i,dPhiPrev,phiPrev,dPhi,phi,zeta,w,Q,f,df,sinPhi,beta,a,b);
 //    printf("i=%d: dPhi=%f zeta=%f; age=%f; beta=%f; w=%f; Q=%f; thresh=%f; \n",i,dPhi,zeta,age,beta,w,Q,thresh);
     if(fabs(dPhi) < thresh) break;
   }

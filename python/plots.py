@@ -34,7 +34,7 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,Ns=None,showLeg=None)
   ax1.plot(valMean+valStd,paramBase[base],'--',label=baseMap[base],c=colA,lw=2,alpha=0.7)
   ax1.fill_betweenx(paramBase[base],valMean-valStd , valMean+valStd, color=colA, alpha=0.3)
   if name == '$K$':
-    leg1 += ax1.plot([30]*len(paramBase[base]), paramBase[base], '--', label="$K_{GT}=30$", c=colorScheme('labelMap')['red'])
+    leg1 += ax1.plot([30]*len(paramBase[base]), paramBase[base], '--', label="$K_{T} = 30$", c=colorScheme('labelMap')['red'])
   ax1.set_ylabel(paramName[base],color=colA)  
   ax1.set_ylim(paramBase[base].min(),paramBase[base].max())
   ax1.invert_yaxis()

@@ -147,7 +147,7 @@ bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
 bases = ['DPvMFmeans','spkm']
 
-paramName =  {'spkm':"$K$",'DPvMFmeans':"$\lambda$ [deg]"}
+paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
   'DpNiw':'DP-GMM','DpNiwSphere':'DpSNIW opt','DpNiwSphereFull':'DP-TGMM', \
   'DPvMFmeans':'DP-vMF-means'}

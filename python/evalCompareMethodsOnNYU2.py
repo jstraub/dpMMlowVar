@@ -101,7 +101,8 @@ for i,cfctFile in enumerate(cfctFiles):
          Ks[i,j] = int(measure[0])
          Sils[i,j] = measure[1]
          if Ks[i,j] >= 7 and j==3:
-           print Ks[i,j],Sils[i,j],f
+           print f
+#           print Ks[i,j],Sils[i,j]
      else:
        raise ValueError
 #print np.sum(cs == 0.0, axis=0)

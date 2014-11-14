@@ -35,8 +35,8 @@ baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = False;
 reIndex = True;
+reIndex = False;
 
 nFiles = 0
 for base in cfg['base']:
@@ -94,12 +94,14 @@ Sils = np.zeros((len(cfctFiles),nFiles))
 Ks = np.zeros((len(cfctFiles),nFiles))
 for i,cfctFile in enumerate(cfctFiles):
    for j,f in enumerate(cfctFile):
-     print j,f
+#     print j,f
      if os.path.isfile(os.path.join(cfg['path'],f)):
        measure = np.loadtxt(os.path.join(cfg['path'],f))
        if measure.size > 0:
          Ks[i,j] = int(measure[0])
          Sils[i,j] = measure[1]
+         if Ks[i,j] >= 7 and j==3:
+           print Ks[i,j],Sils[i,j],f
      else:
        raise ValueError
 #print np.sum(cs == 0.0, axis=0)

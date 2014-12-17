@@ -13,7 +13,7 @@ __device__ inline T distToUninstantiated( T distsq, T age, T w, T Q, T tau, T th
 }
 
 template<typename T, uint32_t K, uint32_t BLK_SIZE>
-__global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, 
+__global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, 
     uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_iAction, 
     uint32_t i0, uint32_t N)
 {
@@ -64,7 +64,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
           sim_k = distToUninstantiated<T>(distsq,age,d_ws[k],Q,tau,1e-6);
 //          sim_k = distToUninstantiated<T,10>(zeta,age,beta,d_ws[k],Q,1e-6);
         }else{ // cluster instantiated                                              
-          sim_k = dot;
+          sim_k = distsq;
         }
         if(sim_k > sim_closest)
         {
@@ -100,7 +100,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 };
 
 
-extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
+extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
     uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double Q, 
     double tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
 {
@@ -110,56 +110,56 @@ extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
   if(K == 0){
-    ddpvMFlabelAssign_kernel<double,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,0,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K == 1){
-    ddpvMFlabelAssign_kernel<double,1,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,1,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==2){
-    ddpvMFlabelAssign_kernel<double,2,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,2,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==3){
-    ddpvMFlabelAssign_kernel<double,3,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,3,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==4){
-    ddpvMFlabelAssign_kernel<double,4,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,4,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==5){
-    ddpvMFlabelAssign_kernel<double,5,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,5,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==6){
-    ddpvMFlabelAssign_kernel<double,6,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,6,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==7){
-    ddpvMFlabelAssign_kernel<double,7,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,7,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==8){
-    ddpvMFlabelAssign_kernel<double,8,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,8,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==9){
-    ddpvMFlabelAssign_kernel<double,9,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,9,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==10){
-    ddpvMFlabelAssign_kernel<double,10,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,10,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==11){
-    ddpvMFlabelAssign_kernel<double,11,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,11,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==12){
-    ddpvMFlabelAssign_kernel<double,12,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,12,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==13){
-    ddpvMFlabelAssign_kernel<double,13,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,13,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==14){
-    ddpvMFlabelAssign_kernel<double,14,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,14,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==15){
-    ddpvMFlabelAssign_kernel<double,15,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,15,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==16){
-    ddpvMFlabelAssign_kernel<double,16,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<double,16,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else{
     assert(false);
   }
@@ -167,7 +167,7 @@ extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 };
 
 
-extern void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, 
+extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, 
     uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q, 
     float tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
 {
@@ -177,56 +177,56 @@ extern void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
   if(K == 0){
-    ddpvMFlabelAssign_kernel<float,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,0,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K == 1){
-    ddpvMFlabelAssign_kernel<float,1,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,1,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==2){
-    ddpvMFlabelAssign_kernel<float,2,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,2,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==3){
-    ddpvMFlabelAssign_kernel<float,3,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,3,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==4){
-    ddpvMFlabelAssign_kernel<float,4,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,4,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==5){
-    ddpvMFlabelAssign_kernel<float,5,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,5,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==6){
-    ddpvMFlabelAssign_kernel<float,6,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,6,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==7){
-    ddpvMFlabelAssign_kernel<float,7,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,7,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==8){
-    ddpvMFlabelAssign_kernel<float,8,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,8,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==9){
-    ddpvMFlabelAssign_kernel<float,9,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,9,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==10){
-    ddpvMFlabelAssign_kernel<float,10,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,10,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==11){
-    ddpvMFlabelAssign_kernel<float,11,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,11,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==12){
-    ddpvMFlabelAssign_kernel<float,12,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,12,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==13){
-    ddpvMFlabelAssign_kernel<float,13,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,13,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==14){
-    ddpvMFlabelAssign_kernel<float,14,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,14,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==15){
-    ddpvMFlabelAssign_kernel<float,15,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,15,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==16){
-    ddpvMFlabelAssign_kernel<float,16,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    ddpLabelAssign_kernel<float,16,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else{
     assert(false);
   }

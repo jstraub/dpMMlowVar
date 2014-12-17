@@ -1,6 +1,8 @@
 project(DpGMMs)
 cmake_minimum_required(VERSION 2.8.1)
 
+message("${CMAKE_MODULE_PATH}")
+
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
@@ -80,6 +82,7 @@ ELSE(BOOST_OLD)
 #    ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
+    ./cuda/ddpLabels_kernel.cu
     ./cuda/copy_kernel.cu
     ./cuda/choiceMult_kernel.cu
     )

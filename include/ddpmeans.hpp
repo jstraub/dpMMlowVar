@@ -82,19 +82,27 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
   sim_closest = this->lambda_;
+  T sim_k = 0.;
 //  cout<<"K="<<this->K_<<" Ns:"<<this->Ns_.transpose()<<endl;
 //  cout<<"cluster dists "<<i<<": "<<this->lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    T sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
-    if(this->Ns_(k) == 0) // cluster not instantiated yet in this timestep
-    {
-      //TODO use gamma
-//      T gamma = 1.0/(1.0/ws_[z_i] + ts_[z_i]*tau_);
-      sim_k = sim_k/(tau_*ts_[k]+1.+ 1.0/ws_[k]) + Q_*ts_[k];
-//      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
-//      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
+    if(this->Ns_(k) == 0) 
+    {// cluster not instantiated yet in this timestep
+      sim_k = DS::distToUninstantiated(this->spx_->col(i), 
+          this->ps_.col(k), ts_[k], ws_[k], tau_, Q_);
+    }else{ // cluster instantiated
+      sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
     }
+//    T sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
+//    if(this->Ns_(k) == 0) // cluster not instantiated yet in this timestep
+//    {
+//      //TODO use gamma
+////      T gamma = 1.0/(1.0/ws_[z_i] + ts_[z_i]*tau_);
+//      sim_k = sim_k/(tau_*ts_[k]+1.+ 1.0/ws_[k]) + Q_*ts_[k];
+////      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
+////      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
+//    }
 //    cout<<" "<<sim_k;
     if(DS::closer(sim_k, sim_closest))
     {

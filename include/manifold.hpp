@@ -28,6 +28,13 @@ struct Euclidean //: public DataSpace<T>
     return a<b;
   };
 
+  static T distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
+      Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T tau, 
+      const T Q)
+  {
+     return dist(x_i, ps_k) / (tau*t_k+1.+ 1.0/w_k) + Q*t_k;
+  };
+
   static Matrix<T,Dynamic,Dynamic> computeCenters(const
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
       VectorXu& Ns)
@@ -77,6 +84,23 @@ struct Spherical //: public DataSpace<T>
   static bool closer(const T a, const T b)
   {
     return a > b;
+  };
+
+  static T distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
+      Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
+      const T Q)
+  {
+    assert(k<this->psPrev_.cols());
+
+    T phi, theta, eta;
+    T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
+            dist(x_i,ps_k) )));
+    solveProblem2(x_i, zeta, t_k, w_k, beta, phi,theta,eta);
+
+    return w_k*(cos(theta)-1.) 
+      + t_k*beta*(cos(phi)-1.) 
+      + cos(eta) // no minus 1 here cancels with Z(tau) from the two other assignments
+      + Q*t_k;
   };
 
   static Matrix<T,Dynamic,Dynamic> computeSums(const
@@ -133,7 +157,68 @@ struct Spherical //: public DataSpace<T>
       return mean_k;
     }
   };
+  private:
 
+  void solveProblem1(T gamma, T age, const T beta, T& phi, T& theta); 
+  void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
+      const T beta, T& phi, T& theta, T& eta); 
 };
 
+
+template<class T>
+void Spherical<T>::solveProblem1(T gamma, T age, const T beta, T& phi, T& theta)
+{
+  // solves
+  // (1)  sin(phi) beta = sin(theta)
+  // (2)  gamma = T phi + theta
+  // for phi and theta
+  phi = 0.0; 
+
+  for (uint32_t i=0; i< 10; ++i)
+  {
+    T sinPhi = sin(phi);
+    T f = - gamma + age*phi + asin(beta*sinPhi);
+    // mathematica
+    T df = age + (beta*cos(phi))/sqrt(1.-beta*beta*sinPhi*sinPhi); 
+    T dPhi = f/df;
+    phi = phi - dPhi; // Newton iteration
+//    cout<<"@i="<<i<<": "<<phi<<"\t"<<dPhi<<endl;
+    if(fabs(dPhi) < 1e-6) break;
+  }
+
+  theta = asin(beta*sin(phi));
+};
+
+
+template<class T>
+void Spherical<T>::solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, 
+    T age, T w, const T beta, T& phi, T& theta, T& eta)
+{
+  // solves
+  // w sin(theta) = beta sin(phi) = ||xSum||_2 sin(eta) 
+  // eta + T phi + theta = zeta = acos(\mu0^T xSum/||xSum||_2)
+  phi = 0.0;
+
+//  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
+
+  T L2xSum = xSum.norm();
+  for (uint32_t i=0; i< 10; ++i)
+  {
+    T sinPhi = sin(phi);
+    T cosPhi = cos(phi);
+    T f = - zeta + asin(beta/L2xSum *sinPhi) + age * phi + asin(beta/w *sinPhi);
+    T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
+        beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -
+        beta*beta*sinPhi*sinPhi); 
+
+    T dPhi = f/df;
+
+    phi = phi - dPhi; // Newton iteration
+//    cout<<"@i="<<i<<": "<<"f="<<f<<" df="<<df<<" phi="<<phi<<"\t"<<dPhi<<endl;
+    if(fabs(dPhi) < 1e-6) break;
+  }
+
+  theta = asin(beta/w *sin(phi));
+  eta = asin(beta/L2xSum *sin(phi));
+};
 

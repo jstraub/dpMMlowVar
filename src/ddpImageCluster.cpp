@@ -111,13 +111,15 @@ int main(int argc, char** argv){
 		}
 		shared_ptr<MXf> data = extractVectorData(frame);
 		clusterer->nextTimeStep(data);
-		while(!clusterer->converged()){
-    			clusterer->updateCenters();
+		do{
+    	clusterer->updateCenters();
 			clusterer->updateLabels();
-		}
+		}while (!clusterer->converged());
 		clusterer->updateState();
-    		const VXu& z = clusterer->z();
-    		const MXf& p = clusterer->centroids();
+    const VXu& z = clusterer->z();
+    const MXf& p = clusterer->centroids();
+    cout<<(z.array() == 0).all()<<endl;
+    cout<<p<<endl;
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;
 		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
@@ -201,9 +203,12 @@ Mat compress(int rw, int cl, VXu z, MXf p){
 			clr.val[0] = p(0, z(idx));
 			clr.val[1] = p(1, z(idx));
 			clr.val[2] = p(2, z(idx));
+      idx ++;
 		}
 	}
 	cvtColor(frameLabOut, frameOutF, CV_Lab2RGB);
+//  imshow("compressed",frameOutF);
+//  waitKey(1);
 	frameOutF.convertTo(frameOut, CV_8U, 255.0);
 	return frameOut;
 	//Mat medianFrame;

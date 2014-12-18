@@ -111,8 +111,8 @@ uint32_t KMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
   uint32_t z_i = 0;
   for(uint32_t k=1; k<this->K_; ++k)
   {
-    T sim_k = dist(this->ps_.col(k), this->spx_->col(i));
-    if( closer(sim_k, sim_closest))
+    T sim_k = space_.dist(this->ps_.col(k), this->spx_->col(i));
+    if( space_.closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
       z_i = k;
@@ -177,10 +177,10 @@ MatrixXu KMeans<T,DS>::mostLikelyInds(uint32_t n,
     for (uint32_t i=0; i<this->N_; ++i)
       if(this->z_(i) == k)
       {
-        T deviate = dist(this->ps_.col(k), this->spx_->col(i));
+        T deviate = space_.dist(this->ps_.col(k), this->spx_->col(i));
 //        T deviate = (this->ps_.col(k) - this->spx_->col(i)).norm();
         for (uint32_t j=0; j<n; ++j)
-          if(closer(deviate, deviates(j,k)))
+          if(space_.closer(deviate, deviates(j,k)))
           {
             for(uint32_t l=n-1; l>j; --l)
             {
@@ -216,7 +216,7 @@ T KMeans<T,DS>::avgIntraClusterDeviation()
     for (uint32_t i=0; i<this->N_; ++i)
       if(this->z_(i) == k)
       {
-        deviates(k) += dist(this->ps_.col(k), this->spx_->col(i));
+        deviates(k) += space_.dist(this->ps_.col(k), this->spx_->col(i));
 //        deviates(k) += (this->ps_.col(k) - this->spx_->col(i)).norm();
         this->Ns_(k) ++;
       }

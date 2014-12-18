@@ -20,7 +20,7 @@ using namespace cv;
 namespace po = boost::program_options;
 
 int makeDirectory(const char* name);
-MXf extractVectorData(Mat& frame);
+shared_ptr<MXf> extractVectorData(Mat& frame);
 Mat compress(int rw, int cl, VXu z, MXf p);
 
 void printProgress(string pre, double pct);
@@ -91,8 +91,9 @@ int main(int argc, char** argv){
 	cout << "New Frame Dimensions: " << nfr_w << " x " << nfr_h << endl;
 
 	//set up the DDP Means object
-  	DDPMeansCUDA<float> *clusterer = NULL;
 	mt19937 rng; rng.seed(vm["seed"].as<int>());
+	shared_ptr<MXf> tmp(new MXf(3, 1));
+  	DDPMeansCUDA<float> *clusterer = new DDPMeansCUDA<float>(tmp, lambda, Q, tau, &rng);
 
 
 	//loop over frames, resize if necessary, and cluster
@@ -108,25 +109,21 @@ int main(int argc, char** argv){
 			resize(frame, frameresized, Size(nfr_w, nfr_h), 0, 0, INTER_CUBIC);
 			frameresized.copyTo(frame);
 		}
-		MXf data = extractVectorData(frame);
-		shared_ptr<MXf> ptr(&data);
-		if (clusterer == NULL){
-			clusterer = new DDPMeansCUDA<float>(ptr, lambda, Q, tau, &rng);
-		} else {
-			clusterer->nextTimeStep(ptr);
-		}
-		while(!clusterer->converged()){
-    			clusterer->updateCenters();
+		shared_ptr<MXf> data = extractVectorData(frame);
+		clusterer->nextTimeStep(data);
+		do{
+    	clusterer->updateCenters();
 			clusterer->updateLabels();
-		}
-    		const VXu& z = clusterer->z();
-    		const MXf& p = clusterer->centroids();
+		}while (!clusterer->converged());
+		clusterer->updateState();
+    const VXu& z = clusterer->z();
+    const MXf& p = clusterer->centroids();
+    cout<<(z.array() == 0).all()<<endl;
+    cout<<p<<endl;
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;
-		oss << argv[2] << "/" << setw(7) << setfill('0') << fr << ".png";
+		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
 		imwrite(oss.str(), compressedFrame, compression_params);
-		
-		fr++;
 	}
 	cout << endl;
 	delete clusterer;
@@ -176,23 +173,23 @@ void printProgress(string pre, double pct){
 	return;
 }
 
-MXf extractVectorData(Mat& frame){
+shared_ptr<MXf> extractVectorData(Mat& frame){
 	Mat framef, frameLab;
 	frame.convertTo(framef, CV_32F, 1.0/255.0);
 	cvtColor(framef, frameLab, CV_RGB2Lab);
-	MXf data(3, frame.rows*frame.cols);
+	MXf* data = new MXf(3, frame.rows*frame.cols);
 	int idx = 0;
 	for(int y = 0; y < frame.rows; y++){
 		for (int x = 0; x <frame.cols; x++){
     			const Vec3f& veclab = frameLab.at<Vec3f>(y, x);
-			data(0, idx) = veclab.val[0];
-			data(1, idx) = veclab.val[1];
-			data(2, idx) = veclab.val[2];
+			(*data)(0, idx) = veclab.val[0];
+			(*data)(1, idx) = veclab.val[1];
+			(*data)(2, idx) = veclab.val[2];
 			idx++;
 		}
 	}
 	//cout << "RGB: " << frame.at<Vec3b>(0, 0) << " Lab: " << frameLab.at<Vec3f>(0, 0) << " data: " << data[0].v.transpose() << endl;
-	return data;
+	return shared_ptr<MXf>(data);
 }
 
 Mat compress(int rw, int cl, VXu z, MXf p){
@@ -206,9 +203,12 @@ Mat compress(int rw, int cl, VXu z, MXf p){
 			clr.val[0] = p(0, z(idx));
 			clr.val[1] = p(1, z(idx));
 			clr.val[2] = p(2, z(idx));
+      idx ++;
 		}
 	}
 	cvtColor(frameLabOut, frameOutF, CV_Lab2RGB);
+//  imshow("compressed",frameOutF);
+//  waitKey(1);
 	frameOutF.convertTo(frameOut, CV_8U, 255.0);
 	return frameOut;
 	//Mat medianFrame;

@@ -92,8 +92,15 @@ DDPMeansCUDA<T>::DDPMeansCUDA(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T Q, T tau, 
     mt19937* pRndGen)
   : DDPMeans<T>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
-  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
-{}
+  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1), globalMaxInd_(0)
+{
+  this->Kprev_ = 0; // so that centers are initialized directly from sample mean
+  this->psPrev_ = this->ps_;
+  xSums_ = Matrix<T,Dynamic,Dynamic>::Zero(this->D_,1);
+
+  assert(this->lambda_ >= 0.0 && this->Q_ >= 0.0 && this->tau_ >= 0.0);
+
+}
 
 template<class T>
 DDPMeansCUDA<T>::~DDPMeansCUDA()
@@ -209,17 +216,21 @@ uint32_t DDPMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
 
   assert(this->K_ < 17); // limitation of kernel at this point
 
-//  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
-//  cout<<this->ps_<<endl;
-//  d_x_.print();
-//  d_p_.print();
-//  d_z_.print();
-//  d_ages_.print();
-//  d_Ns_.print();
+  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
+  cout<<this->ps_<<endl;
+  d_x_.print();
+  d_p_.print();
+  d_z_.print();
+  d_ages_.print();
+  d_Ns_.print();
+  cout<<"d_Ns_ "<<d_Ns_.get()<<endl;
+  cout<<"d_ages_ "<<d_ages_.get()<<endl;
 
+//  cout << "******************BEFORE*******************"<<endl;
   ddpLabels_gpu( d_x_.data(),  d_p_.data(),  d_z_.data(), 
       d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->lambda_, this->Q_, 
       this->tau_, 0, this->K_, i0, this->N_-i0, d_iAction_.data());
+//  cout << "------------------AFTER--------------------"<<endl;
   d_iAction_.get(iAction); 
   return iAction;
 }
@@ -234,16 +245,20 @@ uint32_t DDPMeansCUDA<T>::optimisticLabelsAssign(uint32_t i0)
 template<class T>
 void DDPMeansCUDA<T>::updateLabels()
 {
+  cout<<"assigning labels now:"<<endl;
+  cout<<this->ps_<<endl;
+
   uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
 //  cout<<"::updateLabelsParallel"<<endl;
   do{
     idAction = optimisticLabelsAssign(i0);
-//  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
+  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
     if(idAction != UNASSIGNED)
     {
       T sim = 0.;
       uint32_t z_i = this->indOfClosestCluster(idAction,sim);
+      cout<<"z_i = "<<z_i<<" K="<<this->K_<<endl;
       if(z_i == this->K_) 
       { // start a new cluster
         this->ps_.conservativeResize(this->D_,this->K_+1);
@@ -252,19 +267,23 @@ void DDPMeansCUDA<T>::updateLabels()
         this->Ns_(z_i) = 1.;
         this->globalInd_.push_back(this->globalMaxInd_++);
         this->K_ ++;
+	cout << " new " << endl;
       } 
       else if(this->Ns_[z_i] == 0)
       { // instantiated an old cluster
         reInstantiatedOldCluster(this->spx_->col(idAction), z_i);
         this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
         // computeLabelsGPU to use the cluster;
+	cout << " old " << endl;
       }
       i0 = idAction;
     }
-    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0<<endl;
+    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0 << " idAction=" << idAction<< " "<<UNASSIGNED<<" "<<(UNASSIGNED==idAction)<<endl;
+    cout<<this->ps_<<endl;
   }while(idAction != UNASSIGNED);
-//  this->z_.resize(this->N_);
-//  d_z_.set(this->z_); // TODO i dont think I need to copy back
+
+  this->z_.resize(this->N_);
+  d_z_.get(this->z_); // TODO i dont think I need to copy back
 
 //  // TODO: this cost only works for a single time slice
 //  T cost =  0.0;
@@ -272,18 +291,27 @@ void DDPMeansCUDA<T>::updateLabels()
 //    if(this->Ns_(k) == 1.) cost += this->lambda_;
 //
 //  //TODO get counts from GPU
-//  this->Ns_.fill(0);
-//#pragma omp parallel for reduction(+:cost)
-//  for(uint32_t k=0; k<this->K_; ++k)
-//    for(uint32_t i=0; i<this->N_; ++i)
-//      if(this->z_(i) == k)
-//      {
-//        this->Ns_(k) ++; 
-//        T sim_closest = dist(this->ps_.col(k), this->spx_->col(i));
+  prevNs_ =  this->Ns_;
+  this->Ns_.fill(0);
+#pragma omp parallel for // reduction(+:cost)
+  for(uint32_t k=0; k<this->K_; ++k)
+    for(uint32_t i=0; i<this->N_; ++i)
+      if(this->z_(i) == k)
+      {
+        this->Ns_(k) ++; 
+//        T sim_closest = this->dist(this->ps_.col(k), this->spx_->col(i));
 //        cost += sim_closest;
-//      }
+      }
 //  this->prevCost_ = this->cost_;
 //  this->cost_ = cost;
+  cout<<"Labels assigned successfully"<<endl;
+};
+
+template<class T>
+void DDPMeansCUDA<T>::reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k)
+{
+  T gamma = 1.0/(1.0/this->ws_[k] + this->ts_[k]*this->tau_);
+  this->ps_.col(k) = (gamma*this->psPrev_.col(k) + xSum)/(gamma+1.0);
 };
 
 //template<class T>

@@ -26,6 +26,9 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
   const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
+  if(idx==0){printf("CALLED ddpLabelAssign_kernel\n");}
+  __syncthreads();
+
   // caching and init
   iAction[tid] = MAX_UINT32;
   if(tid < DIM*K) p[tid] = d_p[tid];
@@ -34,7 +37,6 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
   if(tid < K) Ns[tid] = d_Ns[tid];
 //  if(tid < K) ws[tid] = d_ws[tid];
   __syncthreads(); // make sure that ys have been cached
-
 
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
   {
@@ -66,7 +68,7 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         }else{ // cluster instantiated                                              
           sim_k = distsq;
         }
-        if(sim_k > sim_closest)
+        if(sim_k < sim_closest)
         {
           sim_closest = sim_k;
           z_i = k;
@@ -85,7 +87,8 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 
   // min() reduction
   __syncthreads(); //sync the threads
-#pragma unroll
+
+  #pragma unroll
   for(int s=(BLK_SIZE)/2; s>1; s>>=1) {
     if(tid < s)
     {

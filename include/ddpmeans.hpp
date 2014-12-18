@@ -91,7 +91,8 @@ uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
     {
       //TODO use gamma
 //      T gamma = 1.0/(1.0/ws_[z_i] + ts_[z_i]*tau_);
-      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
+      sim_k = sim_k/(tau_*ts_[k]+1.+ 1.0/ws_[k]) + Q_*ts_[k];
+//      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
 //      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
     }
 //    cout<<" "<<sim_k;

@@ -57,7 +57,8 @@ struct Euclidean //: public DataSpace<T>
     if(*N_k > 0)
       return mean_k/(*N_k);
     else
-      return Matrix<T,Dynamic,1>::Zero(D,1);
+      //TODO: cloud try to do sth more random here
+      return x.col(k); //Matrix<T,Dynamic,1>::Zero(D,1);
   };
 };
 
@@ -112,7 +113,7 @@ struct Spherical //: public DataSpace<T>
   {
     const uint32_t D = x.rows();
     Matrix<T,Dynamic,Dynamic> centroids(D,K);
-//#pragma omp parallel for 
+#pragma omp parallel for 
     for(uint32_t k=0; k<K; ++k)
       centroids.col(k) = computeCenter(x,z,k,&Ns(k));
     return centroids;

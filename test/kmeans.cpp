@@ -10,6 +10,7 @@
 #include "kmeans.hpp"
 //#include "spkm.hpp"
 //#include "normalSphere.hpp"
+#include "dpmeans.hpp"
 //#include "dpvMFmeans.hpp"
 //#include "ddpvMFmeans.hpp"
 //#include "ddpmeans.hpp"
@@ -34,55 +35,56 @@ BOOST_AUTO_TEST_CASE(kmeans_test)
   else
       spx->col(i) <<1,0,0;
 
-  uint32_t T = 100;
+  uint32_t T = 10;
 
   cout<<" ---------------- kmeans -------------------"<<endl;
   boost::mt19937 rndGen3(91);
-//  KMeans<double,Euclidean<double> > kmeans(spx,K,&rndGen3);
-  KMeans<double,Spherical<double> > kmeans(spx,K,&rndGen3);
+  KMeans<double,Euclidean<double> > kmeans(spx,K,&rndGen3);
+//  KMeans<double,Spherical<double> > kmeans(spx,K,&rndGen3);
   for(uint32_t t=0; t<T; ++t)
   {
     kmeans.updateCenters();
     kmeans.updateLabels();
     cout<<kmeans.z().transpose()<<" "
       <<kmeans.avgIntraClusterDeviation()<<endl;
-    cout<<kmeans.centroids()<<endl;
+//    cout<<kmeans.centroids()<<endl;
   }
-  MatrixXd deviates;
-  MatrixXu inds = kmeans.mostLikelyInds(10,deviates);
-  cout<<"most likely indices"<<endl;
-  cout<<inds<<endl;
+//  MatrixXd deviates;
+//  MatrixXu inds = kmeans.mostLikelyInds(10,deviates);
+//  cout<<"most likely indices"<<endl;
+//  cout<<inds<<endl;
 
-//  double lambda = - 0.9; //cos(15.0*M_PI/180.0);
-//  cout<<" -------------------- DpvMF means ----------------------"<<endl;
-//  DPvMFMeans<double> dpvmfmeans(spx,K,lambda,&rndGen);
-//  for(uint32_t t=0; t<T; ++t)
-//  {
-//    dpvmfmeans.updateCenters();
-//    cout<<dpvmfmeans.z().transpose()<<" "
-//      <<dpvmfmeans.avgIntraClusterDeviation()<<endl;
-//    dpvmfmeans.updateLabels();
-//    cout<<dpvmfmeans.z().transpose()<<" "
-//      <<dpvmfmeans.avgIntraClusterDeviation()<<endl;
-////    cout<<spkm.centroids()<<endl;
-//  }
+  double lambda = cos(15.0*M_PI/180.0);
+  cout<<" -------------------- DpvMF means "<<lambda<<" ----------------------"<<endl;
+  DPMeans<double,Spherical<double> > dpvmfmeans(spx,1,lambda,&rndGen);
+  for(uint32_t t=0; t<T; ++t)
+  {
+    dpvmfmeans.updateCenters();
+    cout<<dpvmfmeans.z().transpose()<<" "
+      <<dpvmfmeans.avgIntraClusterDeviation()<<endl;
+    dpvmfmeans.updateLabels();
+    cout<<dpvmfmeans.z().transpose()<<" "
+      <<dpvmfmeans.avgIntraClusterDeviation()<<endl;
+    cout<<dpvmfmeans.centroids()<<endl;
+  }
 //  inds = dpvmfmeans.mostLikelyInds(10,deviates);
 //  cout<<"most likely indices"<<endl;
 //  cout<<inds<<endl;
-//
-//  lambda = cos(15.0*M_PI/180.0);
-//  cout<<" -------------------- DP-means ----------------------"<<endl;
-//  DPMeans<double> dpmeans(spx,K,lambda,&rndGen);
-//  for(uint32_t t=0; t<T; ++t)
-//  {
-//    dpmeans.updateCenters();
-//    cout<<dpmeans.z().transpose()<<" "
-//      <<dpmeans.avgIntraClusterDeviation()<<endl;
-//    dpmeans.updateLabels();
-//    cout<<dpmeans.z().transpose()<<" "
-//      <<dpmeans.avgIntraClusterDeviation()<<endl;
-////    cout<<spkm.centroids()<<endl;
-//  }
+
+  lambda = 0.1; //cos(15.0*M_PI/180.0);
+  cout<<" -------------------- DP-means ----------------------"<<endl;
+  DPMeans<double,Euclidean<double> > dpmeans(spx,1,lambda,&rndGen);
+  for(uint32_t t=0; t<T; ++t)
+  {
+    dpmeans.updateCenters();
+    cout<<dpmeans.z().transpose()<<" "
+      <<dpmeans.avgIntraClusterDeviation()<<endl;
+    dpmeans.updateLabels();
+    cout<<dpmeans.z().transpose()<<" "
+      <<dpmeans.avgIntraClusterDeviation()<<endl;
+    cout<<dpmeans.centroids()<<endl;
+  }
+
 //  inds = dpmeans.mostLikelyInds(10,deviates);
 //  cout<<"most likely indices"<<endl;
 //  cout<<inds<<endl;

@@ -91,8 +91,9 @@ int main(int argc, char** argv){
 	cout << "New Frame Dimensions: " << nfr_w << " x " << nfr_h << endl;
 
 	//set up the DDP Means object
-  	DDPMeansCUDA<float> *clusterer = NULL;
 	mt19937 rng; rng.seed(vm["seed"].as<int>());
+	shared_ptr<MXf> tmp(new MXf(3, 1));
+  	DDPMeansCUDA<float> *clusterer = new DDPMeansCUDA<float>(tmp, lambda, Q, tau, &rng);
 
 
 	//loop over frames, resize if necessary, and cluster
@@ -109,17 +110,12 @@ int main(int argc, char** argv){
 			frameresized.copyTo(frame);
 		}
 		shared_ptr<MXf> data = extractVectorData(frame);
-		cout << data->rows() << " " << data->cols() << endl;
-		if (clusterer == NULL){
-			clusterer = new DDPMeansCUDA<float>(data, lambda, Q, tau, &rng);
-		} else {
-			clusterer->nextTimeStep(data);
-		}
+		clusterer->nextTimeStep(data);
 		while(!clusterer->converged()){
     			clusterer->updateCenters();
 			clusterer->updateLabels();
 		}
-		cout << "Got here 5" << endl;
+		clusterer->updateState();
     		const VXu& z = clusterer->z();
     		const MXf& p = clusterer->centroids();
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);

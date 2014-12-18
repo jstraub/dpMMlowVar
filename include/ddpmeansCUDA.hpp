@@ -92,8 +92,15 @@ DDPMeansCUDA<T>::DDPMeansCUDA(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T Q, T tau, 
     mt19937* pRndGen)
   : DDPMeans<T>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
-  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
-{}
+  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1), globalMaxInd_(0)
+{
+  this->Kprev_ = 0; // so that centers are initialized directly from sample mean
+  this->psPrev_ = this->ps_;
+  xSums_ = Matrix<T,Dynamic,Dynamic>::Zero(this->D_,1);
+
+  assert(this->lambda_ >= 0.0 && this->Q_ >= 0.0 && this->tau_ >= 0.0);
+
+}
 
 template<class T>
 DDPMeansCUDA<T>::~DDPMeansCUDA()
@@ -209,17 +216,19 @@ uint32_t DDPMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
 
   assert(this->K_ < 17); // limitation of kernel at this point
 
-//  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
-//  cout<<this->ps_<<endl;
-//  d_x_.print();
-//  d_p_.print();
-//  d_z_.print();
-//  d_ages_.print();
-//  d_Ns_.print();
+  //cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
+  //cout<<this->ps_<<endl;
+  //d_x_.print();
+  //d_p_.print();
+  //d_z_.print();
+  //d_ages_.print();
+  //d_Ns_.print();
 
+  cout << "******************BEFORE*******************"<<endl;
   ddpLabels_gpu( d_x_.data(),  d_p_.data(),  d_z_.data(), 
       d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->lambda_, this->Q_, 
       this->tau_, 0, this->K_, i0, this->N_-i0, d_iAction_.data());
+  cout << "------------------AFTER--------------------"<<endl;
   d_iAction_.get(iAction); 
   return iAction;
 }
@@ -237,7 +246,6 @@ void DDPMeansCUDA<T>::updateLabels()
   uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
 //  cout<<"::updateLabelsParallel"<<endl;
-uint32_t it = 0;
   do{
     idAction = optimisticLabelsAssign(i0);
 //  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
@@ -253,17 +261,18 @@ uint32_t it = 0;
         this->Ns_(z_i) = 1.;
         this->globalInd_.push_back(this->globalMaxInd_++);
         this->K_ ++;
+	cout << " new " << endl;
       } 
       else if(this->Ns_[z_i] == 0)
       { // instantiated an old cluster
         reInstantiatedOldCluster(this->spx_->col(idAction), z_i);
         this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
         // computeLabelsGPU to use the cluster;
+	cout << " old " << endl;
       }
       i0 = idAction;
     }
-   cout << "i0 " << i0 << endl;
-    //cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0<<endl;
+    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0 << " idAction=" << idAction<<endl;
   }while(idAction != UNASSIGNED);
 //  this->z_.resize(this->N_);
 //  d_z_.set(this->z_); // TODO i dont think I need to copy back

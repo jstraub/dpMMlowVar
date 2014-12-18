@@ -24,8 +24,8 @@ using boost::mt19937;
 
 #define UNASSIGNED 4294967295
 
-template<class T>
-class DDPMeans : public DPMeans<T>
+template<class T, class DS>
+class DDPMeans : public DPMeans<T,DS>
 {
 public:
   DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
@@ -53,10 +53,10 @@ protected:
 };
 
 // -------------------------------- impl ----------------------------------
-template<class T>
-DDPMeans<T>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
+template<class T, class DS>
+DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T Q, T tau, mt19937* pRndGen)
-  : DPMeans<T>(spx,0,lambda,pRndGen), Q_(Q), tau_(tau)
+  : DPMeans<T,DS>(spx,0,lambda,pRndGen), Q_(Q), tau_(tau)
 {
   // compute initial counts for weight initialization
 //#pragma omp parallel for
@@ -73,12 +73,12 @@ DDPMeans<T>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
   psPrev_ = this->ps_;
 }
 
-template<class T>
-DDPMeans<T>::~DDPMeans()
+template<class T, class DS>
+DDPMeans<T,DS>::~DDPMeans()
 {}
 
-template<class T>
-uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
+template<class T, class DS>
+uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
   sim_closest = this->lambda_;
@@ -86,7 +86,7 @@ uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
 //  cout<<"cluster dists "<<i<<": "<<this->lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    T sim_k = this->dist(this->ps_.col(k), this->spx_->col(i));
+    T sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
     if(this->Ns_(k) == 0) // cluster not instantiated yet in this timestep
     {
       //TODO use gamma
@@ -96,7 +96,7 @@ uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
 //      sim_k = sim_k/(tau_*ts_[k]+1.) + Q_*ts_[k];
     }
 //    cout<<" "<<sim_k;
-    if(this->closer(sim_k, sim_closest))
+    if(DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
       z_i = k;
@@ -106,8 +106,8 @@ uint32_t DDPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
   return z_i;
 }
 
-template<class T>
-void DDPMeans<T>::updateLabels()
+template<class T, class DS>
+void DDPMeans<T,DS>::updateLabels()
 {
   this->prevCost_ = this->cost_;
   this->cost_ = 0.; // TODO:  does this take into account that creating a cluster costs
@@ -141,13 +141,15 @@ void DDPMeans<T>::updateLabels()
   }
 };
 
-template<class T>
-void DDPMeans<T>::updateCenters()
+template<class T, class DS>
+void DDPMeans<T,DS>::updateCenters()
 {
 #pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
-    Matrix<T,Dynamic,1> mean_k = this->computeCenter(k);
+     Matrix<T,Dynamic,1> mean_k = DS::computeCenter(*this->spx_,this->z_,k,
+       &this->Ns_(k));
+//    Matrix<T,Dynamic,1> mean_k = this->computeCenter(k);
     if (this->Ns_(k) > 0) 
     { // have data to update kth cluster
       if(k < this->Kprev_){
@@ -161,8 +163,8 @@ void DDPMeans<T>::updateCenters()
   }
 };
 
-template<class T>
-void DDPMeans<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+template<class T, class DS>
+void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
   assert(this->D_ == spx->rows());
   this->spx_ = spx; // update the data
@@ -172,8 +174,8 @@ void DDPMeans<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx
 //  this->z_.fill(UNASSIGNED);
 };
 
-template<class T>
-void DDPMeans<T>::updateState()
+template<class T, class DS>
+void DDPMeans<T,DS>::updateState()
 {
   for(uint32_t k=0; k<this->K_; ++k)
   {

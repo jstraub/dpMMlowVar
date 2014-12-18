@@ -16,7 +16,7 @@ using namespace Eigen;
 using boost::mt19937;
 #endif
 
-template<class T>
+template<class T, class DS>
 class Clusterer
 {
 public:
@@ -37,11 +37,11 @@ public:
   const Matrix<T,Dynamic,Dynamic>& centroids() const {return ps_;};
 
   // natural distance to be used by the algorithm
-  virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
+//  virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
   // closer in the sense of distance defined above
-  virtual bool closer(T a, T b) = 0;
+//  virtual bool closer(T a, T b) = 0;
   // measure of disimilarity between two points (not necessarily the distance)
-  virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
+//  virtual T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
 
   virtual uint32_t getK(){return K_;};
   virtual uint32_t K(){return K_;}; 
@@ -65,20 +65,20 @@ protected:
 };
 
 // ----------------------------- impl -----------------------------------------
-template<class T>
-Clusterer<T>::Clusterer(
+template<class T, class DS>
+Clusterer<T,DS>::Clusterer(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     mt19937* pRndGen)
   : K_(K), D_(spx->rows()), N_(spx->cols()), cost_(INFINITY), prevCost_(INFINITY),
   spx_(spx), ps_(D_,K_), Ns_(K_), z_(N_), pRndGen_(pRndGen)
 {};
 
-template<class T>
-Clusterer<T>::~Clusterer()
+template<class T, class DS>
+Clusterer<T,DS>::~Clusterer()
 {};
 
-template<class T>
-T Clusterer<T>::silhouette()
+template<class T, class DS>
+T Clusterer<T,DS>::silhouette()
 { 
   if(K_<2) return -1.0;
   assert(Ns_.sum() == N_);
@@ -90,7 +90,7 @@ T Clusterer<T>::silhouette()
     for(uint32_t j=0; j<N_; ++j)
       if(j != i)
       {
-        b(z_(j)) += dissimilarity(spx_->col(i),spx_->col(j));
+        b(z_(j)) += DS::dissimilarity(spx_->col(i),spx_->col(j));
       }
     b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
     T a_i = b(z_(i)); // average dist to own cluster

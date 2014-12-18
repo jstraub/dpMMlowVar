@@ -93,7 +93,7 @@ int main(int argc, char** argv){
 	//set up the DDP Means object
 	mt19937 rng; rng.seed(vm["seed"].as<int>());
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  	DDPMeansCUDA<float> *clusterer = new DDPMeansCUDA<float>(tmp, lambda, Q, tau, &rng);
+  	DDPMeansCUDA<float,Euclidean<float> > *clusterer = new DDPMeansCUDA<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
 
 
 	//loop over frames, resize if necessary, and cluster

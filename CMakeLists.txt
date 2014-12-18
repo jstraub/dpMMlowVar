@@ -131,7 +131,7 @@ target_link_libraries(testSO3
   boost_unit_test_framework
   )
 
-add_executable(testClusterer ./test/spkm.cpp
+add_executable(testClusterer ./test/kmeans.cpp
   )
 target_link_libraries(testClusterer
   boost_system

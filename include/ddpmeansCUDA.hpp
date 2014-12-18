@@ -27,8 +27,8 @@ extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
     uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q, 
     float tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
 
-template<class T>
-class DDPMeansCUDA : public DDPMeans<T>
+template<class T, class DS>
+class DDPMeansCUDA : public DDPMeans<T,DS>
 {
 public:
   DDPMeansCUDA(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
@@ -87,11 +87,11 @@ protected:
 };
 // --------------------------- impl -------------------------------------------
 
-template<class T>
-DDPMeansCUDA<T>::DDPMeansCUDA(
+template<class T, class DS>
+DDPMeansCUDA<T,DS>::DDPMeansCUDA(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T Q, T tau, 
     mt19937* pRndGen)
-  : DDPMeans<T>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
+  : DDPMeans<T,DS>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
   d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1), globalMaxInd_(0)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean
@@ -102,12 +102,12 @@ DDPMeansCUDA<T>::DDPMeansCUDA(
 
 }
 
-template<class T>
-DDPMeansCUDA<T>::~DDPMeansCUDA()
+template<class T, class DS>
+DDPMeansCUDA<T,DS>::~DDPMeansCUDA()
 {}
 
-template<class T>
-void DDPMeansCUDA<T>::computeSums(uint32_t k0, uint32_t K)
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::computeSums(uint32_t k0, uint32_t K)
 {
 //  cout<<"CUDA ::computeSums for k0="<<k0<<" K="<<K<<" N="<<this->N_<<endl;
   Matrix<T,Dynamic,Dynamic> xSums = Matrix<T,Dynamic,Dynamic>::Zero(
@@ -129,8 +129,8 @@ void DDPMeansCUDA<T>::computeSums(uint32_t k0, uint32_t K)
 }
 
 
-template<class T>
-void DDPMeansCUDA<T>::computeSums(void)
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::computeSums(void)
 {
   prevNs_ =  this->Ns_;
 
@@ -145,10 +145,10 @@ void DDPMeansCUDA<T>::computeSums(void)
   }
 }
 
-template<class T>
-void DDPMeansCUDA<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
-  DDPMeans<T>::nextTimeStep(spx);
+  DDPMeans<T,DS>::nextTimeStep(spx);
 //  cout<<"copy x"<<endl;
 //  d_x_.print();
 //  d_z_.print();
@@ -163,13 +163,13 @@ void DDPMeansCUDA<T>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >&
   }
 };
 
-template<class T>
-void DDPMeansCUDA<T>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset)
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset)
 {
   this->psPrev_ = this->ps_;
   this->Kprev_ = this->K_;
   // TODO: hopefully this does not mess stuff up
-//  DDPMeans<T>::nextTimeStep(spx);
+//  DDPMeans<T,DS>::nextTimeStep(spx);
   this->N_ = N;
 //  cout<<"copy x"<<endl;
 //  d_x_.print();
@@ -192,16 +192,16 @@ void DDPMeansCUDA<T>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t o
 //  d_z_.print();
 };
 
-//template<class T>
-//void DDPMeansCUDA<T>::updateLabels()
+//template<class T, class DS>
+//void DDPMeansCUDA<T,DS>::updateLabels()
 //{
-//  DDPMeans<T>::updateLabels();
+//  DDPMeans<T,DS>::updateLabels();
 ////  d_z_.set(this->z_); // TODO i dont think I need to copy back
 //};
 
 
-template<class T>
-uint32_t DDPMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
+template<class T, class DS>
+uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
 {
   uint32_t iAction = MAX_UINT32;
   d_iAction_.set(iAction);
@@ -235,15 +235,15 @@ uint32_t DDPMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
   return iAction;
 }
 
-template<class T>
-uint32_t DDPMeansCUDA<T>::optimisticLabelsAssign(uint32_t i0)
+template<class T, class DS>
+uint32_t DDPMeansCUDA<T,DS>::optimisticLabelsAssign(uint32_t i0)
 {
   return computeLabelsGPU(0); // TODO make passing i0 work!
 };
 
 
-template<class T>
-void DDPMeansCUDA<T>::updateLabels()
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::updateLabels()
 {
   cout<<"assigning labels now:"<<endl;
   cout<<this->ps_<<endl;
@@ -299,7 +299,7 @@ void DDPMeansCUDA<T>::updateLabels()
       if(this->z_(i) == k)
       {
         this->Ns_(k) ++; 
-//        T sim_closest = this->dist(this->ps_.col(k), this->spx_->col(i));
+//        T sim_closest = DS::dist(this->ps_.col(k), this->spx_->col(i));
 //        cost += sim_closest;
       }
 //  this->prevCost_ = this->cost_;
@@ -307,15 +307,15 @@ void DDPMeansCUDA<T>::updateLabels()
   cout<<"Labels assigned successfully"<<endl;
 };
 
-template<class T>
-void DDPMeansCUDA<T>::reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k)
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k)
 {
   T gamma = 1.0/(1.0/this->ws_[k] + this->ts_[k]*this->tau_);
   this->ps_.col(k) = (gamma*this->psPrev_.col(k) + xSum)/(gamma+1.0);
 };
 
-//template<class T>
-//void DDPMeansCUDA<T>::updateLabelsParallel()
+//template<class T, class DS>
+//void DDPMeansCUDA<T,DS>::updateLabelsParallel()
 //{
 //  uint32_t idAction = MAX_UINT32;
 ////  cout<<"::updateLabelsParallel"<<endl;

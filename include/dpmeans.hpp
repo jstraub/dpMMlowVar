@@ -12,8 +12,8 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
-template<class T>
-class DPMeans : public KMeans<T,Euclidean<T> >
+template<class T, class DS>
+class DPMeans : public KMeans<T,DS>
 {
 public:
   DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K0,
@@ -32,25 +32,25 @@ protected:
 };
 
 // -------------------------------- impl ----------------------------------
-template<class T>
-DPMeans<T>::DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
+template<class T, class DS>
+DPMeans<T,DS>::DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     uint32_t K0, double lambda, mt19937* pRndGen)
-  : KMeans<T,Euclidean<T> >(spx,K0,pRndGen), lambda_(lambda)
+  : KMeans<T,DS>(spx,K0,pRndGen), lambda_(lambda)
 {}
 
-template<class T>
-DPMeans<T>::~DPMeans()
+template<class T, class DS>
+DPMeans<T,DS>::~DPMeans()
 {}
 
-template<class T>
-uint32_t DPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
+template<class T, class DS>
+uint32_t DPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
   sim_closest = lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    T sim_k = this->dist(this->ps_.col(k), this->spx_->col(i));
-    if(this->closer(sim_k, sim_closest))
+    T sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
+    if(DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
       z_i = k;
@@ -59,8 +59,8 @@ uint32_t DPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
   return z_i;
 }
 
-template<class T>
-void DPMeans<T>::updateLabels()
+template<class T, class DS>
+void DPMeans<T,DS>::updateLabels()
 {
 //#pragma omp parallel for 
 // TODO not sure how to parallelize
@@ -84,14 +84,14 @@ void DPMeans<T>::updateLabels()
   }
 };
 
-template<class T>
-void DPMeans<T>::updateCenters()
+template<class T, class DS>
+void DPMeans<T,DS>::updateCenters()
 {
+  this->ps_ = DS::computeCenters(*this->spx_,this->z_,this->K_,this->Ns_);
+
   vector<bool> toDelete(this->K_,false);
-#pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
-    this->ps_.col(k) = this->computeCenter(k);
     if (this->Ns_(k) <= 0) 
       toDelete[k] = true;
   }

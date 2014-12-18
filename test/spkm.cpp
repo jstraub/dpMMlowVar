@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 #include "kmeans.hpp"
-#include "sphericalKMeans.hpp"
+#include "spkm.hpp"
 #include "normalSphere.hpp"
 #include "dpvMFmeans.hpp"
 #include "ddpvMFmeans.hpp"

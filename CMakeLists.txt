@@ -138,6 +138,9 @@ target_link_libraries(ddpImageCluster
   boost_system
   boost_random
   boost_program_options
+  opencv_core
+  opencv_imgproc
+  opencv_highgui
   )
 
 INSTALL(TARGETS dpMMlowVar ddpImageCluster #dpStickGMM dpDirMM

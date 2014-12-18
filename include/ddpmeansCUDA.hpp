@@ -237,6 +237,7 @@ void DDPMeansCUDA<T>::updateLabels()
   uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
 //  cout<<"::updateLabelsParallel"<<endl;
+uint32_t it = 0;
   do{
     idAction = optimisticLabelsAssign(i0);
 //  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
@@ -261,7 +262,8 @@ void DDPMeansCUDA<T>::updateLabels()
       }
       i0 = idAction;
     }
-    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0<<endl;
+   cout << "i0 " << i0 << endl;
+    //cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<< " i0="<<i0<<endl;
   }while(idAction != UNASSIGNED);
 //  this->z_.resize(this->N_);
 //  d_z_.set(this->z_); // TODO i dont think I need to copy back
@@ -284,6 +286,13 @@ void DDPMeansCUDA<T>::updateLabels()
 //      }
 //  this->prevCost_ = this->cost_;
 //  this->cost_ = cost;
+};
+
+template<class T>
+void DDPMeansCUDA<T>::reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k)
+{
+  T gamma = 1.0/(1.0/this->ws_[k] + this->ts_[k]*this->tau_);
+  this->ps_.col(k) = (gamma*this->psPrev_.col(k) + xSum)/(gamma+1.0);
 };
 
 //template<class T>

@@ -131,16 +131,16 @@ target_link_libraries(testSO3
   boost_unit_test_framework
   )
 
-add_executable(dpMMlowVarCluster ./src/dpMMlowVarCluster.cpp
+add_executable(ddpImageCluster ./src/ddpImageCluster.cpp
   )
-target_link_libraries(dpMMlowVarCluster
+target_link_libraries(ddpImageCluster
   dpMMlowVar
   boost_system
   boost_random
   boost_program_options
   )
 
-INSTALL(TARGETS dpMMlowVar dpMMlowVarCluster #dpStickGMM dpDirMM
+INSTALL(TARGETS dpMMlowVar ddpImageCluster #dpStickGMM dpDirMM
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   # ARCHIVE DESTINATION lib

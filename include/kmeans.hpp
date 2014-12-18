@@ -83,13 +83,13 @@ KMeans<T>::~KMeans()
 template<class T>
 T KMeans<T>::dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
-  return (a-b).norm();
+  return (a-b).squaredNorm();
 };
 
 template<class T>
 T KMeans<T>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
-  return (a-b).norm();
+  return (a-b).squaredNorm();
 };
 
 template<class T>

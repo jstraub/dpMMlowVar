@@ -26,7 +26,7 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
   const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
-  if(tid==0){printf("CALLED ddpLabelAssign_kernel\n");}
+  if(idx==0){printf("CALLED ddpLabelAssign_kernel\n");}
   __syncthreads();
 
   // caching and init
@@ -68,7 +68,7 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         }else{ // cluster instantiated                                              
           sim_k = distsq;
         }
-        if(sim_k > sim_closest)
+        if(sim_k < sim_closest)
         {
           sim_closest = sim_k;
           z_i = k;

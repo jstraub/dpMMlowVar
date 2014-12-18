@@ -15,7 +15,7 @@ using std::cout;
 using std::endl;
 
 template<class T>
-class SphericalKMeans : public KMeans<T>
+class SphericalKMeans : public KMeans<T,Euclidean<T> >
 {
 public:
   SphericalKMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
@@ -50,7 +50,7 @@ template<class T>
 SphericalKMeans<T>::SphericalKMeans(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     mt19937* pRndGen)
-  : KMeans<T>(spx,K, pRndGen)
+  : KMeans<T, Euclidean<T> >(spx,K, pRndGen)
 {}
 
 template<class T>

@@ -11,6 +11,8 @@
 #include "dir.hpp"
 #include "cat.hpp"
 
+#include "manifold.hpp"
+
 using namespace Eigen;
 using std::cout;
 using std::endl;
@@ -21,7 +23,7 @@ using std::endl;
 using boost::mt19937;
 #endif
 
-template<class T>
+template<class T, class DS>
 class KMeans : public Clusterer<T>
 {
 public:
@@ -47,12 +49,15 @@ public:
 
 protected:
   Sphere<T> S_;  // TODO this should not be here - needed for the empty cluster
+
+  DS space_; // dataspace class has all methods to compute distances and so on.
+
 };
 
 // --------------------------- impl -------------------------------------------
 
-template<class T>
-KMeans<T>::KMeans(
+template<class T, class DS>
+KMeans<T,DS>::KMeans(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     mt19937* pRndGen)
   : Clusterer<T>(spx,K, pRndGen), S_(this->D_) 
@@ -75,34 +80,34 @@ KMeans<T>::KMeans(
 //  cout<<"init centers"<<endl<<this->ps_<<endl;
 }
 
-template<class T>
-KMeans<T>::~KMeans()
+template<class T, class DS>
+KMeans<T,DS>::~KMeans()
 {}
 
 
-template<class T>
-T KMeans<T>::dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
+template<class T, class DS>
+T KMeans<T,DS>::dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
   return (a-b).norm();
 };
 
-template<class T>
-T KMeans<T>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
+template<class T, class DS>
+T KMeans<T,DS>::dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
 {
   return (a-b).norm();
 };
 
-template<class T>
-bool KMeans<T>::closer(T a, T b)
+template<class T, class DS>
+bool KMeans<T,DS>::closer(T a, T b)
 {
   return a<b; // if dist a is smaller than dist b a is closer than b (Eucledian)
 };
 
 
-template<class T>
-uint32_t KMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
+template<class T, class DS>
+uint32_t KMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
-  sim_closest = dist(this->ps_.col(0), this->spx_->col(i));
+  sim_closest = space_.dist(this->ps_.col(0), this->spx_->col(i));
   uint32_t z_i = 0;
   for(uint32_t k=1; k<this->K_; ++k)
   {
@@ -116,8 +121,8 @@ uint32_t KMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
   return z_i;
 };
 
-template<class T>
-void KMeans<T>::updateLabels()
+template<class T, class DS>
+void KMeans<T,DS>::updateLabels()
 {
   T cost = 0.;
 #pragma omp parallel for reduction(+:cost)
@@ -131,8 +136,8 @@ void KMeans<T>::updateLabels()
   this->cost_ = cost;
 }
 
-template<class T>
-Matrix<T,Dynamic,1> KMeans<T>::computeCenter(uint32_t k)
+template<class T, class DS>
+Matrix<T,Dynamic,1> KMeans<T,DS>::computeCenter(uint32_t k)
 {
   this->Ns_(k) = 0.0;
   Matrix<T,Dynamic,1> mean_k(this->D_);
@@ -146,8 +151,8 @@ Matrix<T,Dynamic,1> KMeans<T>::computeCenter(uint32_t k)
   return mean_k/this->Ns_(k);
 }
 
-template<class T>
-void KMeans<T>::updateCenters()
+template<class T, class DS>
+void KMeans<T,DS>::updateCenters()
 {
 #pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
@@ -158,8 +163,8 @@ void KMeans<T>::updateCenters()
   }
 }
 
-template<class T>
-MatrixXu KMeans<T>::mostLikelyInds(uint32_t n, 
+template<class T, class DS>
+MatrixXu KMeans<T,DS>::mostLikelyInds(uint32_t n, 
     Matrix<T,Dynamic,Dynamic>& deviates)
 {
   MatrixXu inds = MatrixXu::Zero(n,this->K_);
@@ -199,8 +204,8 @@ MatrixXu KMeans<T>::mostLikelyInds(uint32_t n,
   return inds;
 };
 
-template<class T>
-T KMeans<T>::avgIntraClusterDeviation()
+template<class T, class DS>
+T KMeans<T,DS>::avgIntraClusterDeviation()
 {
   Matrix<T,Dynamic,1> deviates(this->K_);
   deviates.setZero(this->K_);

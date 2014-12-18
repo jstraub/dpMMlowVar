@@ -13,7 +13,7 @@ using std::cout;
 using std::endl;
 
 template<class T>
-class DPMeans : public KMeans<T>
+class DPMeans : public KMeans<T,Euclidean<T> >
 {
 public:
   DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K0,
@@ -35,7 +35,7 @@ protected:
 template<class T>
 DPMeans<T>::DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     uint32_t K0, double lambda, mt19937* pRndGen)
-  : KMeans<T>(spx,K0,pRndGen), lambda_(lambda)
+  : KMeans<T,Euclidean<T> >(spx,K0,pRndGen), lambda_(lambda)
 {}
 
 template<class T>

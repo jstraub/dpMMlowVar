@@ -120,10 +120,8 @@ int main(int argc, char** argv){
     		const MXf& p = clusterer->centroids();
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;
-		oss << argv[2] << "/" << setw(7) << setfill('0') << fr << ".png";
+		oss << argv[2] << "/" << setw(7) << setfill('0') << fr++ << ".png";
 		imwrite(oss.str(), compressedFrame, compression_params);
-		
-		fr++;
 	}
 	cout << endl;
 	delete clusterer;

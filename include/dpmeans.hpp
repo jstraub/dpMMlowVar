@@ -49,8 +49,8 @@ uint32_t DPMeans<T>::indOfClosestCluster(int32_t i, T& sim_closest)
   sim_closest = lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    T sim_k = dist(this->ps_.col(k), this->spx_->col(i));
-    if(closer(sim_k, sim_closest))
+    T sim_k = this->dist(this->ps_.col(k), this->spx_->col(i));
+    if(this->closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
       z_i = k;

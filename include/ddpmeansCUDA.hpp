@@ -71,10 +71,18 @@ protected:
 
   VectorXu prevNs_;
 
+  // TODO initialize propperly!
+  Matrix<T,Dynamic,Dynamic> xSums_;
+  std::vector<uint32_t> globalInd_; // for each non-dead cluster the global id of it;
+  uint32_t globalMaxInd_;
+
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual void computeSums(uint32_t k0, uint32_t K); 
   virtual void computeSums(void); // updates internal xSums_ 
   uint32_t computeLabelsGPU(uint32_t i0);
+
+  // TODO: implement
+  virtual void reInstantiatedOldCluster(const Matrix<T,Dynamic,1>& xSum, uint32_t k);
 
 };
 // --------------------------- impl -------------------------------------------

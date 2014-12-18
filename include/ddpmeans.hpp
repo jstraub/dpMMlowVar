@@ -187,11 +187,11 @@ void DDPMeans<T>::updateState()
       ws_.push_back(this->Ns_(k));
     }
     ts_[k] ++; // increment all ages
-    cout<<"cluster "<<k
-      <<"\tN="<<this->Ns_(k)
-      <<"\tage="<<ts_[k]
-      <<"\tweight="<<ws_[k]<<endl;
-    cout<<"  center: "<<this->ps_.col(k).transpose()<<endl;
+    //cout<<"cluster "<<k
+    //  <<"\tN="<<this->Ns_(k)
+    //  <<"\tage="<<ts_[k]
+    //  <<"\tweight="<<ws_[k]<<endl;
+    //cout<<"  center: "<<this->ps_.col(k).transpose()<<endl;
   }
   psPrev_ = this->ps_;
   this->Kprev_ = this->K_;

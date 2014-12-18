@@ -116,10 +116,8 @@ int main(int argc, char** argv){
 			clusterer->updateLabels();
 		}while (!clusterer->converged());
 		clusterer->updateState();
-    const VXu& z = clusterer->z();
-    const MXf& p = clusterer->centroids();
-    cout<<(z.array() == 0).all()<<endl;
-    cout<<p<<endl;
+    		const VXu& z = clusterer->z();
+    		const MXf& p = clusterer->centroids();
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;
 		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";

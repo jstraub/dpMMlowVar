@@ -71,7 +71,7 @@ KMeans<T,DS>::KMeans(
     this->z_.fill(0);
   }
 
-  this->ps_.setZero(); 
+//  this->ps_.setZero(); 
 //  updateCenters();
 //  for(uint32_t k=0; k<this->K_; ++k)
 //    this->ps_.col(k) = S_.sampleUnif(this->pRndGen_);
@@ -105,11 +105,13 @@ KMeans<T,DS>::~KMeans()
 template<class T, class DS>
 uint32_t KMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
-  sim_closest = DS::dist(this->ps_.col(0), this->spx_->col(i));
+  sim_closest = this->cls_[0]->dist(this->spx_->col(i));
+//    DS::dist(this->ps_.col(0), this->spx_->col(i));
   uint32_t z_i = 0;
   for(uint32_t k=1; k<this->K_; ++k)
   {
-    T sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
+    T sim_k = this->cls_[k]->dist(this->spx_->col(i));
+//DS::dist(this->ps_.col(k), this->spx_->col(i));
     if( DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
@@ -152,7 +154,10 @@ void KMeans<T,DS>::updateLabels()
 template<class T, class DS>
 void KMeans<T,DS>::updateCenters()
 {
-  this->ps_ = DS::computeCenters(*(this->spx_),this->z_,this->K_,this->Ns_);
+#pragma omp parallel for
+  for(uint32_t k=0; k<this->K_; ++k)
+    this->cls_[k]->computeCenter(*(this->spx_),this->z_,k);
+//  this->ps_ = DS::computeCenters(*(this->spx_),this->z_,this->K_,this->Ns_);
 //#pragma omp parallel for 
 //  for(uint32_t k=0; k<this->K_; ++k)
 //  {
@@ -176,7 +181,8 @@ MatrixXu KMeans<T,DS>::mostLikelyInds(uint32_t n,
     for (uint32_t i=0; i<this->N_; ++i)
       if(this->z_(i) == k)
       {
-        T deviate = DS::dist(this->ps_.col(k), this->spx_->col(i));
+        T deviate = this->cls_[k]->dist(this->spx_->col(i)); 
+//          DS::dist(this->ps_.col(k), this->spx_->col(i));
 //        T deviate = (this->ps_.col(k) - this->spx_->col(i)).norm();
         for (uint32_t j=0; j<n; ++j)
           if(DS::closer(deviate, deviates(j,k)))
@@ -211,15 +217,16 @@ T KMeans<T,DS>::avgIntraClusterDeviation()
 #pragma omp parallel for 
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    this->Ns_(k) = 0.0;
+    this->cls_[k]->N() = 0.0;
     for (uint32_t i=0; i<this->N_; ++i)
       if(this->z_(i) == k)
       {
-        deviates(k) += DS::dist(this->ps_.col(k), this->spx_->col(i));
+        deviates(k) += this->cls_[k]->dist( this->spx_->col(i));
+//          DS::dist(this->ps_.col(k), this->spx_->col(i));
 //        deviates(k) += (this->ps_.col(k) - this->spx_->col(i)).norm();
-        this->Ns_(k) ++;
+        this->cls_[k]->N() ++;
       }
 //    if(this->Ns_(k) > 0.0) deviates(k) /= this->Ns_(k);
   }
-  return deviates.sum()/ this->Ns_.sum();//static_cast<T>(this->K_);
+  return deviates.sum()/ this->N_;//static_cast<T>(this->K_);
 }

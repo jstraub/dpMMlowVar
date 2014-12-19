@@ -49,7 +49,8 @@ uint32_t DPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
   sim_closest = lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    T sim_k = DS::dist(this->ps_.col(k), this->spx_->col(i));
+    T sim_k = this->cls_[k]->dist(this->spx_->col(i));
+//      DS::dist(this->ps_.col(k), this->spx_->col(i));
     if(DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
@@ -74,10 +75,7 @@ void DPMeans<T,DS>::updateLabels()
 
     if(z_i == this->K_) 
     {
-      this->ps_.conservativeResize(this->D_,this->K_+1);
-      this->Ns_.conservativeResize(this->K_+1); 
-      this->ps_.col(this->K_) = this->spx_->col(i);
-      this->Ns_(this->K_) = 1.;
+      this->cls_.push_back(shared_ptr<typename DS::Cluster>(new typename DS::Cluster(this->spx_->col(i))));
       this->K_ ++;
     }
     this->z_(i) = z_i;
@@ -87,12 +85,14 @@ void DPMeans<T,DS>::updateLabels()
 template<class T, class DS>
 void DPMeans<T,DS>::updateCenters()
 {
-  this->ps_ = DS::computeCenters(*this->spx_,this->z_,this->K_,this->Ns_);
+  KMeans<T,DS>::updateCenters();
+//  this->ps_ = DS::computeCenters(*this->spx_,this->z_,this->K_,this->Ns_);
 
   vector<bool> toDelete(this->K_,false);
   for(uint32_t k=0; k<this->K_; ++k)
   {
-    if (this->Ns_(k) <= 0) 
+    if (!this->cls_[k]->isInstantiated()) 
+//    if (this->Ns_(k) <= 0) 
       toDelete[k] = true;
   }
 
@@ -109,15 +109,20 @@ void DPMeans<T,DS>::updateCenters()
       kNew --;
     }
 
-  Matrix<T,Dynamic,Dynamic> psNew(this->D_,kNew);
-  int32_t offset = 0;
-  for(uint32_t k=0; k<this->K_; ++k)
+//  Matrix<T,Dynamic,Dynamic> psNew(this->D_,kNew);
+//  int32_t offset = 0;
+  for(int32_t k=this->K_; k >=0 ; --k)
     if(toDelete[k])
     {
-      offset ++;
-    }else{
-      psNew.col(k-offset) = this->ps_.col(k);
+      this->cls_.erase(this->cls_.begin()+k);
     }
-  this->ps_ = psNew;
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    if(toDelete[k])
+//    {
+//      offset ++;
+//    }else{
+//      psNew.col(k-offset) = this->ps_.col(k);
+//    }
+//  this->ps_ = psNew;
   this->K_ = kNew;
 };

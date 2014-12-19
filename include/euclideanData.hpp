@@ -7,19 +7,50 @@ template<typename T>
 struct Euclidean //: public DataSpace<T>
 {
 
-//  template <typename T>
   class Cluster
   {
     Matrix<T,Dynamic,1> centroid_;
     Matrix<T,Dynamic,1> xSum_;
-    T N_;
+    uint32_t N_;
 
     public:
+
+    Cluster() : centroid_(0,1), xSum_(0,1), N_(0)
+    {};
+
+    Cluster(const Matrix<T,Dynamic,1>& x_i) : centroid_(x_i), xSum_(x_i), N_(1)
+    {};
+
     T dist (const Matrix<T,Dynamic,1>& x_i) const
-    { return dist(this->centroid_, x_i); };
+    { return Euclidean::dist(this->centroid_, x_i); };
+
+    void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
+        const uint32_t k)
+    {
+      const uint32_t D = x.rows();
+      const uint32_t N = x.cols();
+      N_ = 0;
+      xSum_.setZero(D);
+      for(uint32_t i=0; i<N; ++i)
+        if(z(i) == k)
+        {
+          xSum_ += x.col(i); 
+          ++ N_;
+        }
+      if(N_ > 0)
+        centroid_ = xSum_/N_;
+      else
+        //TODO: cloud try to do sth more random here
+        centroid_ = x.col(k); //Matrix<T,Dynamic,1>::Zero(D,1);
+    };
+
+    bool isInstantiated() const {return this->N_>0;};
+
+    uint32_t N() const {return N_;};
+    uint32_t& N(){return N_;};
+    Matrix<T,Dynamic,1> centroid(){return centroid_;};
   };
 
-//  template <typename T>
   class DependentCluster : public Cluster
   {
     // variables
@@ -32,18 +63,17 @@ struct Euclidean //: public DataSpace<T>
 
     public:
     bool isDead() const {return t_*Q_ > lambda_;};
-    bool isInstantiated() const {return this->N_>0;};
 
     void updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k)
     {w_ =  1./(1./w_ + t_*tau_) + N_k;};
 
-    Matrix<T,Dynamic,1> reInstantiate(const Matrix<T,Dynamic,1>& xSum)
+    void reInstantiate(const Matrix<T,Dynamic,1>& xSum)
     { const T gamma = 1.0/(1.0/w_ + t_*tau_);
      this->centroid_ = (this->centroid_ * gamma + xSum)/(gamma+1.);};
 
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     {
-      if(isInstantiated())
+      if(this->isInstantiated())
         return dist(this->centroid_, x_i);
       else{
         return dist(this->centroid_,x_i) / (tau_*t_+1.+ 1.0/ w_) + Q_*t_; 

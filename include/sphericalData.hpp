@@ -5,6 +5,95 @@
 template<typename T>
 struct Spherical //: public DataSpace<T>
 {
+  class Cluster
+  {
+    Matrix<T,Dynamic,1> centroid_;
+    Matrix<T,Dynamic,1> xSum_;
+    uint32_t N_;
+
+    public:
+
+    Cluster() : centroid_(0,1), xSum_(0,1), N_(0)
+    {};
+
+    Cluster(const Matrix<T,Dynamic,1>& x_i) : centroid_(x_i), xSum_(x_i), N_(1)
+    {};
+
+    T dist (const Matrix<T,Dynamic,1>& x_i) const
+    { return Spherical::dist(this->centroid_, x_i); };
+
+    void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
+        const uint32_t k)
+    {
+      const uint32_t D = x.rows();
+      Matrix<T,Dynamic,1> xSum = Spherical::computeSum(x,z,k,&N_);
+      if(N_ > 0)
+        this->centroid_ = xSum/xSum.norm();
+      else
+      {
+        this->centroid_ = Matrix<T,Dynamic,1>::Zero(D);
+        this->centroid_(0) = 1.;
+      }
+    };
+
+    bool isInstantiated() const {return this->N_>0;};
+
+    uint32_t N() const {return N_;};
+    uint32_t& N(){return N_;};
+    Matrix<T,Dynamic,1> centroid(){return centroid_;};
+  };
+
+
+  class DependentCluster : public Cluster
+  {
+    // variables
+    T t_;
+    T w_;
+    // parameters
+    T beta_;
+    T lambda_;
+    T Q_;
+
+    public:
+    bool isDead() const {return t_*Q_ < lambda_;};
+
+    void updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k)
+    {
+      T phi, theta, eta;
+      T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
+              dist(xSum,this->centroid_)/xSum.norm())));
+      solveProblem2(xSum , zeta, t_, w_, beta_, phi,theta,eta);
+      w_ =  w_ * cos(theta) + beta_*t_*cos(phi) + xSum.norm()*cos(eta);
+    };
+
+    void reInstantiate(const Matrix<T,Dynamic,1>& xSum)
+    {
+      T phi, theta, eta;
+      T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
+              dist(xSum,this->centroid_)/xSum.norm())));
+      solveProblem2(xSum , zeta, t_, w_, beta_, phi,theta,eta);
+
+      // rotate point from mean_k towards previous mean by angle eta?
+      this->centroid_ = rotationFromAtoB<T>(xSum/xSum.norm(), 
+          this->centroid_, eta/(phi*t_+theta+eta)) * xSum/xSum.norm(); 
+    };
+
+    T dist (const Matrix<T,Dynamic,1>& x_i) const
+    {
+      if(this->isInstantiated())
+        return dist(this->centroid_, x_i);
+      else{
+        T phi, theta, eta;
+        T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
+                dist(x_i,this->centroid_) )));
+        solveProblem2(x_i, zeta, t_, w_, beta_, phi,theta,eta);
+
+        return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
+          + cos(eta); // no minus 1 here cancels with Z(tau) from the two other assignments
+      }
+    };
+  };
+
   static T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
   { return a.transpose()*b; };
 
@@ -13,13 +102,6 @@ struct Spherical //: public DataSpace<T>
 
   static bool closer(const T a, const T b)
   { return a > b; };
-
-  static T clusterIsDead(const T t_k, const T lambda, const T Q)
-  { return t_k*Q < lambda;};
-
-  static T distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
-      Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
-      const T Q);
 
   static Matrix<T,Dynamic,Dynamic> computeSums(const
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K);
@@ -31,6 +113,7 @@ struct Spherical //: public DataSpace<T>
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
       VectorXu& Ns);
 
+  // TODO deprecate soon
   static Matrix<T,Dynamic,1> computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
       const VectorXu& z, const uint32_t k, uint32_t* N_k);
 
@@ -40,6 +123,13 @@ struct Spherical //: public DataSpace<T>
 
   static T updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k,
       const Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta);
+
+  static T clusterIsDead(const T t_k, const T lambda, const T Q)
+  { return t_k*Q < lambda;};
+
+  static T distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
+      Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
+      const T Q);
   
   private:
 

@@ -223,37 +223,42 @@ void DDPMeans<T,DS>::updateLabels()
     cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
   }while(idAction != UNASSIGNED);
 //  cout<<"ps = "<<this->ps_<<endl;
+  // if a cluster runs out of labels reset it to the previous mean!
+  for(uint32_t k=0; k<this->K_; ++k)
+    if(!this->cls_[k]->isInstantiated()) this->cls_[k] = this->clsPrev_[k];
 
   // TODO: this cost only works for a single time slice
-  T cost =  0.0;
-  for(uint32_t k=0; k<this->K_; ++k)
-    if(this->cls_[k]->N() == 1.) cost += this->lambda_;
+//  T cost =  0.0;
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    if(this->cls_[k]->N() == 1.) cost += this->lambda_;
 
-  //TODO get counts from GPU
-  prevNs_.resize(this->K_);
-  for(uint32_t k=0; k<this->K_; ++k)
-  {
-//    this->cls_[k]->print();
-    prevNs_(k) = this->cls_[k]->N();
-    this->cls_[k]->N() = 0;
-  }
-#pragma omp parallel for reduction(+:cost)
-  for(uint32_t k=0; k<this->K_; ++k)
-    for(uint32_t i=0; i<this->N_; ++i)
-      if(this->z_(i) == k)
-      {
-        this->cls_[k]->N() += 1; 
-        T sim_closest = this->cls_[k]->dist(this->spx_->col(i));
-//          DS::dist(this->ps_.col(k), this->spx_->col(i));
-        cost += sim_closest;
-      }
-  this->prevCost_ = this->cost_;
-  this->cost_ = cost;
+//  //TODO get counts from GPU
+//  prevNs_.resize(this->K_);
+//  for(uint32_t k=0; k<this->K_; ++k)
+//  {
+////    this->cls_[k]->print();
+//    prevNs_(k) = this->cls_[k]->N();
+////    this->cls_[k]->N() = 0;
+//  }
+//
+//#pragma omp parallel for //reduction(+:cost)
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    for(uint32_t i=0; i<this->N_; ++i)
+//      if(this->z_(i) == k)
+//      {
+//        this->cls_[k]->N() += 1; 
+////        T sim_closest = this->cls_[k]->dist(this->spx_->col(i));
+//////          DS::dist(this->ps_.col(k), this->spx_->col(i));
+////        cost += sim_closest;
+//      }
+//  this->prevCost_ = this->cost_;
+//  this->cost_ = cost;
 };
 
 template<class T, class DS>
 void DDPMeans<T,DS>::updateLabelsSerial()
 {
+  //TODO this one may be broken by now
   for(uint32_t i=0; i<this->N_; ++i)
   {
     T sim = 0.;
@@ -282,28 +287,35 @@ void DDPMeans<T,DS>::updateLabelsSerial()
     this->z_(i) = z_i;
   }
 
-  prevNs_.resize(this->K_);
-  for(uint32_t k=0; k<this->K_; ++k)
-  {
-    prevNs_(k) = this->cls_[k]->N();
-    this->cls_[k]->N() = 0;
-  }
+//  prevNs_.resize(this->K_);
+//  for(uint32_t k=0; k<this->K_; ++k)
+//  {
+//    prevNs_(k) = this->cls_[k]->N();
+//    this->cls_[k]->N() = 0;
+//  }
 //  this->Ns_.fill(0);
-#pragma omp parallel for
-  for(uint32_t k=0; k<this->K_; ++k)
-    for(uint32_t i=0; i<this->N_; ++i)
-      if(this->z_(i) == k)
-      {
-        ++ this->cls_[k]->N(); 
-      }
-  cout<<" Ns = ";
-  for(uint32_t k=0; k<this->K_; ++k) cout<<this->cls_[k]->N()<<" "; cout<<endl;
+//#pragma omp parallel for
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    for(uint32_t i=0; i<this->N_; ++i)
+//      if(this->z_(i) == k)
+//      {
+//        this->cls_[k]->N() ++; 
+//      }
+//  cout<<" Ns = ";
+//  for(uint32_t k=0; k<this->K_; ++k) cout<<this->cls_[k]->N()<<" "; cout<<endl;
 };
 
 template<class T, class DS>
 void DDPMeans<T,DS>::updateCenters()
 {
 //  xSums_ = Matrix<T,Dynamic,Dynamic>::Zero(this->D_, this->K_);
+  prevNs_.resize(this->K_);
+  for(uint32_t k=0; k<this->K_; ++k)
+  {
+//    this->cls_[k]->print();
+    prevNs_(k) = this->cls_[k]->N();
+//    this->cls_[k]->N() = 0;
+  }
 #pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
@@ -337,8 +349,11 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
 //  psPrev_ = this->ps_;
   this->clsPrev_.clear();
   for (uint32_t k =0; k< this->K_; ++k)
+  {
     clsPrev_.push_back(shared_ptr<typename
         DS::DependentCluster>(this->cls_[k]->clone())); 
+    this->cls_[k]->N() = 0;
+  }
 
   this->Kprev_ = this->K_;
   assert(this->D_ == spx->rows());

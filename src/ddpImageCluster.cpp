@@ -113,8 +113,8 @@ int main(int argc, char** argv){
 		shared_ptr<MXf> data = extractVectorData(frame);
 		clusterer->nextTimeStep(data);
 		do{
-    	clusterer->updateCenters();
 			clusterer->updateLabels();
+    	clusterer->updateCenters();
 		}while (!clusterer->converged());
 		clusterer->updateState();
     const VXu& z = clusterer->z();

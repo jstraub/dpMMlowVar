@@ -109,6 +109,7 @@ struct Euclidean //: public DataSpace<T>
     {};
 
     bool isDead() const {return t_*Q_ > lambda_;};
+    bool isNew() const {return t_ == 0;};
 
     void incAge() { ++ t_; };
 

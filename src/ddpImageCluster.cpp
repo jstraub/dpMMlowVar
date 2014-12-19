@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <boost/program_options.hpp>
-#include <ddpmeansCUDA.hpp>
+#include <ddpmeansCUDAnew.hpp>
 #include <euclideanData.hpp>
 
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;
@@ -94,8 +94,8 @@ int main(int argc, char** argv){
 	//set up the DDP Means object
 	mt19937 rng; rng.seed(vm["seed"].as<int>());
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-//  	DDPMeansCUDA<float,Euclidean<float> > *clusterer = new DDPMeansCUDA<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
-  	DDPMeans<float,Euclidean<float> > *clusterer = new DDPMeans<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
+  	DDPMeansCUDA<float,Euclidean<float> > *clusterer = new DDPMeansCUDA<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
+//  	DDPMeans<float,Euclidean<float> > *clusterer = new DDPMeans<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
 
 	//loop over frames, resize if necessary, and cluster
 	int fr = 1;

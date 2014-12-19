@@ -110,6 +110,7 @@ struct Spherical //: public DataSpace<T>
     DependentCluster* clone(){return new DependentCluster(*this);}
 
     bool isDead() const {return t_*Q_ < lambda_;};
+    bool isNew() const {return t_ == 0;};
 
     void incAge() { ++ t_; };
 
@@ -182,6 +183,13 @@ struct Spherical //: public DataSpace<T>
   static bool closer(const T a, const T b)
   { return a > b; };
 
+  private:
+
+  static void solveProblem1(T gamma, T age, const T beta, T& phi, T& theta); 
+  static void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
+      const T beta, T& phi, T& theta, T& eta); 
+
+  // TODO deprecate soon
   static Matrix<T,Dynamic,Dynamic> computeSums(const
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K);
 
@@ -192,7 +200,6 @@ struct Spherical //: public DataSpace<T>
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
       VectorXu& Ns);
 
-  // TODO deprecate soon
   static Matrix<T,Dynamic,1> computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
       const VectorXu& z, const uint32_t k, uint32_t* N_k);
 
@@ -210,11 +217,6 @@ struct Spherical //: public DataSpace<T>
       Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
       const T Q);
   
-  private:
-
-  static void solveProblem1(T gamma, T age, const T beta, T& phi, T& theta); 
-  static void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
-      const T beta, T& phi, T& theta, T& eta); 
 };
 
 // ================================ impl ======================================

@@ -33,7 +33,6 @@ public:
   virtual ~DDPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
-  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual void updateLabelsSerial();
   virtual void updateLabels();
   virtual void updateCenters();
@@ -49,17 +48,28 @@ public:
       && (prevNs_.array() == this->counts().array()).all();
   };
 
+  VectorXf ages(){
+    VectorXf ts(this->K_);
+    for(uint32_t k=0; k<this->K_; ++k) ts(k) = this->cls_[k]->t();
+    return ts;
+  };
+
+  VectorXf weights(){
+    VectorXf ws(this->K_);
+    for(uint32_t k=0; k<this->K_; ++k) ws(k) = this->cls_[k]->w();
+    return ws;
+  };
 
 protected:
 
   T Kprev_; // K before updateLabels()
   VectorXu prevNs_;
-
   uint32_t globalMaxInd_;
 
   typename DS::DependentCluster cl0_;
-
   vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
+
+  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
 };
 
 // -------------------------------- impl ----------------------------------
@@ -92,7 +102,6 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
   }
   return z_i;
 }
-
 
 template<class T,class DS>
 uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)

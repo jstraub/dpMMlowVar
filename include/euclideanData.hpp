@@ -9,6 +9,7 @@ struct Euclidean //: public DataSpace<T>
 
   class Cluster
   {
+    protected:
     Matrix<T,Dynamic,1> centroid_;
     Matrix<T,Dynamic,1> xSum_;
     uint32_t N_;
@@ -21,10 +22,13 @@ struct Euclidean //: public DataSpace<T>
     Cluster(const Matrix<T,Dynamic,1>& x_i) : centroid_(x_i), xSum_(x_i), N_(1)
     {};
 
+    Cluster(const Matrix<T,Dynamic,1>& xSum, uint32_t N) : centroid_(xSum/N), xSum_(xSum), N_(N)
+    {};
+
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     { return Euclidean::dist(this->centroid_, x_i); };
 
-    void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
+    void computeSS(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
         const uint32_t k)
     {
       const uint32_t D = x.rows();
@@ -37,22 +41,37 @@ struct Euclidean //: public DataSpace<T>
           xSum_ += x.col(i); 
           ++ N_;
         }
+      //TODO: cloud try to do sth more random here
+      if(N_ == 0)
+        xSum_ = x.col(k); //Matrix<T,Dynamic,1>::Zero(D,1);
+    };
+
+    void updateCenter()
+    {
       if(N_ > 0)
         centroid_ = xSum_/N_;
       else
-        //TODO: cloud try to do sth more random here
-        centroid_ = x.col(k); //Matrix<T,Dynamic,1>::Zero(D,1);
+        centroid_ = xSum_;
+    };
+
+    void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
+        const uint32_t k)
+    {
+      computeSS(x,z,k);
+      updateCenter();
     };
 
     bool isInstantiated() const {return this->N_>0;};
 
     uint32_t N() const {return N_;};
     uint32_t& N(){return N_;};
-    Matrix<T,Dynamic,1> centroid(){return centroid_;};
+    const Matrix<T,Dynamic,1>& centroid() const {return centroid_;};
+    const Matrix<T,Dynamic,1>& xSum() const {return xSum_;};
   };
 
   class DependentCluster : public Cluster
   {
+    protected:
     // variables
     T t_;
     T w_;
@@ -61,24 +80,80 @@ struct Euclidean //: public DataSpace<T>
     T lambda_;
     T Q_;
 
+
     public:
+
+    DependentCluster() : Cluster(), t_(0), w_(0), tau_(1), lambda_(1), Q_(1)
+    {};
+
+    DependentCluster(const Matrix<T,Dynamic,1>& x_i) : Cluster(x_i), t_(0),
+      w_(0), tau_(1), lambda_(1), Q_(1)
+    {};
+
+    DependentCluster(const Matrix<T,Dynamic,1>& x_i, T tau, T lambda, T Q) :
+      Cluster(x_i), t_(0), w_(0), tau_(tau), lambda_(lambda), Q_(Q)
+    {};
+
+    DependentCluster(const Matrix<T,Dynamic,1>& x_i, const DependentCluster& cl0) :
+      Cluster(x_i), t_(0), w_(0), tau_(cl0.tau()), lambda_(cl0.lambda()),
+      Q_(cl0.Q())
+    {};
+
+    DependentCluster(T tau, T lambda, T Q) :
+      Cluster(), t_(0), w_(0), tau_(tau), lambda_(lambda), Q_(Q)
+    {};
+
+    DependentCluster(const DependentCluster& b) :
+      Cluster(b.xSum(), b.N()), t_(b.t()), w_(b.w()), tau_(b.tau()),
+      lambda_(b.lambda()), Q_(b.Q())
+    {};
+
     bool isDead() const {return t_*Q_ > lambda_;};
 
-    void updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k)
-    {w_ =  1./(1./w_ + t_*tau_) + N_k;};
+    void incAge() { ++ t_; };
 
-    void reInstantiate(const Matrix<T,Dynamic,1>& xSum)
+    void updateWeight()
+    {
+      w_ = w_==0? this->N_ : 1./(1./w_ + t_*tau_) + this->N_;
+      t_ = 0;
+    };
+
+    void print() const 
+    {
+      cout<<"cluster "<<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
+        <<w_ <<"\t dead? "<<this->isDead()
+        <<"  center: "<<this->centroid().transpose()<<endl;
+    };
+
+    DependentCluster* clone(){return new DependentCluster(*this);}
+
+    void reInstantiate()
     { const T gamma = 1.0/(1.0/w_ + t_*tau_);
-     this->centroid_ = (this->centroid_ * gamma + xSum)/(gamma+1.);};
+      this->centroid_ = (this->centroid_ * gamma + this->xSum_)/(gamma+this->N_);
+    };
+
+    void reInstantiate(const Matrix<T,Dynamic,Dynamic>& x_i)
+    {
+      this->xSum_ = x_i; this->N_ = 1;
+      reInstantiate();
+    };
 
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     {
       if(this->isInstantiated())
-        return dist(this->centroid_, x_i);
+        return Euclidean::dist(this->centroid_, x_i);
       else{
-        return dist(this->centroid_,x_i) / (tau_*t_+1.+ 1.0/ w_) + Q_*t_; 
+        return Euclidean::dist(this->centroid_,x_i) / (tau_*t_+1.+ 1.0/ w_) + Q_*t_; 
       }
     };
+
+    T tau() const {return tau_;};
+    T lambda() const {return lambda_;};
+    T Q() const {return Q_;};
+    T t() const {return t_;};
+    T w() const {return w_;};
+
+    uint32_t globalId; // id globally - only increasing id
   };
    
   static T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)

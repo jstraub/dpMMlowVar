@@ -7,6 +7,7 @@ struct Spherical //: public DataSpace<T>
 {
   class Cluster
   {
+    protected:
     Matrix<T,Dynamic,1> centroid_;
     Matrix<T,Dynamic,1> xSum_;
     uint32_t N_;
@@ -19,33 +20,58 @@ struct Spherical //: public DataSpace<T>
     Cluster(const Matrix<T,Dynamic,1>& x_i) : centroid_(x_i), xSum_(x_i), N_(1)
     {};
 
+    Cluster(const Matrix<T,Dynamic,1>& xSum, uint32_t N) :
+      centroid_(xSum/xSum.norm()), xSum_(xSum), N_(N)
+    {};
+
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     { return Spherical::dist(this->centroid_, x_i); };
+
+    void computeSS(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
+        const uint32_t k)
+    {
+      const uint32_t D = x.rows();
+      const uint32_t N = x.cols();
+      N_ = 0;
+      xSum_.setZero(D);
+      for(uint32_t i=0; i<N; ++i)
+        if(z(i) == k)
+        {
+          xSum_ += x.col(i); 
+          ++ N_;
+        }
+      //TODO: cloud try to do sth more random here
+      if(N_ == 0)
+      {
+        xSum_ = Matrix<T,Dynamic,1>::Zero(D);
+        xSum_(0) = 1.;
+      }
+    };
+
+    void updateCenter()
+    {
+      centroid_ = xSum_/xSum_.norm();
+    };
 
     void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
         const uint32_t k)
     {
-      const uint32_t D = x.rows();
-      Matrix<T,Dynamic,1> xSum = Spherical::computeSum(x,z,k,&N_);
-      if(N_ > 0)
-        this->centroid_ = xSum/xSum.norm();
-      else
-      {
-        this->centroid_ = Matrix<T,Dynamic,1>::Zero(D);
-        this->centroid_(0) = 1.;
-      }
+      computeSS(x,z,k);
+      updateCenter();
     };
 
     bool isInstantiated() const {return this->N_>0;};
 
     uint32_t N() const {return N_;};
     uint32_t& N(){return N_;};
-    Matrix<T,Dynamic,1> centroid(){return centroid_;};
+    const Matrix<T,Dynamic,1>& centroid() const {return centroid_;};
+    const Matrix<T,Dynamic,1>& xSum() const {return xSum_;};
   };
 
 
   class DependentCluster : public Cluster
   {
+    protected:
     // variables
     T t_;
     T w_;
@@ -55,43 +81,96 @@ struct Spherical //: public DataSpace<T>
     T Q_;
 
     public:
+
+    DependentCluster() : Cluster(), t_(0), w_(0), beta_(1), lambda_(1), Q_(1)
+    {};
+
+    DependentCluster(const Matrix<T,Dynamic,1>& x_i) : Cluster(x_i), t_(0),
+      w_(0), beta_(1), lambda_(1), Q_(1)
+    {};
+
+    DependentCluster(const Matrix<T,Dynamic,1>& x_i, T beta, T lambda, T Q) :
+      Cluster(x_i), t_(0), w_(0), beta_(beta), lambda_(lambda), Q_(Q)
+    {};
+
+    DependentCluster(const Matrix<T,Dynamic,1>& x_i, const DependentCluster& cl0) :
+      Cluster(x_i), t_(0), w_(0), beta_(cl0.beta()), lambda_(cl0.lambda()),
+      Q_(cl0.Q())
+    {};
+
+    DependentCluster(T beta, T lambda, T Q) :
+      Cluster(), t_(0), w_(0), beta_(beta), lambda_(lambda), Q_(Q)
+    {};
+
+    DependentCluster(const DependentCluster& b) :
+      Cluster(b.xSum(), b.N()), t_(b.t()), w_(b.w()), beta_(b.beta()),
+      lambda_(b.lambda()), Q_(b.Q())
+    {};
+
+    DependentCluster* clone(){return new DependentCluster(*this);}
+
     bool isDead() const {return t_*Q_ < lambda_;};
 
-    void updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k)
+    void incAge() { ++ t_; };
+
+    void print() const 
     {
-      T phi, theta, eta;
-      T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-              dist(xSum,this->centroid_)/xSum.norm())));
-      solveProblem2(xSum , zeta, t_, w_, beta_, phi,theta,eta);
-      w_ =  w_ * cos(theta) + beta_*t_*cos(phi) + xSum.norm()*cos(eta);
+      cout<<"cluster " <<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
+        <<w_ <<"\t dead? "<<this->isDead()
+        <<"  center: "<<this->centroid().transpose()<<endl;
     };
 
-    void reInstantiate(const Matrix<T,Dynamic,1>& xSum)
+    void updateWeight()
     {
       T phi, theta, eta;
       T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-              dist(xSum,this->centroid_)/xSum.norm())));
-      solveProblem2(xSum , zeta, t_, w_, beta_, phi,theta,eta);
+              dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
+      Spherical::solveProblem2(this->xSum_ , zeta, t_, w_, beta_, phi,theta,eta);
+      w_ = w_ == 0.0? this->xSum_.norm() : w_ * cos(theta) + beta_*t_*cos(phi)
+        + this->xSum_.norm()*cos(eta);
+      t_ =  0;
+    };
+
+    void reInstantiate()
+    {
+      T phi, theta, eta;
+      T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
+              dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
+      Spherical::solveProblem2(this->xSum_ , zeta, t_, w_, beta_, phi,theta,eta);
 
       // rotate point from mean_k towards previous mean by angle eta?
-      this->centroid_ = rotationFromAtoB<T>(xSum/xSum.norm(), 
-          this->centroid_, eta/(phi*t_+theta+eta)) * xSum/xSum.norm(); 
+      this->centroid_ = rotationFromAtoB<T>(this->xSum_/this->xSum_.norm(), 
+          this->centroid_, eta/(phi*t_+theta+eta)) * this->xSum_/this->xSum_.norm(); 
+    };
+
+    void reInstantiate(const Matrix<T,Dynamic,Dynamic>& x_i)
+    {
+      this->xSum_ = x_i; this->N_ = 1;
+      reInstantiate();
     };
 
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     {
       if(this->isInstantiated())
-        return dist(this->centroid_, x_i);
+        return Spherical::dist(this->centroid_, x_i);
       else{
         T phi, theta, eta;
         T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-                dist(x_i,this->centroid_) )));
-        solveProblem2(x_i, zeta, t_, w_, beta_, phi,theta,eta);
+                Spherical::dist(x_i,this->centroid_) )));
+        Spherical::solveProblem2(x_i, zeta, t_, w_, beta_, phi,theta,eta);
 
         return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
-          + cos(eta); // no minus 1 here cancels with Z(tau) from the two other assignments
+          + cos(eta); // no minus 1 here cancels with Z(beta) from the two other assignments
       }
     };
+
+    T beta() const {return beta_;};
+    T lambda() const {return lambda_;};
+    T Q() const {return Q_;};
+    T t() const {return t_;};
+    T w() const {return w_;};
+
+    uint32_t globalId; // id globally - only increasing id
   };
 
   static T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
@@ -133,8 +212,8 @@ struct Spherical //: public DataSpace<T>
   
   private:
 
-  void solveProblem1(T gamma, T age, const T beta, T& phi, T& theta); 
-  void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
+  static void solveProblem1(T gamma, T age, const T beta, T& phi, T& theta); 
+  static void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
       const T beta, T& phi, T& theta, T& eta); 
 };
 

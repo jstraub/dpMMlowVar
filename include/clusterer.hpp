@@ -34,10 +34,9 @@ public:
   virtual T avgIntraClusterDeviation() = 0;
   
   const VectorXu& z() const {return z_;};
-  const VectorXu& counts() const {
+  VectorXu counts() const {
     VectorXu Ns(K_);
-    for(uint32_t k=0; k<K_; ++k)
-      Ns(k) = cls_[k]->N();
+    for(uint32_t k=0; k<K_; ++k) Ns(k) = cls_[k]->N();
     return Ns;
   };
   const Matrix<T,Dynamic,Dynamic>& centroids() const {
@@ -69,7 +68,7 @@ protected:
   uint32_t N_;
   T cost_, prevCost_;
   shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
-  vector< shared_ptr<typename DS::Cluster> > cls_; // clusters
+  vector< shared_ptr<typename DS::DependentCluster> > cls_; // clusters
 //  Matrix<T,Dynamic,Dynamic> ps_; // centroids on the sphere
 //  VectorXu Ns_; // counts for each cluster
   VectorXu z_; // labels
@@ -85,7 +84,7 @@ Clusterer<T,DS>::Clusterer(
   spx_(spx), z_(N_), pRndGen_(pRndGen)
 {
   for (uint32_t k=0; k<K_; ++k)
-    cls_.push_back(shared_ptr<typename DS::Cluster >(new typename DS::Cluster()));
+    cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
 };
 
 template<class T, class DS>

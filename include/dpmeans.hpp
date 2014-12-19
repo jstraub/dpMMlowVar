@@ -75,7 +75,8 @@ void DPMeans<T,DS>::updateLabels()
 
     if(z_i == this->K_) 
     {
-      this->cls_.push_back(shared_ptr<typename DS::Cluster>(new typename DS::Cluster(this->spx_->col(i))));
+      this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
+            typename DS::DependentCluster(this->spx_->col(i))));
       this->K_ ++;
     }
     this->z_(i) = z_i;

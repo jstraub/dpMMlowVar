@@ -30,19 +30,11 @@ struct Spherical //: public DataSpace<T>
     void computeSS(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
         const uint32_t k)
     {
-      const uint32_t D = x.rows();
-      const uint32_t N = x.cols();
-      N_ = 0;
-      xSum_.setZero(D);
-      for(uint32_t i=0; i<N; ++i)
-        if(z(i) == k)
-        {
-          xSum_ += x.col(i); 
-          ++ N_;
-        }
+      Spherical::computeSum(x,z,k,&N_);
       //TODO: cloud try to do sth more random here
       if(N_ == 0)
       {
+        const uint32_t D = x.rows();
         xSum_ = Matrix<T,Dynamic,1>::Zero(D);
         xSum_(0) = 1.;
       }
@@ -189,67 +181,11 @@ struct Spherical //: public DataSpace<T>
   static void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
       const T beta, T& phi, T& theta, T& eta); 
 
-  // TODO deprecate soon
-  static Matrix<T,Dynamic,Dynamic> computeSums(const
-      Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K);
-
   static Matrix<T,Dynamic,1> computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
       const VectorXu& z, const uint32_t k, uint32_t* N_k);
-
-  static Matrix<T,Dynamic,Dynamic> computeCenters(const
-      Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
-      VectorXu& Ns);
-
-  static Matrix<T,Dynamic,1> computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
-      const VectorXu& z, const uint32_t k, uint32_t* N_k);
-
-  static Matrix<T,Dynamic,1> reInstantiatedOldCluster(const
-      Matrix<T,Dynamic,1>& xSum, const Matrix<T,Dynamic,1>& ps_k, const T t_k,
-      const T w_k, const T beta);
-
-  static T updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k,
-      const Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta);
-
-  static T clusterIsDead(const T t_k, const T lambda, const T Q)
-  { return t_k*Q < lambda;};
-
-  static T distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
-      Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
-      const T Q);
-  
 };
 
 // ================================ impl ======================================
-
-template<typename T>                                                            
-T Spherical<T>::distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
-    Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
-    const T Q)
-{
-  assert(k<this->psPrev_.cols());
-
-  T phi, theta, eta;
-  T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-          dist(x_i,ps_k) )));
-  solveProblem2(x_i, zeta, t_k, w_k, beta, phi,theta,eta);
-
-  return w_k*(cos(theta)-1.) 
-    + t_k*beta*(cos(phi)-1.) 
-    + cos(eta) // no minus 1 here cancels with Z(tau) from the two other assignments
-    + Q*t_k;
-};
-
-template<typename T>                                                            
-Matrix<T,Dynamic,Dynamic> Spherical<T>::computeSums(const
-    Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K)
-{
-  const uint32_t D = x.rows();
-  Matrix<T,Dynamic,Dynamic> xSums(D,K);
-#pragma omp parallel for 
-  for(uint32_t k=0; k<K; ++k)
-    xSums.col(k) = computeSum(x,z,k,NULL);
-  return xSums;
-}
 
   template<typename T>                                                            
 Matrix<T,Dynamic,1> Spherical<T>::computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
@@ -269,64 +205,6 @@ Matrix<T,Dynamic,1> Spherical<T>::computeSum(const Matrix<T,Dynamic,Dynamic>& x,
   return xSum;
 };
 
-template<typename T>                                                            
-Matrix<T,Dynamic,Dynamic> Spherical<T>::computeCenters(const
-    Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
-    VectorXu& Ns)
-{
-  const uint32_t D = x.rows();
-  Matrix<T,Dynamic,Dynamic> centroids(D,K);
-#pragma omp parallel for 
-  for(uint32_t k=0; k<K; ++k)
-    centroids.col(k) = computeCenter(x,z,k,&Ns(k));
-  return centroids;
-}
-
-  template<typename T>                                                            
-Matrix<T,Dynamic,1> Spherical<T>::computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
-    const VectorXu& z, const uint32_t k, uint32_t* N_k)
-{
-  const uint32_t D = x.rows();
-  Matrix<T,Dynamic,1> mean_k = computeSum(x,z,k,N_k);
-  if(*N_k > 0)
-    return mean_k/mean_k.norm();
-  else
-  {
-    mean_k = Matrix<T,Dynamic,1>::Zero(D);
-    mean_k(0) = 1.;
-    return mean_k;
-  }
-};
-
-template<typename T>                                                            
-Matrix<T,Dynamic,1> Spherical<T>::reInstantiatedOldCluster(const
-    Matrix<T,Dynamic,1>& xSum, const Matrix<T,Dynamic,1>& ps_k, const T t_k, const
-    T w_k, const T beta)
-{
-  //  cout<<"xSum: "<<xSum.transpose()<<endl;
-  T phi, theta, eta;
-  T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-          dist(xSum,ps_k)/xSum.norm())));
-  solveProblem2(xSum , zeta, t_k, w_k, beta, phi,theta,eta);
-
-  // rotate point from mean_k towards previous mean by angle eta?
-  return rotationFromAtoB<T>(xSum/xSum.norm(), 
-      ps_k, eta/(phi*t_k+theta+eta)) * xSum/xSum.norm(); 
-};
-
-template<typename T>                                                            
-T Spherical<T>::updateWeight(const Matrix<T,Dynamic,1>& xSum, 
-    const uint32_t N_k, const Matrix<T,Dynamic,1>& ps_k, const T t_k, 
-    const T w_k, const T beta)
-{
-  //  cout<<"xSum: "<<xSum.transpose()<<endl;
-  T phi, theta, eta;
-  T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-          dist(xSum,ps_k)/xSum.norm())));
-  solveProblem2(xSum , zeta, t_k, w_k, beta, phi,theta,eta);
-
-  return w_k * cos(theta) + beta*t_k*cos(phi) + xSum.norm()*cos(eta);
-};
 
 template<class T>
 void Spherical<T>::solveProblem1(T gamma, T age, const T beta, T& phi, T& theta)
@@ -362,7 +240,7 @@ void Spherical<T>::solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta,
   // eta + T phi + theta = zeta = acos(\mu0^T xSum/||xSum||_2)
   phi = 0.0;
 
-//  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
+  //  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
 
   T L2xSum = xSum.norm();
   for (uint32_t i=0; i< 10; ++i)

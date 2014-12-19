@@ -38,6 +38,7 @@ public:
   virtual void updateCenters();
   
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
+  virtual void nextTimeStep(const shared_ptr<ClData<T> >& cld);
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
@@ -93,7 +94,7 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
   T sim_k = 0.;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    sim_k = this->cls_[k]->dist(this->spx_->col(i)); 
+    sim_k = this->cls_[k]->dist(this->cld_->x()->col(i)); 
     if(DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
@@ -119,7 +120,7 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
         if(idAction > i) idAction = i;
       }
     }
-    this->z_(i) = z_i;
+    this->cld_->z(i) = z_i;
   }
   return idAction;
 };
@@ -138,14 +139,14 @@ void DDPMeans<T,DS>::updateLabels()
       if(z_i == this->K_) 
       { // start a new cluster
         this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-              typename DS::DependentCluster(this->spx_->col(idAction),cl0_)));
+              typename DS::DependentCluster(this->cld_->x()->col(idAction),cl0_)));
         this->cls_[z_i]->globalId = this->globalMaxInd_++;
         this->K_ ++;
         cout<<"new cluster "<<(this->K_-1)<<endl;
       } 
       else if(!this->cls_[z_i]->isInstantiated())
       { // instantiated an old cluster
-        this->cls_[z_i]->reInstantiate(this->spx_->col(idAction));
+        this->cls_[z_i]->reInstantiate(this->cld_->x()->col(idAction));
         cout<<"revieve cluster "<<z_i<<endl;
       }
       i0 = idAction;
@@ -168,17 +169,17 @@ void DDPMeans<T,DS>::updateLabelsSerial()
     if(z_i == this->K_) 
     { // start a new cluster
       this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-            typename DS::DependentCluster(this->spx_->col(i),cl0_)));
+            typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
       this->K_ ++;
     } else {
       if(!this->cls_[z_i]->isInstantiated())
       { // instantiated an old cluster
-        this->cls_[z_i]->reInstantiate(this->spx_->col(i));
+        this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
       }
       ++ this->cls_[z_i]->N();
     }
-    if(this->z_(i) != UNASSIGNED) -- this->cls_[z_i]->N();
-    this->z_(i) = z_i;
+    if(this->cld_->z(i) != UNASSIGNED) -- this->cls_[z_i]->N();
+    this->cld_->z(i) = z_i;
   }
 };
 
@@ -189,10 +190,13 @@ void DDPMeans<T,DS>::updateCenters()
   for(uint32_t k=0; k<this->K_; ++k)
     prevNs_(k) = this->cls_[k]->N();
 
-#pragma omp parallel for 
+  this->cld_->updateLabels(this->K_);
+  this->cld_->computeSS();
+
+//#pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
-    this->cls_[k]->computeSS(*this->spx_,this->z_,k);
+    this->cls_[k]->updateSS(this->cld_,k);
     if(this->cls_[k]->isInstantiated()) 
     { // have data to update kth cluster
       if(k < this->Kprev_){
@@ -207,6 +211,12 @@ void DDPMeans<T,DS>::updateCenters()
 template<class T, class DS>
 void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
+  return nextTimeStep(shared_ptr<ClData<T> >(new ClData<T>(spx,this->K_)));
+};
+
+template<class T, class DS>
+void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<ClData<T> >& cld)
+{
   this->clsPrev_.clear();
   for (uint32_t k =0; k< this->K_; ++k)
   {
@@ -216,11 +226,12 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   }
 
   this->Kprev_ = this->K_;
-  assert(this->D_ == spx->rows());
-  if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
-  this->N_ = spx->cols();
-  this->z_.resize(this->N_);
-  this->z_.fill(UNASSIGNED);
+//  assert(this->D_ == spx->rows());
+//  if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
+  this->cld_ = cld;
+  this->N_ = this->cld_->N();
+//  this->z_.resize(this->N_);
+//  this->z_.fill(UNASSIGNED);
 };
 
 template<class T, class DS>
@@ -253,13 +264,11 @@ void DDPMeans<T,DS>::updateState()
 
   if(nRemoved > 0)
   {
+    //TODO
     cout<<"labelMap: ";
     for(int32_t k=0; k<this->K_+nRemoved; ++k) cout<<labelMap[k]<<" ";
     cout<<endl;
-    // fix labels
-#pragma parallel for
-    for(uint32_t i=0; i<this->N_; ++i)
-      this->z_[i] = labelMap[this->z_[i]];
+    this->cld_->labelMap(labelMap);
   }
 };
 

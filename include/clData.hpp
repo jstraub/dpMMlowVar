@@ -35,12 +35,17 @@ public:
   virtual void updateLabels(uint32_t K);
   virtual void computeSS();
 
+  virtual void labelMap(const vector<int32_t>& map);
+
 //  virtual const spVectorXu& z() const {return z_;};
   virtual VectorXu& z() {return *z_;};
   virtual uint32_t& z(uint32_t i) {return (*z_)(i);};
   virtual const spVectorXu& labels() const {return z_;};
   virtual const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x() const {return x_;};
 //  virtual const Matrix<T,Dynamic,1>& x_c(uint32_t i) const {return x_->col(i);};
+
+ virtual T* d_x(){ return x_->data();};
+ virtual uint32_t* d_z(){ return z_->data();};
 
   virtual const Matrix<T,Dynamic,Dynamic>& xMat() const {return (*x_);};
   virtual uint32_t N() const {return N_;};
@@ -138,3 +143,11 @@ void ClData<T>::computeSS()
 //      (x_->col(i) - xSums_.col((*z_)(i))).transpose();
 }
 
+template<class T>
+void ClData<T>::labelMap(const vector<int32_t>& map)
+{
+    // fix labels
+#pragma parallel for
+    for(uint32_t i=0; i<this->N_; ++i)
+      (*this->z_)(i) = map[ (*this->z_)(i)];
+};

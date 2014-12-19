@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "ddpmeans.hpp"
+#include "clDataGpu.hpp"
 #include "gpuMatrix.hpp"
 
 
@@ -31,7 +32,9 @@ template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
 {
 public:
-  DDPMeansCUDA(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
+//  DDPMeansCUDA(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
+//      T lambda, T Q, T tau, mt19937* pRndGen);
+  DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
       T lambda, T Q, T tau, mt19937* pRndGen);
   virtual ~DDPMeansCUDA();
 
@@ -39,9 +42,12 @@ public:
 
 //  virtual void updateLabelsParallel();
 //  virtual void updateLabels();
-  virtual void updateCenters();
-  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
-  virtual void nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
+//  virtual void updateCenters();
+//  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
+
+  //TODO: this should be solved using constructors for ClData!
+//  virtual void nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
+
 //  virtual void updateState(); // after converging for a single time instant
 //  virtual uint32_t indOfClosestCluster(int32_t i);
 //
@@ -74,11 +80,18 @@ protected:
 };
 // --------------------------- impl -------------------------------------------
 
+//template<class T, class DS>
+//DDPMeansCUDA<T,DS>::DDPMeansCUDA(
+//    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T Q, T tau, 
+//    mt19937* pRndGen)
+//  : DDPMeans<T,DS>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
+//  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
+//{}
+
 template<class T, class DS>
-DDPMeansCUDA<T,DS>::DDPMeansCUDA(
-    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T Q, T tau, 
-    mt19937* pRndGen)
-  : DDPMeans<T,DS>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
+DDPMeansCUDA<T,DS>::DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
+      T lambda, T Q, T tau, mt19937* pRndGen)
+  : DDPMeans<T,DS>(cld,lambda,Q,tau,pRndGen), //d_x_(cld), d_z_(this->N_),
   d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
 {}
 
@@ -124,27 +137,29 @@ DDPMeansCUDA<T,DS>::~DDPMeansCUDA()
 //      computeSums(k0,min(this->K_-k0,uint32_t(6))); // max 6 SSs per kernel due to shared mem
 //  }
 //}
+//
+//template<class T, class DS>
+//void DDPMeansCUDA<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+//{
+//  DDPMeans<T,DS>::nextTimeStep(spx);
+//  d_x_.set(this->spx_); // copy to GPU
+//  d_z_.set(this->z_);
+//};
 
-template<class T, class DS>
-void DDPMeansCUDA<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
-{
-  DDPMeans<T,DS>::nextTimeStep(spx);
-  d_x_.set(this->spx_); // copy to GPU
-  d_z_.set(this->z_);
-};
-
-template<class T, class DS>
-void DDPMeansCUDA<T,DS>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset)
-{
-// copy from other array with N cols/elems and "step" rows 
-  d_x_.copyFromGpu(d_x,N,step,offset,3);
-  this->spx_->resize(3,N);
-  d_x_.get(*(this->spx_)); // copy it for parallel labeling
-
-  DDPMeans<T,DS>::nextTimeStep(this->spx_);
-
-  d_z_.set(this->z_);
-};
+//template<class T, class DS>
+//void DDPMeansCUDA<T,DS>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset)
+//{
+//  //TODO: this should be solved using constructors for ClData!
+//  assert(false);
+//// copy from other array with N cols/elems and "step" rows 
+////  d_x_.copyFromGpu(d_x,N,step,offset,3);
+////  this->spx_->resize(3,N);
+////  d_x_.get(*(this->spx_)); // copy it for parallel labeling
+////
+////  DDPMeans<T,DS>::nextTimeStep(this->spx_);
+////
+////  d_z_.set(this->z_);
+//};
 
 template<class T, class DS>
 uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
@@ -177,7 +192,7 @@ uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
 //  cout<<"d_ages_ "<<d_ages_.get().transpose()<<endl;
 
 //  cout << "******************BEFORE*******************"<<endl;
-  ddpLabels_gpu( d_x_.data(),  d_p_.data(),  d_z_.data(), 
+  ddpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
       d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
       this->cl0_.Q(), this->cl0_.tau(), 0, this->K_, i0, this->N_-i0, 
       d_iAction_.data());
@@ -192,12 +207,12 @@ uint32_t DDPMeansCUDA<T,DS>::optimisticLabelsAssign(uint32_t i0)
   return computeLabelsGPU(0); // TODO make passing i0 work!
 };
 
-template<class T, class DS>
-void DDPMeansCUDA<T,DS>::updateCenters()
-{
-  d_z_.get(this->z_);
-  DDPMeans<T,DS>::updateCenters();
-};
+//template<class T, class DS>
+//void DDPMeansCUDA<T,DS>::updateCenters()
+//{
+//  d_z_.get(this->z_);
+//  DDPMeans<T,DS>::updateCenters();
+//};
 
 
 

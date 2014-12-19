@@ -46,10 +46,15 @@ struct Spherical //: public DataSpace<T>
       centroid_ = xSum_/xSum_.norm();
     };
 
-    void updateCenter(const shared_ptr<ClData<T> >& cld, uint32_t k)
+    void updateSS(const shared_ptr<ClData<T> >& cld, uint32_t k)
     {
       xSum_ = cld->xSum(k);
       N_ = cld->count(k);
+    };
+
+    void updateCenter(const shared_ptr<ClData<T> >& cld, uint32_t k)
+    {
+      updateSS(cld,k); 
       updateCenter();
     };
 

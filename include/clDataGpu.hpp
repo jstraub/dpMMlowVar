@@ -22,6 +22,8 @@ extern void gmmPdf(float * d_x, float *d_invSigmas,
     float *d_logNormalizers, float *d_logPi, float* d_logPdf, uint32_t N, 
     uint32_t K_);
 
+extern void labelMapGpu(uint32_t *d_z, int32_t* d_Map, uint32_t N);
+
 template<typename T>
 class ClDataGpu : public ClData<T>
 {
@@ -38,11 +40,15 @@ public:
  
   virtual void init();
 
+  virtual void labelMap(const vector<int32_t>& map);
   virtual void updateLabels(uint32_t K);
   virtual void computeSS();
 
-  GpuMatrix<T>& d_x(){ return d_x_;};
-  GpuMatrix<uint32_t>& d_z(){ return d_z_;};
+//  GpuMatrix<T>& d_x(){ return d_x_;};
+//  GpuMatrix<uint32_t>& d_z(){ return d_z_;};
+
+ virtual T* d_x(){ return d_x_.data();};
+ virtual uint32_t* d_z(){ return d_z_.data();};
 
 protected:
 
@@ -56,13 +62,13 @@ typedef ClDataGpu<float> ClDataGpuf;
 template<typename T>
 ClDataGpu<T>::ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
     const spVectorXu& z, uint32_t K)
-  : ClData<T>(x,z,K), d_z_(z_), d_x_(x_), d_Ss_((this->D_-1)+1,this->K_),
+  : ClData<T>(x,z,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
 {};
 
 template<typename T>
 ClDataGpu<T>::ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
     uint32_t K)
-  : ClData<T>(x,K), d_z_(z_), d_x_(x_), d_Ss_((this->D_-1)+1,this->K_),
+  : ClData<T>(x,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
 {};
 
 
@@ -110,6 +116,14 @@ void ClDataGpu<T>::computeSS(void)
     for (k0=0; k0<this->K_; k0+=6)
       computeSS(k0,min(this->K_-k0,uint32_t(6))); // max 6 SSs per kernel due to shared mem
   }
+};
+
+template<class T>
+void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
+{
+  GpuMatrix<T> d_map(map);
+  // fix labels
+  labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
 };
 
 //template<typename T>

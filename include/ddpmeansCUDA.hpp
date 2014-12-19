@@ -145,51 +145,54 @@ void DDPMeansCUDA<T,DS>::computeSums(void)
   }
 }
 
-template<class T, class DS>
-void DDPMeansCUDA<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
-{
-  DDPMeans<T,DS>::nextTimeStep(spx);
-//  cout<<"copy x"<<endl;
-//  d_x_.print();
-//  d_z_.print();
-  d_x_.set(this->spx_); // copy to GPU
-//  d_z_.set(this->z_);
-//  cout<<"resize z"<<endl;
-  d_z_.resize(this->N_,1);
-  if (!d_z_.isInit())
-  {
-    d_z_.setZero(); // to make sure we are initialized
-//    cout<<"set z to Zero"<<endl;
-  }
-};
+//template<class T, class DS>
+//void DDPMeansCUDA<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+//{
+//  DDPMeans<T,DS>::nextTimeStep(spx);
+////  cout<<"copy x"<<endl;
+////  d_x_.print();
+////  d_z_.print();
+////  d_x_.set(this->cld_->x()); // copy to GPU
+////  d_z_.set(this->z_);
+////  cout<<"resize z"<<endl;
+////  d_z_.resize(this->N_,1);
+////  if (!d_z_.isInit())
+////  {
+////    d_z_.setZero(); // to make sure we are initialized
+//////    cout<<"set z to Zero"<<endl;
+////  }
+//};
 
 template<class T, class DS>
 void DDPMeansCUDA<T,DS>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_t offset)
 {
-  this->psPrev_ = this->ps_;
-  this->Kprev_ = this->K_;
-  // TODO: hopefully this does not mess stuff up
-//  DDPMeans<T,DS>::nextTimeStep(spx);
-  this->N_ = N;
-//  cout<<"copy x"<<endl;
-//  d_x_.print();
-//  d_z_.print();
-//  d_x_.set(this->spx_); 
-// copy from other array with N cols/elems and "step" rows 
-  d_x_.copyFromGpu(d_x,N,step,offset,3);
-  this->spx_->resize(3,this->N_);
-  d_x_.get(*(this->spx_)); // copy it for parallel labeling
-//  d_z_.set(this->z_);
-//  cout<<"resize z"<<endl;
-//  d_z_.copyFromGpu(d_z,N,1,0,1);
-  d_z_.resize(this->N_,1);
-  if (!d_z_.isInit())
-  {
-    d_z_.setZero(); // to make sure we are initialized
-//    cout<<"set z to Zero"<<endl;
-  }
-//  d_x_.print();
-//  d_z_.print();
+  //TODO: this should be solved using constructors for ClData!
+  assert(false);
+//  this->psPrev_ = this->ps_;
+//  this->Kprev_ = this->K_;
+//  // TODO: hopefully this does not mess stuff up
+////  DDPMeans<T,DS>::nextTimeStep(spx);
+//  this->N_ = N;
+////  cout<<"copy x"<<endl;
+////  d_x_.print();
+////  d_z_.print();
+////  d_x_.set(this->spx_); 
+//// copy from other array with N cols/elems and "step" rows 
+//  
+//  d_x_.copyFromGpu(d_x,N,step,offset,3);
+//  this->spx_->resize(3,this->N_);
+//  d_x_.get(*(this->cld_spx_)); // copy it for parallel labeling
+////  d_z_.set(this->z_);
+////  cout<<"resize z"<<endl;
+////  d_z_.copyFromGpu(d_z,N,1,0,1);
+//  d_z_.resize(this->N_,1);
+//  if (!d_z_.isInit())
+//  {
+//    d_z_.setZero(); // to make sure we are initialized
+////    cout<<"set z to Zero"<<endl;
+//  }
+////  d_x_.print();
+////  d_z_.print();
 };
 
 //template<class T, class DS>

@@ -343,12 +343,15 @@ void DDPMeans<T,DS>::updateState()
     }
     ts_[k] ++; // increment all ages
 
-    if(this->ts_[k]*Q_ < this->lambda_) toRemove[k] = true;
+    if(DS::clusterIsDead(this->ts_[k],this->lambda_,Q_)) toRemove[k] = true;
+//    if(this->ts_[k]*Q_ > this->lambda_) toRemove[k] = true;
+//    if(this->ts_[k]*Q_ < this->lambda_) toRemove[k] = true;
 
     cout<<"cluster "<<k
       <<"\tN="<<this->Ns_(k)
       <<"\tage="<<ts_[k]
-      <<"\tweight="<<ws_[k]<<endl;
+      <<"\tweight="<<ws_[k]
+      <<"\t dead? "<<DS::clusterIsDead(this->ts_[k],this->lambda_,Q_)<<endl;
     cout<<"  center: "<<this->ps_.col(k).transpose()<<endl;
   }
   uint32_t nRemoved = 0;

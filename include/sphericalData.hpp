@@ -14,6 +14,9 @@ struct Spherical //: public DataSpace<T>
   static bool closer(const T a, const T b)
   { return a > b; };
 
+  static T clusterIsDead(const T t_k, const T lambda, const T Q)
+  { return t_k*Q < lambda;};
+
   static T distToUninstantiated(const Matrix<T,Dynamic,1>& x_i, const
       Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T beta,
       const T Q);

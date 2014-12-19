@@ -49,8 +49,8 @@ uint32_t DPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
   sim_closest = lambda_;
   for (uint32_t k=0; k<this->K_; ++k)
   {
-    T sim_k = this->cls_[k]->dist(this->spx_->col(i));
-//      DS::dist(this->ps_.col(k), this->spx_->col(i));
+    T sim_k = this->cls_[k]->dist(this->cld_->x()->col(i));
+//      DS::dist(this->ps_.col(k), this->cld_->x()->col(i));
     if(DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
@@ -76,10 +76,10 @@ void DPMeans<T,DS>::updateLabels()
     if(z_i == this->K_) 
     {
       this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-            typename DS::DependentCluster(this->spx_->col(i))));
+            typename DS::DependentCluster(this->cld_->x()->col(i))));
       this->K_ ++;
     }
-    this->z_(i) = z_i;
+    this->cld_->z(i) = z_i;
   }
 };
 
@@ -105,7 +105,7 @@ void DPMeans<T,DS>::updateCenters()
 #pragma omp parallel for 
       for(uint32_t i=0; i<this->N_; ++i)
       {
-        if(static_cast<int32_t>(this->z_(i)) >= k) this->z_(i)--;
+        if(static_cast<int32_t>(this->cld_->z(i)) >= k) this->cld_->z(i) -= 1;
       }
       kNew --;
     }

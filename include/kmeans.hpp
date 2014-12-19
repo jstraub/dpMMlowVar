@@ -60,16 +60,16 @@ KMeans<T,DS>::KMeans(
     mt19937* pRndGen)
   : Clusterer<T,DS>(spx,K, pRndGen), S_(this->D_) 
 {
-  if(K>0){
-    Matrix<T,Dynamic,1> alpha(this->K_);
-    alpha.setOnes(this->K_);
-    Dir<Cat<T>,T> dir(alpha,this->pRndGen_);
-    Cat<T> pi = dir.sample(); 
-    cout<<"init pi="<<pi.pdf().transpose()<<endl;
-    pi.sample(this->z_);
-  }else{
-    this->z_.fill(0);
-  }
+//  if(K>0){
+//    Matrix<T,Dynamic,1> alpha(this->K_);
+//    alpha.setOnes(this->K_);
+//    Dir<Cat<T>,T> dir(alpha,this->pRndGen_);
+//    Cat<T> pi = dir.sample(); 
+//    cout<<"init pi="<<pi.pdf().transpose()<<endl;
+//    pi.sample(this->z_);
+//  }else{
+//    this->z_.fill(0);
+//  }
 
 //  this->ps_.setZero(); 
 //  updateCenters();
@@ -105,13 +105,14 @@ KMeans<T,DS>::~KMeans()
 template<class T, class DS>
 uint32_t KMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
-  sim_closest = this->cls_[0]->dist(this->spx_->col(i));
-//    DS::dist(this->ps_.col(0), this->spx_->col(i));
+
+  sim_closest = this->cls_[0]->dist(this->cld_->x()->col(i));
+//    DS::dist(this->ps_.col(0), this->cld_->x()->col(i));
   uint32_t z_i = 0;
   for(uint32_t k=1; k<this->K_; ++k)
   {
-    T sim_k = this->cls_[k]->dist(this->spx_->col(i));
-//DS::dist(this->ps_.col(k), this->spx_->col(i));
+    T sim_k = this->cls_[k]->dist(this->cld_->x()->col(i));
+//DS::dist(this->ps_.col(k), this->cld_->x()->col(i));
     if( DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
@@ -129,7 +130,7 @@ void KMeans<T,DS>::updateLabels()
   for(uint32_t i=0; i<this->N_; ++i)
   {
     T sim = 0;
-    this->z_(i) = indOfClosestCluster(i,sim);
+    this->cld_->z(i) = indOfClosestCluster(i,sim);
     cost += sim;
   }
   this->prevCost_ = this->cost_;
@@ -143,9 +144,9 @@ void KMeans<T,DS>::updateLabels()
 //  Matrix<T,Dynamic,1> mean_k(this->D_);
 //  mean_k.setZero(this->D_);
 //  for(uint32_t i=0; i<this->N_; ++i)
-//    if(this->z_(i) == k)
+//    if(this->cld_->z(i) == k)
 //    {
-//      mean_k += this->spx_->col(i); 
+//      mean_k += this->cld_->x()->col(i); 
 //      this->Ns_(k) ++;
 //    }
 //  return mean_k/this->Ns_(k);
@@ -154,9 +155,15 @@ void KMeans<T,DS>::updateLabels()
 template<class T, class DS>
 void KMeans<T,DS>::updateCenters()
 {
-#pragma omp parallel for
+  this->cld_->updateLabels(this->K_);
+  this->cld_->computeSS();
   for(uint32_t k=0; k<this->K_; ++k)
-    this->cls_[k]->computeCenter(*(this->spx_),this->z_,k);
+    this->cls_[k]->updateCenter(this->cld_,k);
+
+//#pragma omp parallel for
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    this->cls_[k]->computeCenter(*(this->spx_),this->z_,k);
+
 //  this->ps_ = DS::computeCenters(*(this->spx_),this->z_,this->K_,this->Ns_);
 //#pragma omp parallel for 
 //  for(uint32_t k=0; k<this->K_; ++k)
@@ -179,11 +186,11 @@ MatrixXu KMeans<T,DS>::mostLikelyInds(uint32_t n,
   for (uint32_t k=0; k<this->K_; ++k)
   {
     for (uint32_t i=0; i<this->N_; ++i)
-      if(this->z_(i) == k)
+      if(this->cld_->z(i) == k)
       {
-        T deviate = this->cls_[k]->dist(this->spx_->col(i)); 
-//          DS::dist(this->ps_.col(k), this->spx_->col(i));
-//        T deviate = (this->ps_.col(k) - this->spx_->col(i)).norm();
+        T deviate = this->cls_[k]->dist(this->cld_->x()->col(i)); 
+//          DS::dist(this->ps_.col(k), this->cld_->x()->col(i));
+//        T deviate = (this->ps_.col(k) - this->cld_->x()->col(i)).norm();
         for (uint32_t j=0; j<n; ++j)
           if(DS::closer(deviate, deviates(j,k)))
           {
@@ -219,11 +226,11 @@ T KMeans<T,DS>::avgIntraClusterDeviation()
   {
     this->cls_[k]->N() = 0.0;
     for (uint32_t i=0; i<this->N_; ++i)
-      if(this->z_(i) == k)
+      if(this->cld_->z(i) == k)
       {
-        deviates(k) += this->cls_[k]->dist( this->spx_->col(i));
-//          DS::dist(this->ps_.col(k), this->spx_->col(i));
-//        deviates(k) += (this->ps_.col(k) - this->spx_->col(i)).norm();
+        deviates(k) += this->cls_[k]->dist( this->cld_->x()->col(i));
+//          DS::dist(this->ps_.col(k), this->cld_->x()->col(i));
+//        deviates(k) += (this->ps_.col(k) - this->cld_->x()->col(i)).norm();
         this->cls_[k]->N() ++;
       }
 //    if(this->Ns_(k) > 0.0) deviates(k) /= this->Ns_(k);

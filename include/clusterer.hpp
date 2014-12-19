@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <global.hpp>
+#include <clData.hpp>
 //#include <Eigen/Dense>
 //#include <boost/shared_ptr.hpp>
 
@@ -23,6 +24,7 @@ class Clusterer
 public:
   Clusterer(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     mt19937* pRndGen);
+  Clusterer(const shared_ptr<ClData<T> >& cld, mt19937* pRndGen);
   virtual ~Clusterer();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -33,7 +35,7 @@ public:
       Matrix<T,Dynamic,Dynamic>& deviates) = 0;
   virtual T avgIntraClusterDeviation() = 0;
   
-  const VectorXu& z() const {return z_;};
+  const VectorXu& z() const {return (this->cld_->z());};
   VectorXu counts() const {
     VectorXu Ns(K_);
     for(uint32_t k=0; k<K_; ++k) Ns(k) = cls_[k]->N();
@@ -67,21 +69,28 @@ protected:
   const uint32_t D_;
   uint32_t N_;
   T cost_, prevCost_;
-  shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
+  shared_ptr<ClData<T> > cld_;
+//  shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
   vector< shared_ptr<typename DS::DependentCluster> > cls_; // clusters
-//  Matrix<T,Dynamic,Dynamic> ps_; // centroids on the sphere
-//  VectorXu Ns_; // counts for each cluster
-  VectorXu z_; // labels
+//  VectorXu z_; // labels
   mt19937* pRndGen_;
 };
 
 // ----------------------------- impl -----------------------------------------
 template<class T, class DS>
-Clusterer<T,DS>::Clusterer(
-    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    mt19937* pRndGen)
+Clusterer<T,DS>::Clusterer( const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
+    uint32_t K, mt19937* pRndGen)
   : K_(K), D_(spx->rows()), N_(spx->cols()), cost_(INFINITY), prevCost_(INFINITY),
-  spx_(spx), z_(N_), pRndGen_(pRndGen)
+  cld_(new ClData<T>(spx,K)), pRndGen_(pRndGen)
+{
+  for (uint32_t k=0; k<K_; ++k)
+    cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
+};
+
+template<class T, class DS>
+Clusterer<T,DS>::Clusterer( const shared_ptr<ClData<T> >& cld, mt19937* pRndGen)
+  : K_(K), D_(cld->D()), N_(cld->N()), cost_(INFINITY), prevCost_(INFINITY),
+  cld_(cld), pRndGen_(pRndGen)
 {
   for (uint32_t k=0; k<K_; ++k)
     cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
@@ -104,14 +113,14 @@ T Clusterer<T,DS>::silhouette()
     for(uint32_t j=0; j<N_; ++j)
       if(j != i)
       {
-        b(z_(j)) += DS::dissimilarity(spx_->col(i),spx_->col(j));
+        b(cld_->z(j)) += DS::dissimilarity(cld_->x()->col(i),cld_->x()->col(j));
       }
     for (uint32_t k=0; k<K_; ++k) b /= cls_[k]->N();
 //    b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
-    T a_i = b(z_(i)); // average dist to own cluster
-    T b_i = z_(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+    T a_i = b(cld_->z(i)); // average dist to own cluster
+    T b_i = cld_->z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
     for(uint32_t k=0; k<K_; ++k)
-      if(k != z_(i) && b(k) == b(k) && b(k) < b_i && cls_[k]->N() > 0)
+      if(k != cld_->z(i) && b(k) == b(k) && b(k) < b_i && cls_[k]->N() > 0)
       {
         b_i = b(k);
       }

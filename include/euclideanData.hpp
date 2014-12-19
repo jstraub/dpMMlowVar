@@ -2,6 +2,8 @@
 
 #include <Eigen/Dense>
 
+#include <clData.hpp>
+
 
 template<typename T>
 struct Euclidean //: public DataSpace<T>
@@ -52,6 +54,14 @@ struct Euclidean //: public DataSpace<T>
         centroid_ = xSum_/N_;
       else
         centroid_ = xSum_;
+    };
+
+    void updateCenter(const shared_ptr<ClData<T> >& cld, uint32_t k)
+    {
+      xSum_ = cld->xSum(k);
+      N_ = cld->count(k);
+      updateCenter();
+//      cout<<centroid_.transpose()<<endl;
     };
 
     void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,

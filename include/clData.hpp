@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <algorithm>
 #include <Eigen/Dense>
 
 using std::vector;
@@ -27,6 +28,7 @@ protected:
 public:
   ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
       const spVectorXu& z, uint32_t K);
+  ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, uint32_t K);
   virtual ~ClData();
 
   /* after changing z_ outside - we can use update to get new statistics */
@@ -35,8 +37,11 @@ public:
 
 //  virtual const spVectorXu& z() const {return z_;};
   virtual VectorXu& z() {return *z_;};
+  virtual uint32_t& z(uint32_t i) {return (*z_)(i);};
   virtual const spVectorXu& labels() const {return z_;};
   virtual const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x() const {return x_;};
+//  virtual const Matrix<T,Dynamic,1>& x_c(uint32_t i) const {return x_->col(i);};
+
   virtual const Matrix<T,Dynamic,Dynamic>& xMat() const {return (*x_);};
   virtual uint32_t N() const {return N_;};
   virtual uint32_t K() const {return K_;};
@@ -74,6 +79,27 @@ ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
 };
 
 template<class T>
+ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
+    uint32_t K)
+ : z_(new VectorXu(VectorXu::Zero(x->cols()))), x_(x),
+  K_(K>0?K:1), N_(x->cols()), D_(x->rows())
+//   Ss_(K_,Matrix<T,Dynamic,Dynamic>::Zero(D_,D_))
+{
+  cout<<"D="<<D_<<" N="<<N_<<" K="<<K_<<endl;
+  // randomly init z
+  if(K_ > 1)
+  {
+    std::vector<uint32_t> z(N_);
+    for(uint32_t i=0; i<N_; ++i) z[i] = i%K_;
+     // to destrey symmetry
+    for(uint32_t i=0; i<K_; ++i) z[i] = 0;
+    std::random_shuffle(z.begin(),z.end());
+    for(uint32_t i=0; i<N_; ++i) (*z_)(i) = z[i];
+    cout<<"init z: "<<(*z_).transpose()<<endl;
+  }
+};
+
+template<class T>
 ClData<T>::~ClData()
 {};
 
@@ -97,6 +123,9 @@ void ClData<T>::computeSS()
 
   for(uint32_t i=0; i<N_; ++i)
     xSums_.col((*z_)(i)) += x_->col(i);
+
+//  cout<<xSums_<<endl;
+//  cout<<Ns_.transpose()<<endl;
 
 //  for(uint32_t k=0; k<K_; ++k)
 //  {

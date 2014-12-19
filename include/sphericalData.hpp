@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <clData.hpp>
 
 template<typename T>
 struct Spherical //: public DataSpace<T>
@@ -43,6 +44,13 @@ struct Spherical //: public DataSpace<T>
     void updateCenter()
     {
       centroid_ = xSum_/xSum_.norm();
+    };
+
+    void updateCenter(const shared_ptr<ClData<T> >& cld, uint32_t k)
+    {
+      xSum_ = cld->xSum(k);
+      N_ = cld->count(k);
+      updateCenter();
     };
 
     void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,

@@ -119,7 +119,6 @@ int main(int argc, char** argv){
 		clusterer->updateState();
     const VXu& z = clusterer->z();
     const MXf& p = clusterer->centroids();
-    cout<<(z.array() == 0).all()<<endl;
     cout<<p<<endl;
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;

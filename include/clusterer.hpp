@@ -39,7 +39,7 @@ public:
     for(uint32_t k=0; k<K_; ++k) Ns(k) = cls_[k]->N();
     return Ns;
   };
-  const Matrix<T,Dynamic,Dynamic>& centroids() const {
+  Matrix<T,Dynamic,Dynamic> centroids() const {
     Matrix<T,Dynamic,Dynamic> ps(D_,K_);
     for(uint32_t k=0; k<K_; ++k)                                                
       ps.col(k) = cls_[k]->centroid();

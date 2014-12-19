@@ -205,6 +205,7 @@ void DDPMeans<T,DS>::updateLabels()
         this->Ns_(z_i) = 1.; 
         this->globalInd_.push_back(this->globalMaxInd_++);
         this->K_ ++;
+        cout<<"new cluster "<<(this->K_-1)<<endl;
       } 
       else if(this->Ns_[z_i] == 0)
       { // instantiated an old cluster
@@ -212,6 +213,7 @@ void DDPMeans<T,DS>::updateLabels()
             this->ps_.col(z_i), ts_[z_i], ws_[z_i], tau_);
         this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
         // computeLabelsGPU to use the cluster;
+        cout<<"revieve cluster "<<z_i<<endl;
       }
       i0 = idAction;
     }
@@ -354,15 +356,29 @@ void DDPMeans<T,DS>::updateState()
       <<"\t dead? "<<DS::clusterIsDead(this->ts_[k],this->lambda_,Q_)<<endl;
     cout<<"  center: "<<this->ps_.col(k).transpose()<<endl;
   }
-  uint32_t nRemoved = 0;
+
+  vector<int32_t> labelMap(this->K_);
+  for(int32_t k=0; k<this->K_; ++k)
+    labelMap[k] = k;
+  int32_t nRemoved = 0;
   for(int32_t k=this->K_; k>=0; --k)
     if(toRemove[k])
     {
+      for(int32_t j=k; j<this->K_; ++j) -- labelMap[j];
+      ++ nRemoved;
       removeCluster(k);
-      nRemoved ++;
     }
+
+  cout<<"labelMap: ";
+  for(int32_t k=0; k<this->K_; ++k) cout<<labelMap[k]<<" ";
+  cout<<endl;
+
   this->K_ -= nRemoved;
 
+  // fix labels
+#pragma parallel for
+  for(uint32_t i=0; i<this->N_; ++i)
+    this->z_[i] = labelMap[this->z_[i]];
 };
 
 template<class T,class DS>

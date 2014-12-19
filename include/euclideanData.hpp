@@ -20,18 +20,49 @@ struct Euclidean //: public DataSpace<T>
       const T Q)
   { return dist(x_i, ps_k) / (tau*t_k+1.+ 1.0/w_k) + Q*t_k; };
 
+  static Matrix<T,Dynamic,1> computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
+      const VectorXu& z, const uint32_t k, uint32_t* N_k);
+
   static Matrix<T,Dynamic,Dynamic> computeCenters(const
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
       VectorXu& Ns);
 
   static Matrix<T,Dynamic,1> computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
       const VectorXu& z, const uint32_t k, uint32_t* N_k);
+
+  static Matrix<T,Dynamic,1> reInstantiatedOldCluster(const
+      Matrix<T,Dynamic,1>& xSum, const Matrix<T,Dynamic,1>& ps_k, const T t_k, const
+      T w_k, const T tau);
+  
+  static T updateWeight(const Matrix<T,Dynamic,1>& xSum, const uint32_t N_k,
+      const
+      Matrix<T,Dynamic,1>& ps_k, const T t_k, const T w_k, const T tau)
+  {return 1./(1./w_k + t_k*tau) + N_k;};
+
 };
 
 //============================= impl ==========================================
+//
+  template<typename T>                                                            
+Matrix<T,Dynamic,1> Euclidean<T>::computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
+    const VectorXu& z, const uint32_t k, uint32_t* N_k)
+{
+  const uint32_t D = x.rows();
+  const uint32_t N = x.cols();
+  Matrix<T,Dynamic,1> xSum(D);
+  xSum.setZero(D);
+  if(N_k) *N_k = 0;
+  for(uint32_t i=0; i<N; ++i)
+    if(z(i) == k)
+    {
+      xSum += x.col(i); 
+      if(N_k) (*N_k) ++;
+    }
+  return xSum;
+};
 
 template<typename T>                                                            
-static Matrix<T,Dynamic,Dynamic> Euclidean<T>::computeCenters(const
+Matrix<T,Dynamic,Dynamic> Euclidean<T>::computeCenters(const
     Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t K, 
     VectorXu& Ns)
 {
@@ -44,7 +75,7 @@ static Matrix<T,Dynamic,Dynamic> Euclidean<T>::computeCenters(const
 };
 
 template<typename T>                                                            
-static Matrix<T,Dynamic,1> Euclidean<T>::computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
+Matrix<T,Dynamic,1> Euclidean<T>::computeCenter(const Matrix<T,Dynamic,Dynamic>& x, 
     const VectorXu& z, const uint32_t k, uint32_t* N_k)
 {
   const uint32_t D = x.rows();
@@ -65,3 +96,11 @@ static Matrix<T,Dynamic,1> Euclidean<T>::computeCenter(const Matrix<T,Dynamic,Dy
     return x.col(k); //Matrix<T,Dynamic,1>::Zero(D,1);
 };
 
+template<typename T>                                                            
+Matrix<T,Dynamic,1> Euclidean<T>::reInstantiatedOldCluster(const
+    Matrix<T,Dynamic,1>& xSum, const Matrix<T,Dynamic,1>& ps_k, const T t_k, const
+    T w_k, const T tau)
+{
+  const T gamma = 1.0/(1.0/w_k + t_k*tau);
+  return (ps_k*gamma + xSum)/(gamma+1.);
+};

@@ -8,6 +8,8 @@
 #include <stdint.h>
 
 #include "kmeans.hpp"
+#include "sphericalData.hpp"
+#include "euclideanData.hpp"
 //#include "spkm.hpp"
 //#include "normalSphere.hpp"
 #include "dpmeans.hpp"

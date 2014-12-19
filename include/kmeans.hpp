@@ -11,8 +11,6 @@
 #include "dir.hpp"
 #include "cat.hpp"
 
-#include "manifold.hpp"
-
 using namespace Eigen;
 using std::cout;
 using std::endl;

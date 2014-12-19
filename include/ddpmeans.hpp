@@ -171,10 +171,10 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
   {
     T sim = 0.;
     uint32_t z_i = indOfClosestCluster(i,sim);
+    if(z_i == this->K_ || this->Ns_[z_i] == 0) 
+    { // note this as starting position
 #pragma omp critical
-    {
-      if(z_i == this->K_ || this->Ns_[z_i] == 0) 
-      { // note this as starting position
+      {
         if(idAction > i) idAction = i;
       }
     }
@@ -209,7 +209,7 @@ void DDPMeans<T,DS>::updateLabels()
       } 
       else if(this->Ns_[z_i] == 0)
       { // instantiated an old cluster
-        this->ps_.col(z_i) = DS::reInstantiatedOldCluster(this->spx_->col(idAction),
+        this->ps_.col(z_i) = DS::reInstantiatedOldCluster(this->spx_->col(idAction), 1,
             this->ps_.col(z_i), ts_[z_i], ws_[z_i], tau_);
         this->Ns_(z_i) = 1.; // set Ns of revived cluster to 1 tosignal
         // computeLabelsGPU to use the cluster;
@@ -261,7 +261,7 @@ void DDPMeans<T,DS>::updateLabelsSerial()
     } else {
       if(this->Ns_[z_i] == 0)
       { // instantiated an old cluster
-        this->ps_.col(z_i) = DS::reInstantiatedOldCluster(this->spx_->col(i),
+        this->ps_.col(z_i) = DS::reInstantiatedOldCluster(this->spx_->col(i), 1,
             this->ps_.col(z_i), ts_[z_i], ws_[z_i], tau_);
       }
       this->Ns_(z_i) ++;
@@ -298,7 +298,7 @@ void DDPMeans<T,DS>::updateCenters()
     if (this->Ns_(k) > 0) 
     { // have data to update kth cluster
       if(k < this->Kprev_){
-        this->ps_.col(k) = DS::reInstantiatedOldCluster(xSums_.col(k),
+        this->ps_.col(k) = DS::reInstantiatedOldCluster(xSums_.col(k), this->Ns_(k),
             this->ps_.col(k), ts_[k], ws_[k], tau_);
 //        T gamma = 1.0/(1.0/ws_[k] + ts_[k]*tau_);
 //        this->ps_.col(k) = (this->ps_.col(k)*gamma+mean_k*this->Ns_(k))/
@@ -308,6 +308,7 @@ void DDPMeans<T,DS>::updateCenters()
       }
     }
   }
+  cout<<"centers"<<endl<<this->ps_<<endl<<this->Ns_.transpose()<<endl;
 };
 
 template<class T, class DS>

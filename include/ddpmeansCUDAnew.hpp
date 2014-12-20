@@ -174,7 +174,7 @@ uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
       ps.col(k) = this->clsPrev_[k]->centroid();
   d_p_.set(ps);
 
-  assert(this->K_ < 17); // limitation of kernel at this point
+//  assert(this->K_ < 17); // limitation of kernel at this point
 
 //  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
 //  cout<<ps<<endl;

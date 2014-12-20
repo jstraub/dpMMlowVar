@@ -27,6 +27,15 @@ extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
     uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q, 
     float tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
 
+
+extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages,
+    double *d_ws, double lambda, double Q, double tau, uint32_t K, uint32_t N,
+    uint32_t *d_asgnIdces);
+extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
+    float *d_ws, float lambda, float Q, float tau, uint32_t K, uint32_t N,
+    uint32_t *d_asgnIdces);
+
+
 template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
 {

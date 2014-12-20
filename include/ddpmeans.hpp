@@ -126,11 +126,19 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
   return idAction;
 };
 
+template<class T,class DS>
+uint32_t DDPMeans<T,DS>::initLabels()
+{
+}
+
 template<class T, class DS>
 void DDPMeans<T,DS>::updateLabels()
 {
+  initLabels();
+
   uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
+
   do{
     idAction = optimisticLabelsAssign(i0);
     if(idAction != UNASSIGNED)

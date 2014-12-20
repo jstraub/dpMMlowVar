@@ -232,27 +232,14 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   }
 
   this->Kprev_ = this->K_;
-//  assert(this->D_ == spx->rows());
-//  if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
   this->cld_->updateData(spx);
   this->N_ = this->cld_->N();
-//  this->z_.resize(this->N_);
-//  this->z_.fill(UNASSIGNED);
-//  return nextTimeStep(shared_ptr<ClData<T> >(new ClData<T>(spx,this->K_)));
-//
+
   if(true)
   {
     VectorXu idActions = initLabels();
-
     for(uint32_t k=0; k<this->K_; ++k)
-      if(idActions(k) != UNASSIGNED)
-      {
-        //      cout<<"idAction "<<idAction<<endl;
-        //      cout<<" x @ idAction "<<this->cld_->x()->col(idAction).transpose()<<endl;
-        //      cout<<"K= "<<this->K_<<endl;
-        T sim = 0.;
-        //      uint32_t z_i = this->indOfClosestCluster(idActions(k),sim);
-        if(!this->cls_[k]->isInstantiated())
+      if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
         { // instantiated an old cluster
           cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
           cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
@@ -292,7 +279,6 @@ void DDPMeans<T,DS>::updateState()
 
   if(nRemoved > 0)
   {
-    //TODO
     cout<<"labelMap: ";
     for(int32_t k=0; k<this->K_+nRemoved; ++k) cout<<labelMap[k]<<" ";
     cout<<endl;

@@ -231,8 +231,6 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   {
     clsPrev_.push_back(shared_ptr<typename
         DS::DependentCluster>(this->cls_[k]->clone())); 
-    clsPrev_[k]->print();
-    this->cls_[k]->print();
     this->cls_[k]->N() = 0;
   }
 
@@ -241,7 +239,7 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   this->N_ = this->cld_->N();
 
   if(false && this->K_ > 0)
-  {
+  { // seemed to slow down the algorithms confergence
     VectorXu idActions = initLabels();
     for(uint32_t k=0; k<this->K_; ++k)
       if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())

@@ -61,8 +61,8 @@ protected:
 
   static const uint32_t MAX_UINT32 = 4294967295;
 
-  GpuMatrix<T> d_x_;
-  GpuMatrix<uint32_t> d_z_;
+//  GpuMatrix<T> d_x_;
+//  GpuMatrix<uint32_t> d_z_;
   GpuMatrix<uint32_t> d_iAction_;
   GpuMatrix<T> d_ages_;
   GpuMatrix<T> d_ws_;

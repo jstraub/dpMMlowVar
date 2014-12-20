@@ -30,6 +30,8 @@ class DDPMeans : public DPMeans<T,DS>
 public:
   DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
       T lambda, T Q, T tau, mt19937* pRndGen);
+  DDPMeans(const shared_ptr<ClData<T> >& cld,
+      T lambda, T Q, T tau, mt19937* pRndGen);
   virtual ~DDPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -78,6 +80,14 @@ template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T Q, T tau, mt19937* pRndGen)
   : DPMeans<T,DS>(spx,0,lambda,pRndGen), cl0_(tau,lambda,Q)
+{
+  this->Kprev_ = 0; // so that centers are initialized directly from sample mean
+};
+
+template<class T, class DS>
+DDPMeans<T,DS>::DDPMeans(const shared_ptr<ClData<T> >& cld, 
+    T lambda, T Q, T tau, mt19937* pRndGen)
+  : DPMeans<T,DS>(cld,0,lambda,pRndGen), cl0_(tau,lambda,Q)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean
 };

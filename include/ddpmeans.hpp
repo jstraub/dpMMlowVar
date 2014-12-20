@@ -64,6 +64,7 @@ protected:
   vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
+  virtual VectorXu initLabels();
 };
 
 // -------------------------------- impl ----------------------------------
@@ -127,15 +128,14 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
 };
 
 template<class T,class DS>
-uint32_t DDPMeans<T,DS>::initLabels()
+VectorXu DDPMeans<T,DS>::initLabels()
 {
+  return VectorXu::Ones(this->K_)*UNASSIGNED;
 }
 
 template<class T, class DS>
 void DDPMeans<T,DS>::updateLabels()
 {
-  initLabels();
-
   uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
 
@@ -239,6 +239,27 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
 //  this->z_.resize(this->N_);
 //  this->z_.fill(UNASSIGNED);
 //  return nextTimeStep(shared_ptr<ClData<T> >(new ClData<T>(spx,this->K_)));
+//
+  if(true)
+  {
+    VectorXu idActions = initLabels();
+
+    for(uint32_t k=0; k<this->K_; ++k)
+      if(idActions(k) != UNASSIGNED)
+      {
+        //      cout<<"idAction "<<idAction<<endl;
+        //      cout<<" x @ idAction "<<this->cld_->x()->col(idAction).transpose()<<endl;
+        //      cout<<"K= "<<this->K_<<endl;
+        T sim = 0.;
+        //      uint32_t z_i = this->indOfClosestCluster(idActions(k),sim);
+        if(!this->cls_[k]->isInstantiated())
+        { // instantiated an old cluster
+          cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
+          cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
+          this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
+        }
+      }
+  }
 };
 
 template<class T, class DS>

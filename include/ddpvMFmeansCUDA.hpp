@@ -9,6 +9,8 @@
 #include "ddpvMFmeans.hpp"
 #include "gpuMatrix.hpp"
 
+#include "clData.hpp"
+
 
 using namespace Eigen;
 using std::cout;
@@ -20,13 +22,13 @@ extern void vectorSum_gpu( double *d_x, uint32_t *d_z , uint32_t N,
 extern void vectorSum_gpu(float *d_x, uint32_t *d_z, 
     uint32_t N, uint32_t k0, uint32_t K, float *d_SSs);
 
-extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
-    uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double beta, 
-    double Q, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, 
-    uint32_t *d_iAction);
-extern void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, 
-    uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float beta, 
-    float Q, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
+extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
+    uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double beta,
+    double Q, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t
+    *d_iAction);
+extern void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, uint32_t
+    *d_Ns, float *d_ages, float *d_ws, float lambda, float beta, float Q,
+    uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
 
 template<class T>
 class DDPvMFMeansCUDA : public DDPvMFMeans<T>
@@ -59,8 +61,6 @@ public:
   uint32_t* d_z(){ return d_z_.data();};
   
 protected:
-
-  static const uint32_t MAX_UINT32 = 4294967295;
 
   GpuMatrix<T> d_x_;
   GpuMatrix<uint32_t> d_z_;
@@ -189,7 +189,7 @@ void DDPvMFMeansCUDA<T>::nextTimeStep(T* d_x, uint32_t N, uint32_t step, uint32_
 template<class T>
 uint32_t DDPvMFMeansCUDA<T>::computeLabelsGPU(uint32_t i0)
 {
-  uint32_t iAction = MAX_UINT32;
+  uint32_t iAction = UNASSIGNED;
   d_iAction_.set(iAction);
   d_Ns_.set(this->Ns_);
   d_ages_.set(this->ts_);
@@ -282,17 +282,17 @@ void DDPvMFMeansCUDA<T>::updateLabels()
 //template<class T>
 //void DDPvMFMeansCUDA<T>::updateLabelsParallel()
 //{
-//  uint32_t idAction = MAX_UINT32;
+//  uint32_t idAction = UNASSIGNED;
 ////  cout<<"::updateLabelsParallel"<<endl;
 //  do{
-////    if(idAction == MAX_UINT32)
+////    if(idAction == UNASSIGNED)
 ////    {
 //      idAction = computeLabelsGPU(0);
 ////    }else{
 ////      idAction = computeLabelsGPU(idAction-1);
 ////    }
 ////  cout<<"::updateLabelsParallel:  idAction: "<<idAction<<endl;
-//    if(idAction != MAX_UINT32)
+//    if(idAction != UNASSIGNED)
 //    {
 //      uint32_t z_i = this->indOfClosestCluster(idAction);
 //      if(z_i == this->K_) 
@@ -311,7 +311,7 @@ void DDPvMFMeansCUDA<T>::updateLabels()
 //      }
 //    }
 //    cout<<" K="<<this->K_<<" Ns="<<this->Ns_.transpose()<<endl;
-//  }while(idAction != MAX_UINT32);
+//  }while(idAction != UNASSIGNED);
 //};
 
  

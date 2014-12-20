@@ -97,7 +97,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
   // caching and init
-  iAction[tid] = MAX_UINT32;
+  iAction[tid] = UNASSIGNED;
   if(tid < DIM*K) p[tid] = d_p[tid];
 //  if(tid < K) ages[tid] = d_ages[tid];
 //  if (K>=1) return;
@@ -119,7 +119,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
     if (q_i[0]!=q_i[0] || q_i[1]!=q_i[1] || q_i[2]!=q_i[2])
     {
       // normal is nan -> break out here
-      z[id] = INVALID_LABEL;
+      z[id] = UNASSIGNED;
     }else{
       for (uint32_t k=0; k<K; ++k)
       {

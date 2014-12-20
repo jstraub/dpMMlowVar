@@ -11,8 +11,7 @@
 #define MIN_DOT -0.95
 #define MAX_DOT 0.95
 
-#define MAX_UINT32 4294967295
-#define INVALID_LABEL MAX_UINT32 //4294967294
+#define UNASSIGNED 4294967294
 
 #if DIM==3
 template<typename T>

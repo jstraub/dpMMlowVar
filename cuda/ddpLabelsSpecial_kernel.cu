@@ -1,6 +1,7 @@
 
 #include "cuda_global.h"
 #include <stdio.h>
+#include <float.h>
 
 // executions per thread
 #define N_PER_T 16
@@ -26,8 +27,8 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
 
   // caching and init
   for(int k = 0; k < K; k++){
-    asgnIdces[K*tid+k] = MAX_UINT32;
-    asgnCosts[K*tid+k] = MAX_FLOAT;
+    asgnIdces[K*tid+k] = UNASSIGNED;
+    asgnCosts[K*tid+k] = FLT_MAX;
     if(tid < DIM) oldp[k*DIM+tid] = d_oldp[k*DIM+tid];
   }
   __syncthreads(); // make sure that ys have been cached
@@ -36,7 +37,7 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
   {
     T max_sim_k = 0;
     T max_r = 0.;
-    uint32_t max_r_k = MAX_UINT32;
+    uint32_t max_r_k = UNASSIGNED;
     T sim_k = 0.;
     T* p_k = oldp;
     T q_i[DIM];
@@ -60,7 +61,7 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
       }
       if(max_r_k < K){
       	asgnCosts[K*tid+max_r_k] = max_sim_k;
-      	asgnIdces[K*tid+max_r_k] = id;
+        asgnIdces[K*tid+max_r_k] = id;
       }
     }
   }

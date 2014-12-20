@@ -23,6 +23,14 @@ extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
     uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q, 
     float tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
 
+extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages,
+    double *d_ws, double lambda, double Q, double tau, uint32_t K, uint32_t N,
+    uint32_t *d_asgnIdces);
+
+extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
+    float *d_ws, float lambda, float Q, float tau, uint32_t K, uint32_t N,
+    uint32_t *d_asgnIdces);
+
 template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
 {
@@ -36,7 +44,7 @@ public:
   
 protected:
 
-  static const uint32_t MAX_UINT32 = 4294967295;
+//  static const uint32_t MAX_UINT32 = 4294967295;
 
   GpuMatrix<uint32_t> d_iAction_;
   GpuMatrix<T> d_ages_;
@@ -47,6 +55,7 @@ protected:
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   uint32_t computeLabelsGPU(uint32_t i0);
 
+  virtual VectorXu initLabels();
 };
 // --------------------------- impl -------------------------------------------
 
@@ -64,7 +73,7 @@ DDPMeansCUDA<T,DS>::~DDPMeansCUDA()
 template<class T, class DS>
 uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
 {
-  uint32_t iAction = MAX_UINT32;
+  uint32_t iAction = UNASSIGNED;
   d_iAction_.set(iAction);
   d_Ns_.set(this->counts());
   d_ages_.set(this->ages());
@@ -105,3 +114,14 @@ uint32_t DDPMeansCUDA<T,DS>::optimisticLabelsAssign(uint32_t i0)
   return computeLabelsGPU(0); // TODO make passing i0 work!
 };
 
+template<class T,class DS>
+VectorXu DDPMeansCUDA<T,DS>::initLabels()
+{
+  VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
+  GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
+
+  ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), 
+      d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
+      this->cl0_.Q(), this->cl0_.tau(), this->K_, this->N_, d_asgnIdces.data());
+  return d_asgnIdces.get();      
+}

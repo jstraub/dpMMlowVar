@@ -9,7 +9,7 @@ using std::cout;
 using std::endl;
 using boost::shared_ptr;
 
-#define UNASSIGNED 4294967295
+#define UNASSIGNED 4294967294
 
 /* clustered data */
 template <class T>

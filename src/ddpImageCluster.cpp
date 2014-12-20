@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <boost/program_options.hpp>
-#include <ddpmeansCUDAnew.hpp>
+#include <ddpmeansCUDA.hpp>
 #include <euclideanData.hpp>
 
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;

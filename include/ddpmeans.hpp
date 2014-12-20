@@ -167,7 +167,10 @@ void DDPMeans<T,DS>::updateLabels()
   }while(idAction != UNASSIGNED);
   // if a cluster runs out of labels reset it to the previous mean!
   for(uint32_t k=0; k<this->K_; ++k)
-    if(!this->cls_[k]->isInstantiated()) this->cls_[k] = this->clsPrev_[k];
+    if(!this->cls_[k]->isInstantiated())
+    {
+      this->cls_[k]->centroid() = this->clsPrev_[k]->centroid();
+    }
 };
 
 template<class T, class DS>
@@ -228,6 +231,8 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   {
     clsPrev_.push_back(shared_ptr<typename
         DS::DependentCluster>(this->cls_[k]->clone())); 
+    clsPrev_[k]->print();
+    this->cls_[k]->print();
     this->cls_[k]->N() = 0;
   }
 

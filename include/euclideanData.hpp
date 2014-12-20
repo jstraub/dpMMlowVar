@@ -83,6 +83,7 @@ struct Euclidean //: public DataSpace<T>
     uint32_t N() const {return N_;};
     uint32_t& N(){return N_;};
     const Matrix<T,Dynamic,1>& centroid() const {return centroid_;};
+     Matrix<T,Dynamic,1>& centroid() {return centroid_;};
     const Matrix<T,Dynamic,1>& xSum() const {return xSum_;};
   };
 
@@ -123,7 +124,7 @@ struct Euclidean //: public DataSpace<T>
     DependentCluster(const DependentCluster& b) :
       Cluster(b.xSum(), b.N()), t_(b.t()), w_(b.w()), tau_(b.tau()),
       lambda_(b.lambda()), Q_(b.Q())
-    {};
+    {this->centroid_ = b.centroid();};
 
     bool isDead() const {return t_*Q_ > lambda_;};
     bool isNew() const {return t_ == 0;};
@@ -143,6 +144,7 @@ struct Euclidean //: public DataSpace<T>
         <<"  center: "<<this->centroid().transpose()<<endl
         <<"  xSum: "<<this->xSum_.transpose()<<endl;
       assert(this->centroid()(0) == this->centroid()(0));
+      assert(!(this->centroid().array() == 0).all());
     };
 
     DependentCluster* clone(){return new DependentCluster(*this);}

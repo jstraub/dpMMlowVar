@@ -115,7 +115,7 @@ void ClDataGpu<T>::computeSS(void)
     computeSS(0,this->K_); // max 6 SSs per kernel due to shared mem
   }else{
     for (k0=0; k0<this->K_; k0+=6)
-      computeSS(k0,min(this->K_-k0,uint32_t(6))); // max 6 SSs per kernel due to shared mem
+      computeSS(k0,std::min(this->K_-k0,uint32_t(6))); // max 6 SSs per kernel due to shared mem
   }
 };
 

@@ -8,13 +8,9 @@
 template<uint32_t BLK_SIZE>
 __global__ void labelMap_kernel(uint32_t *z, int32_t* map, uint32_t N)
 {
-  const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
-
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
-  {
     z[id] = map[z[id]];
-  }
 };
 
 extern void labelMapGpu(uint32_t *d_z, int32_t* d_Map, uint32_t N)

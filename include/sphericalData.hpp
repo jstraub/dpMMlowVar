@@ -3,6 +3,54 @@
 #include <Eigen/Dense>
 #include <clData.hpp>
 
+using std::min;
+using std::max;
+
+/* rotation from point A to B; percentage specifies how far the rotation will 
+ * bring us towards B [0,1] */
+template<typename T>
+inline Matrix<T,Dynamic,Dynamic> rotationFromAtoB(const Matrix<T,Dynamic,1>& a,
+    const Matrix<T,Dynamic,1>& b, T percentage=1.0)
+{
+  assert(b.size() == a.size());
+
+  uint32_t D_ = b.size();
+  Matrix<T,Dynamic,Dynamic> bRa(D_,D_);
+   
+  T dot = b.transpose()*a;
+  ASSERT(fabs(dot) <=1.0, "a="<<a.transpose()<<" |.| "<<a.norm()
+      <<" b="<<b.transpose()<<" |.| "<<b.norm()
+      <<" -> "<<dot);
+  dot = max(static_cast<T>(-1.0),min(static_cast<T>(1.0),dot));
+//  cout << "dot="<<dot<<" | |"<<fabs(dot+1.)<<endl;
+  if(fabs(dot -1.) < 1e-6)
+  {
+    // points are almost the same -> just put identity
+    bRa =  Matrix<T,Dynamic,Dynamic>::Identity(D_,D_);
+  }else if(fabs(dot +1.) <1e-6) 
+  {
+    // direction does not matter since points are on opposing sides of sphere
+    // -> pick one and rotate by percentage;
+    bRa = -Matrix<T,Dynamic,Dynamic>::Identity(D_,D_);
+    bRa(0,0) = cos(percentage*M_PI*0.5);
+    bRa(1,1) = cos(percentage*M_PI*0.5);
+    bRa(0,1) = -sin(percentage*M_PI*0.5);
+    bRa(1,0) = sin(percentage*M_PI*0.5);
+  }else{
+    T alpha = acos(dot) * percentage;
+
+    Matrix<T,Dynamic,1> c(D_);
+    c = a - b*dot;
+    ASSERT(c.norm() >1e-5, "c="<<c.transpose()<<" |.| "<<c.norm());
+    c /= c.norm();
+    Matrix<T,Dynamic,Dynamic> A = b*c.transpose() - c*b.transpose();
+
+    bRa = Matrix<T,Dynamic,Dynamic>::Identity(D_,D_) + sin(alpha)*A + 
+      (cos(alpha)-1.)*(b*b.transpose() + c*c.transpose());
+  }
+  return bRa;
+}
+
 template<typename T>
 struct Spherical //: public DataSpace<T>
 {

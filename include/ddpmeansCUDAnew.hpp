@@ -16,11 +16,6 @@ using std::cout;
 using std::endl;
 
 
-extern void vectorSum_gpu( double *d_x, uint32_t *d_z , uint32_t N, 
-    uint32_t k0, uint32_t K, double *d_SSs);
-extern void vectorSum_gpu(float *d_x, uint32_t *d_z, 
-    uint32_t N, uint32_t k0, uint32_t K, float *d_SSs);
-
 extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
     uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda,
     double Q, double tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
@@ -54,8 +49,8 @@ public:
 //  virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b);
 //  virtual bool closer(T a, T b);
   
-  void getZfromGpu(){this->z_.resize(d_z_.rows()); d_z_.get(this->z_);};
-  uint32_t* d_z(){ return d_z_.data();};
+  void getZfromGpu() {this->cld_->z();};
+  uint32_t* d_z(){ return this->cdl_->d_z();};
   
 protected:
 

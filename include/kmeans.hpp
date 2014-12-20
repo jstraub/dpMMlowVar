@@ -27,6 +27,7 @@ class KMeans : public Clusterer<T,DS>
 public:
   KMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
     mt19937* pRndGen);
+  KMeans(const shared_ptr<ClData<T> >& cld, uint32_t K, mt19937* pRndGen);
   virtual ~KMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -77,6 +78,12 @@ KMeans<T,DS>::KMeans(
 //    this->ps_.col(k) = S_.sampleUnif(this->pRndGen_);
 //  cout<<"init centers"<<endl<<this->ps_<<endl;
 }
+
+template<class T, class DS>
+KMeans<T,DS>::KMeans( const shared_ptr<ClData<T> >& cld, uint32_t K, mt19937*
+    pRndGen)
+  : Clusterer<T,DS>(cld, pRndGen), S_(this->D_) 
+{}
 
 template<class T, class DS>
 KMeans<T,DS>::~KMeans()

@@ -10,17 +10,22 @@
 using namespace Eigen;
 using std::vector;
 
-extern void sufficientStatistics_gpu(double *d_x, uint32_t *d_z , uint32_t N, 
-    uint32_t k0, uint32_t K, double *d_SSs);
-extern void gmmPdf(double * d_x, double *d_invSigmas, 
-    double *d_logNormalizers, double *d_logPi, double* d_logPdf, uint32_t N, 
-    uint32_t K_);
+//extern void sufficientStatistics_gpu(double *d_x, uint32_t *d_z , uint32_t N, 
+//    uint32_t k0, uint32_t K, double *d_SSs);
+//extern void gmmPdf(double * d_x, double *d_invSigmas, 
+//    double *d_logNormalizers, double *d_logPi, double* d_logPdf, uint32_t N, 
+//    uint32_t K_);
+//
+//extern void sufficientStatistics_gpu(float *d_x, uint32_t *d_z , uint32_t N, 
+//    uint32_t k0, uint32_t K, float *d_SSs);
+//extern void gmmPdf(float * d_x, float *d_invSigmas, 
+//    float *d_logNormalizers, float *d_logPi, float* d_logPdf, uint32_t N, 
+//    uint32_t K_);
 
-extern void sufficientStatistics_gpu(float *d_x, uint32_t *d_z , uint32_t N, 
-    uint32_t k0, uint32_t K, float *d_SSs);
-extern void gmmPdf(float * d_x, float *d_invSigmas, 
-    float *d_logNormalizers, float *d_logPi, float* d_logPdf, uint32_t N, 
-    uint32_t K_);
+extern void vectorSum_gpu( double *d_x, uint32_t *d_z , uint32_t N, 
+    uint32_t k0, uint32_t K, double *d_SSs);
+extern void vectorSum_gpu(float *d_x, uint32_t *d_z, 
+    uint32_t N, uint32_t k0, uint32_t K, float *d_SSs);
 
 extern void labelMapGpu(uint32_t *d_z, int32_t* d_Map, uint32_t N);
 
@@ -121,7 +126,7 @@ void ClDataGpu<T>::computeSS(void)
 template<class T>
 void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
 {
-  GpuMatrix<T> d_map(map);
+  GpuMatrix<int32_t> d_map(map);
   // fix labels
   labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
 };

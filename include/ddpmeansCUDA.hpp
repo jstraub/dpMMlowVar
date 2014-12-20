@@ -79,7 +79,6 @@ uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
   d_ages_.set(this->ages());
   d_ws_.set(this->weights());
 
-  // TODO not too too sure about this
   Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
   for(uint32_t k=0; k<this->K_; ++k)
     if(this->cls_[k]->isInstantiated())
@@ -87,8 +86,6 @@ uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
     else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
       ps.col(k) = this->clsPrev_[k]->centroid();
   d_p_.set(ps);
-
-//  assert(this->K_ < 17); // limitation of kernel at this point
 
 //  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
 //  cout<<ps<<endl;

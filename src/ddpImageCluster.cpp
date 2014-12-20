@@ -122,8 +122,8 @@ int main(int argc, char** argv){
 		clusterer->updateState();
     const VXu& z = clusterer->z();
     const MXf& p = clusterer->centroids();
-    cout<<p<<endl;
-    cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
+//    cout<<p<<endl;
+//    cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;
 		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";

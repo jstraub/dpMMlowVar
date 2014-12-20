@@ -10,6 +10,7 @@
 using namespace Eigen;
 using std::vector;
 
+
 //extern void sufficientStatistics_gpu(double *d_x, uint32_t *d_z , uint32_t N, 
 //    uint32_t k0, uint32_t K, double *d_SSs);
 //extern void gmmPdf(double * d_x, double *d_invSigmas, 
@@ -42,8 +43,6 @@ public:
       const spVectorXu& z, uint32_t K);
   ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, uint32_t K);
   virtual ~ClDataGpu(){;};
- 
-  virtual void init();
 
   virtual void labelMap(const vector<int32_t>& map);
   virtual void updateLabels(uint32_t K);
@@ -52,8 +51,16 @@ public:
 //  GpuMatrix<T>& d_x(){ return d_x_;};
 //  GpuMatrix<uint32_t>& d_z(){ return d_z_;};
 
- virtual T* d_x(){ return d_x_.data();};
- virtual uint32_t* d_z(){ return d_z_.data();};
+  virtual void updateK(uint32_t K){ this->K_ = K;};
+  virtual void updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
+
+  virtual VectorXu& z() { this->d_z_.get(this->z_); return ClData<T>::z();};
+  virtual T* d_x(){ 
+//    d_x_.print();
+    return d_x_.data();};
+  virtual uint32_t* d_z(){ 
+//    d_z_.print();
+    return d_z_.data();};
 
 protected:
 
@@ -68,25 +75,33 @@ template<typename T>
 ClDataGpu<T>::ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
     const spVectorXu& z, uint32_t K)
   : ClData<T>(x,z,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
-{};
+{cout<<"ClDataGpu constructed"<<endl;};
 
 template<typename T>
 ClDataGpu<T>::ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
     uint32_t K)
   : ClData<T>(x,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
-{};
+{cout<<"ClDataGpu constructed"<<endl;};
 
 
 template<typename T>
 void ClDataGpu<T>::updateLabels(uint32_t K)
 {
   this->K_ = K>0?K:this->z_->maxCoeff()+1;
-  assert(this->z_->maxCoeff() < this->K_); // no indicators \geq K
-  assert(this->z_->minCoeff() >= 0); // no indicators \le 0
-  assert((this->z_->array() < this->K_).all());
-  // update the labels on the GPU
-  d_z_.set(this->z_);
+//  assert(this->z_->maxCoeff() < this->K_); // no indicators \geq K
+//  assert(this->z_->minCoeff() >= 0); // no indicators \le 0
+//  assert((this->z_->array() < this->K_).all());
+//  // update the labels on the GPU
+//  d_z_.set(this->z_);
 }
+
+template<class T>
+void ClDataGpu<T>::updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x)
+{
+  ClData<T>::updateData(x);
+  d_x_.set(this->x_);
+  d_z_.set(this->z_);
+};
 
 template<class T>
 void ClDataGpu<T>::computeSS(uint32_t k0, uint32_t K)
@@ -104,15 +119,17 @@ void ClDataGpu<T>::computeSS(uint32_t k0, uint32_t K)
   for (uint32_t k=0; k<K; ++k)
   {
 //    this->Ns_(k+k0) = Ss(3,k); //TODO do I need counts?
-    this->xSums_.col(k+k0) = xSums.block(0,k,3,1);
     this->Ns_(k+k0) = xSums(3,k);
+    if(this->Ns_(k+k0) > 0)
+      this->xSums_.col(k+k0) = xSums.block(0,k,3,1);
   }
 }
 
 template<class T>
 void ClDataGpu<T>::computeSS(void)
 {
-  this->xSums_ = Matrix<T,Dynamic,Dynamic>::Zero(this->D_, this->K_);
+  this->Ns_.setZero(this->K_);
+  this->xSums_.setZero(this->D_,this->K_);
   uint32_t k0 = 0;
   if(this->K_ <= 6)
   {
@@ -127,8 +144,13 @@ template<class T>
 void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
 {
   GpuMatrix<int32_t> d_map(map);
+//  cout<<"GPU labelMap: "<<d_map.get().transpose()<<endl;
+//  VectorXu& z = this->z();
+//  cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
   // fix labels
   labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
+//  z = this->z();
+//  cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
 };
 
 //template<typename T>

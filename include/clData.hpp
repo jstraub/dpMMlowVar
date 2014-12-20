@@ -9,6 +9,8 @@ using std::cout;
 using std::endl;
 using boost::shared_ptr;
 
+#define UNASSIGNED 4294967295
+
 /* clustered data */
 template <class T>
 class ClData
@@ -36,6 +38,9 @@ public:
   virtual void computeSS();
 
   virtual void labelMap(const vector<int32_t>& map);
+
+  virtual void updateK(uint32_t K){ K_ = K;};
+  virtual void updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
 
 //  virtual const spVectorXu& z() const {return z_;};
   virtual VectorXu& z() {return *z_;};
@@ -77,7 +82,7 @@ typedef ClData<double> ClDatad;
 template<class T>
 ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
     const spVectorXu& z, uint32_t K)
- : z_(z), x_(x), K_(K>0?K:z->maxCoeff()+1), N_(x->cols()), D_(x->rows())
+ : z_(z), x_(x), K_(z->maxCoeff()+1), N_(x->cols()), D_(x->rows())
 //   Ss_(K_,Matrix<T,Dynamic,Dynamic>::Zero(D_,D_))
 {
   cout<<"D="<<D_<<" N="<<N_<<" K="<<K_<<endl;
@@ -87,7 +92,7 @@ template<class T>
 ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
     uint32_t K)
  : z_(new VectorXu(VectorXu::Zero(x->cols()))), x_(x),
-  K_(K>0?K:1), N_(x->cols()), D_(x->rows())
+  K_(K), N_(x->cols()), D_(x->rows())
 //   Ss_(K_,Matrix<T,Dynamic,Dynamic>::Zero(D_,D_))
 {
   cout<<"D="<<D_<<" N="<<N_<<" K="<<K_<<endl;
@@ -101,7 +106,10 @@ ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
     std::random_shuffle(z.begin(),z.end());
     for(uint32_t i=0; i<N_; ++i) (*z_)(i) = z[i];
     cout<<"init z: "<<(*z_).transpose()<<endl;
-  }
+  }else if(K==1)
+    z_->fill(0.);
+  else
+    z_->fill(UNASSIGNED);
 };
 
 template<class T>
@@ -113,6 +121,19 @@ void ClData<T>::updateLabels(uint32_t K)
 {
   K_ = K;
 }
+
+template<class T>
+void ClData<T>::updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x)
+{
+  x_ = x;
+  assert(D_ == x_->rows());
+  if(N_ != x->cols())
+  {
+    N_ = x->cols();
+    z_->resize(N_);
+    z_->fill(UNASSIGNED);
+  }
+};
 
 template<class T>
 void ClData<T>::computeSS()

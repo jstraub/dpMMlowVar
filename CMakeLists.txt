@@ -55,6 +55,7 @@ IF(BOOST_OLD)
     ./cuda/ddpvMFlabels_kernel.cu
     ./cuda/copy_kernel.cu
     ./cuda/choiceMult_kernel.cu
+    ./cuda/labelMap_kernel.cu
     )
   target_link_libraries(dpMMlowVar
     boost_system
@@ -85,6 +86,7 @@ ELSE(BOOST_OLD)
     ./cuda/ddpLabels_kernel.cu
     ./cuda/copy_kernel.cu
     ./cuda/choiceMult_kernel.cu
+    ./cuda/labelMap_kernel.cu
     )
   target_link_libraries(dpMMlowVar
     boost_system

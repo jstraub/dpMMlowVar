@@ -92,11 +92,11 @@ int main(int argc, char** argv){
 	cout << "New Frame Dimensions: " << nfr_w << " x " << nfr_h << endl;
 
 	//set up the DDP Means object
-	mt19937 rng; rng.seed(vm["seed"].as<int>());
+//	mt19937 rng; rng.seed(vm["seed"].as<int>());
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,1));
+  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
   DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
-    DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau, &rng);
+    DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
 //  	DDPMeansCUDA<float,Euclidean<float> > *clusterer = new DDPMeansCUDA<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
 //  	DDPMeans<float,Euclidean<float> > *clusterer = new DDPMeans<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
 
@@ -123,6 +123,7 @@ int main(int argc, char** argv){
     const VXu& z = clusterer->z();
     const MXf& p = clusterer->centroids();
     cout<<p<<endl;
+    cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
 		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
 		ostringstream oss;
 		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";

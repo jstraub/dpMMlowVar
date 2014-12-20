@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 
-#include <boost/random/mersenne_twister.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "sphere.hpp"
@@ -16,22 +15,14 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
-#ifdef BOOST_OLD
-#define mt19937 boost::mt19937
-#else
-using boost::mt19937;
-#endif
-
-#define UNASSIGNED 4294967295
-
 template<class T, class DS>
 class DDPMeans : public DPMeans<T,DS>
 {
 public:
   DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
-      T lambda, T Q, T tau, mt19937* pRndGen);
+      T lambda, T Q, T tau);
   DDPMeans(const shared_ptr<ClData<T> >& cld,
-      T lambda, T Q, T tau, mt19937* pRndGen);
+      T lambda, T Q, T tau);
   virtual ~DDPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -40,7 +31,7 @@ public:
   virtual void updateCenters();
   
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
-  virtual void nextTimeStep(const shared_ptr<ClData<T> >& cld);
+//  virtual void nextTimeStep(const shared_ptr<ClData<T> >& cld);
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
@@ -78,18 +69,18 @@ protected:
 // -------------------------------- impl ----------------------------------
 template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-    T lambda, T Q, T tau, mt19937* pRndGen)
-  : DPMeans<T,DS>(spx,0,lambda,pRndGen), cl0_(tau,lambda,Q)
+    T lambda, T Q, T tau)
+  : DPMeans<T,DS>(spx,0,lambda), cl0_(tau,lambda,Q)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean
 };
 
 template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<ClData<T> >& cld, 
-    T lambda, T Q, T tau, mt19937* pRndGen)
-  : DPMeans<T,DS>(cld,0,lambda,pRndGen), cl0_(tau,lambda,Q)
+    T lambda, T Q, T tau)
+  : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q)
 {
-  this->Kprev_ = 0; // so that centers are initialized directly from sample mean
+  this->Kprev_ = cld->K(); // so that centers are initialized directly from sample mean
 };
 
 template<class T, class DS>
@@ -144,6 +135,9 @@ void DDPMeans<T,DS>::updateLabels()
     idAction = optimisticLabelsAssign(i0);
     if(idAction != UNASSIGNED)
     {
+//      cout<<"idAction "<<idAction<<endl;
+//      cout<<" x @ idAction "<<this->cld_->x()->col(idAction).transpose()<<endl;
+//      cout<<"K= "<<this->K_<<endl;
       T sim = 0.;
       uint32_t z_i = this->indOfClosestCluster(idAction,sim);
       if(z_i == this->K_) 
@@ -200,7 +194,7 @@ void DDPMeans<T,DS>::updateCenters()
   for(uint32_t k=0; k<this->K_; ++k)
     prevNs_(k) = this->cls_[k]->N();
 
-  this->cld_->updateLabels(this->K_);
+  this->cld_->updateK(this->K_);
   this->cld_->computeSS();
 
 //#pragma omp parallel for 
@@ -221,12 +215,6 @@ void DDPMeans<T,DS>::updateCenters()
 template<class T, class DS>
 void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
-  return nextTimeStep(shared_ptr<ClData<T> >(new ClData<T>(spx,this->K_)));
-};
-
-template<class T, class DS>
-void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<ClData<T> >& cld)
-{
   this->clsPrev_.clear();
   for (uint32_t k =0; k< this->K_; ++k)
   {
@@ -238,12 +226,18 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<ClData<T> >& cld)
   this->Kprev_ = this->K_;
 //  assert(this->D_ == spx->rows());
 //  if(this->spx_.get() != spx.get()) this->spx_ = spx; // update the data
-  this->cld_ = cld;
+  this->cld_->updateData(spx);
   this->N_ = this->cld_->N();
 //  this->z_.resize(this->N_);
 //  this->z_.fill(UNASSIGNED);
+//  return nextTimeStep(shared_ptr<ClData<T> >(new ClData<T>(spx,this->K_)));
 };
 
+//template<class T, class DS>
+//void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<ClData<T> >& cld)
+//{
+//};
+//
 template<class T, class DS>
 void DDPMeans<T,DS>::updateState()
 {

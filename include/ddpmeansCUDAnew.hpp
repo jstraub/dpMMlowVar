@@ -28,9 +28,9 @@ class DDPMeansCUDA : public DDPMeans<T,DS>
 {
 public:
 //  DDPMeansCUDA(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
-//      T lambda, T Q, T tau, mt19937* pRndGen);
+//      T lambda, T Q, T tau);
   DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
-      T lambda, T Q, T tau, mt19937* pRndGen);
+      T lambda, T Q, T tau);
   virtual ~DDPMeansCUDA();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -79,14 +79,14 @@ protected:
 //DDPMeansCUDA<T,DS>::DDPMeansCUDA(
 //    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, T lambda, T Q, T tau, 
 //    mt19937* pRndGen)
-//  : DDPMeans<T,DS>(spx,lambda,Q,tau,pRndGen), d_x_(spx), d_z_(this->N_),
+//  : DDPMeans<T,DS>(spx,lambda,Q,tau), d_x_(spx), d_z_(this->N_),
 //  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
 //{}
 
 template<class T, class DS>
 DDPMeansCUDA<T,DS>::DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
-      T lambda, T Q, T tau, mt19937* pRndGen)
-  : DDPMeans<T,DS>(cld,lambda,Q,tau,pRndGen), //d_x_(cld), d_z_(this->N_),
+      T lambda, T Q, T tau)
+  : DDPMeans<T,DS>(cld,lambda,Q,tau), //d_x_(cld), d_z_(this->N_),
   d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
 {}
 
@@ -178,9 +178,7 @@ uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
 
 //  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;
 //  cout<<ps<<endl;
-//  d_x_.print();
 //  d_p_.print();
-//  d_z_.print();
 //  d_ages_.print();
 //  d_Ns_.print();
 //  cout<<"d_Ns_ "<<d_Ns_.get().transpose()<<endl;

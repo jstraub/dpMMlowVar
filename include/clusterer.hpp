@@ -1,30 +1,22 @@
 #pragma once
 
-
 #include <vector>
 #include <global.hpp>
 #include <clData.hpp>
-//#include <Eigen/Dense>
-//#include <boost/shared_ptr.hpp>
 
-#include <boost/random/mersenne_twister.hpp>
+#include <Eigen/Dense>
+#include <boost/shared_ptr.hpp>
+
 
 using namespace Eigen;
 using std::vector;
-
-#ifdef BOOST_OLD
-#define mt19937 boost::mt19937
-#else
-using boost::mt19937;
-#endif
 
 template<class T, class DS>
 class Clusterer
 {
 public:
-  Clusterer(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    mt19937* pRndGen);
-  Clusterer(const shared_ptr<ClData<T> >& cld, mt19937* pRndGen);
+  Clusterer(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K);
+  Clusterer(const shared_ptr<ClData<T> >& cld);
   virtual ~Clusterer();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -73,24 +65,23 @@ protected:
 //  shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
   vector< shared_ptr<typename DS::DependentCluster> > cls_; // clusters
 //  VectorXu z_; // labels
-  mt19937* pRndGen_;
 };
 
 // ----------------------------- impl -----------------------------------------
 template<class T, class DS>
 Clusterer<T,DS>::Clusterer( const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
-    uint32_t K, mt19937* pRndGen)
+    uint32_t K)
   : K_(K), D_(spx->rows()), N_(spx->cols()), cost_(INFINITY), prevCost_(INFINITY),
-  cld_(new ClData<T>(spx,K)), pRndGen_(pRndGen)
+  cld_(new ClData<T>(spx,K))
 {
   for (uint32_t k=0; k<K_; ++k)
     cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
 };
 
 template<class T, class DS>
-Clusterer<T,DS>::Clusterer( const shared_ptr<ClData<T> >& cld, mt19937* pRndGen)
-  : K_(K), D_(cld->D()), N_(cld->N()), cost_(INFINITY), prevCost_(INFINITY),
-  cld_(cld), pRndGen_(pRndGen)
+Clusterer<T,DS>::Clusterer( const shared_ptr<ClData<T> >& cld)
+  : K_(cld->K()), D_(cld->D()), N_(cld->N()), cost_(INFINITY), prevCost_(INFINITY),
+  cld_(cld)
 {
   for (uint32_t k=0; k<K_; ++k)
     cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));

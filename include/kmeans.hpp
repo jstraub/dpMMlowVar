@@ -3,7 +3,6 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/random/mersenne_twister.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "sphere.hpp"
@@ -15,19 +14,12 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
-#ifdef BOOST_OLD
-#define mt19937 boost::mt19937
-#else
-using boost::mt19937;
-#endif
-
 template<class T, class DS>
 class KMeans : public Clusterer<T,DS>
 {
 public:
-  KMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    mt19937* pRndGen);
-  KMeans(const shared_ptr<ClData<T> >& cld, uint32_t K, mt19937* pRndGen);
+  KMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K);
+  KMeans(const shared_ptr<ClData<T> >& cld);
   virtual ~KMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -57,9 +49,8 @@ protected:
 
 template<class T, class DS>
 KMeans<T,DS>::KMeans(
-    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K,
-    mt19937* pRndGen)
-  : Clusterer<T,DS>(spx,K, pRndGen), S_(this->D_) 
+    const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K)
+  : Clusterer<T,DS>(spx,K), S_(this->D_) 
 {
 //  if(K>0){
 //    Matrix<T,Dynamic,1> alpha(this->K_);
@@ -80,9 +71,8 @@ KMeans<T,DS>::KMeans(
 }
 
 template<class T, class DS>
-KMeans<T,DS>::KMeans( const shared_ptr<ClData<T> >& cld, uint32_t K, mt19937*
-    pRndGen)
-  : Clusterer<T,DS>(cld, pRndGen), S_(this->D_) 
+KMeans<T,DS>::KMeans( const shared_ptr<ClData<T> >& cld)
+  : Clusterer<T,DS>(cld), S_(this->D_) 
 {}
 
 template<class T, class DS>

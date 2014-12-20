@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(kmeans_test)
 
   cout<<" ---------------- kmeans -------------------"<<endl;
   boost::mt19937 rndGen3(91);
-  KMeans<double,Euclidean<double> > kmeans(spx,K,&rndGen3);
+  KMeans<double,Euclidean<double> > kmeans(spx,K);
 //  KMeans<double,Spherical<double> > kmeans(spx,K,&rndGen3);
   for(uint32_t t=0; t<T; ++t)
   {
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(kmeans_test)
 
   double lambda = cos(15.0*M_PI/180.0);
   cout<<" -------------------- DpvMF means "<<lambda<<" ----------------------"<<endl;
-  DPMeans<double,Spherical<double> > dpvmfmeans(spx,1,lambda,&rndGen);
+  DPMeans<double,Spherical<double> > dpvmfmeans(spx,1,lambda);
   for(uint32_t t=0; t<T; ++t)
   {
     dpvmfmeans.updateCenters();
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(kmeans_test)
 
   lambda = 0.1; //cos(15.0*M_PI/180.0);
   cout<<" -------------------- DP-means ----------------------"<<endl;
-  DPMeans<double,Euclidean<double> > dpmeans(spx,1,lambda,&rndGen);
+  DPMeans<double,Euclidean<double> > dpmeans(spx,1,lambda);
   for(uint32_t t=0; t<T; ++t)
   {
     dpmeans.updateCenters();

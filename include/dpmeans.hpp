@@ -3,7 +3,6 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/random/mersenne_twister.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "kmeans.hpp"
@@ -17,9 +16,8 @@ class DPMeans : public KMeans<T,DS>
 {
 public:
   DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K0,
-    double lambda, mt19937* pRndGen);
-  DPMeans(const shared_ptr<ClData<T> >& cld, uint32_t K0,
-    double lambda, mt19937* pRndGen);
+    double lambda);
+  DPMeans(const shared_ptr<ClData<T> >& cld, double lambda);
   virtual ~DPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -36,14 +34,13 @@ protected:
 // -------------------------------- impl ----------------------------------
 template<class T, class DS>
 DPMeans<T,DS>::DPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
-    uint32_t K0, double lambda, mt19937* pRndGen)
-  : KMeans<T,DS>(spx,K0,pRndGen), lambda_(lambda)
+    uint32_t K0, double lambda)
+  : KMeans<T,DS>(spx,K0), lambda_(lambda)
 {}
 
 template<class T, class DS>
-DPMeans<T,DS>::DPMeans(const shared_ptr<ClData<T> >& cld, 
-    uint32_t K0, double lambda, mt19937* pRndGen)
-  : KMeans<T,DS>(cld,K0,pRndGen), lambda_(lambda)
+DPMeans<T,DS>::DPMeans(const shared_ptr<ClData<T> >& cld, double lambda)
+  : KMeans<T,DS>(cld), lambda_(lambda)
 {}
 
 template<class T, class DS>

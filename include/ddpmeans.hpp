@@ -233,11 +233,6 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
 //  return nextTimeStep(shared_ptr<ClData<T> >(new ClData<T>(spx,this->K_)));
 };
 
-//template<class T, class DS>
-//void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<ClData<T> >& cld)
-//{
-//};
-//
 template<class T, class DS>
 void DDPMeans<T,DS>::updateState()
 {

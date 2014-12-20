@@ -33,7 +33,6 @@ IF(BOOST_OLD)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DBOOST_OLD")
   include_directories(
     ./include
-    ./src
     ./cuda
     ${EIGEN3_INCLUDE_DIR}
     /usr/include
@@ -46,11 +45,6 @@ IF(BOOST_OLD)
     )
   # no sampling from chi_squared
   cuda_add_library(dpMMlowVar SHARED
-#    ./src/cat.cpp
-#    ./src/sampler.cpp
-#    ./src/dir.cpp
-#    ./src/normal.cpp
-#    ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
     ./cuda/copy_kernel.cu
@@ -66,7 +60,6 @@ IF(BOOST_OLD)
 ELSE(BOOST_OLD)
   include_directories(
     ./include
-    ./src
     ./cuda
     ${EIGEN3_INCLUDE_DIR}
     /usr/include
@@ -77,11 +70,6 @@ ELSE(BOOST_OLD)
     $ENV{WORKSPACE_HOME}/3rdparty/lib
     )
   cuda_add_library(dpMMlowVar SHARED
-#    ./src/cat.cpp
-#    ./src/sampler.cpp
-#    ./src/dir.cpp
-#    ./src/normal.cpp
-#    ./src/sphere.cpp
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
     ./cuda/ddpLabels_kernel.cu
@@ -95,35 +83,6 @@ ELSE(BOOST_OLD)
     boost_random
     boost_program_options
     )
-
-#  cuda_add_executable(testSPKM ./test/spkm.cpp
-#    ./src/cat.cpp
-#    ./src/mult.cpp
-#    ./src/dir.cpp
-#    ./src/sphere.cpp
-#    ./src/normal.cpp
-#    )
-#  target_link_libraries(testSPKM
-#    boost_system
-#    boost_random
-#    boost_unit_test_framework
-#    )
-#
-#  cuda_add_executable(testvMFmeans ./test/vMFmeans.cpp
-#    ./src/cat.cpp
-#    ./src/mult.cpp
-#    ./src/dir.cpp
-#    ./src/sphere.cpp
-#    ./src/normal.cpp
-#    ./cuda/vectorSum_kernel.cu
-#    ./cuda/ddpvMFlabels_kernel.cu
-#    ./cuda/copy_kernel.cu
-#    )
-#  target_link_libraries(testvMFmeans
-#    boost_system
-#    boost_random
-#    boost_unit_test_framework
-#    )
 
 ENDIF(BOOST_OLD)
 

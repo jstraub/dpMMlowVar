@@ -4,19 +4,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include <stdint.h>
 
 #include "kmeans.hpp"
 #include "sphericalData.hpp"
 #include "euclideanData.hpp"
-//#include "spkm.hpp"
-//#include "normalSphere.hpp"
 #include "dpmeans.hpp"
-//#include "dpvMFmeans.hpp"
-//#include "ddpvMFmeans.hpp"
-//#include "ddpmeans.hpp"
-//#include "karcherMean.hpp"
+
+#ifdef BOOST_OLD
+//using boost::mt19937;
+#define mt19937 boost::mt19937
+#else
+using boost::mt19937;
+#endif
 
 using namespace Eigen;
 using std::cout;

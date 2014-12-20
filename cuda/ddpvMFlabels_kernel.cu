@@ -59,15 +59,15 @@ __device__ inline T distToUninstantiatedSmallAngleApprox( T zeta, T age, T beta,
   T dPhi = 0.0;
   for (uint32_t i=0; i< I; ++i)
   {
-    T a = (beta*phi);
-    T b = (beta/w *phi);
+//    T a = (beta*phi);
+//    T b = (beta/w *phi);
     T f = -zeta + (beta*phi) + (age * phi) + (beta/w *phi);
     T df = beta + age + (beta/w);
 //    T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi) 
 //      + (beta*cosPhi)/sqrt(w*w - beta*beta*sinPhi*sinPhi); 
 
-    T phiPrev = phi;
-    T dPhiPrev = dPhi;
+//    T phiPrev = phi;
+//    T dPhiPrev = dPhi;
 
     dPhi = f/df;
     phi = phi - dPhi; // Newton iteration

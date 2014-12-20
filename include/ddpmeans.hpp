@@ -6,10 +6,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "sphere.hpp"
 #include "dpmeans.hpp"
-#include "dir.hpp"
-#include "cat.hpp"
 
 using namespace Eigen;
 using std::cout;
@@ -25,7 +22,6 @@ public:
       T lambda, T Q, T tau);
   virtual ~DDPMeans();
 
-//  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
   virtual void updateLabelsSerial();
   virtual void updateLabels();
   virtual void updateCenters();

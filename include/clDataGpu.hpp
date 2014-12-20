@@ -90,7 +90,6 @@ void ClDataGpu<T>::computeSS(uint32_t k0, uint32_t K)
   Matrix<T,Dynamic,Dynamic> xSums = Matrix<T,Dynamic,Dynamic>::Zero(
       this->D_+1,K);
   GpuMatrix<T> d_xSums(xSums);
-
 //  d_x_.print();
 //  d_z_.print();
   vectorSum_gpu(d_x_.data(),d_z_.data(),this->N_,k0,K,d_xSums.data());
@@ -124,12 +123,6 @@ template<class T>
 void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
 {
   GpuMatrix<int32_t> d_map(map);
-//  cout<<"GPU labelMap: "<<d_map.get().transpose()<<endl;
-//  VectorXu& z = this->z();
-//  cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
-  // fix labels
   labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
-//  z = this->z();
-//  cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
 };
 

@@ -93,7 +93,6 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
   }
 };
 
-
 extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages, double *d_ws, double lambda, double Q, 
     double tau, uint32_t K, uint32_t N, uint32_t *d_asgnIdces)
 {

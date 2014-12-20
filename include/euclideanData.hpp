@@ -24,8 +24,9 @@ struct Euclidean //: public DataSpace<T>
     Cluster(const Matrix<T,Dynamic,1>& x_i) : centroid_(x_i), xSum_(x_i), N_(1)
     {};
 
-    Cluster(const Matrix<T,Dynamic,1>& xSum, uint32_t N) : centroid_(xSum/N), xSum_(xSum), N_(N)
-    {};
+    Cluster(const Matrix<T,Dynamic,1>& xSum, uint32_t N) :
+      centroid_(xSum), xSum_(xSum), N_(N)
+    {if(N>0) centroid_/=N_;};
 
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     { return Euclidean::dist(this->centroid_, x_i); };
@@ -50,6 +51,7 @@ struct Euclidean //: public DataSpace<T>
 
     void updateCenter()
     {
+      assert(this->centroid()(0) == this->centroid()(0));
       if(N_ > 0)
         centroid_ = xSum_/N_;
       else
@@ -130,7 +132,7 @@ struct Euclidean //: public DataSpace<T>
 
     void updateWeight()
     {
-      w_ = w_==0? this->N_ : 1./(1./w_ + t_*tau_) + this->N_;
+      w_ = w_ == 0? this->N_ : 1./(1./w_ + t_*tau_) + this->N_;
       t_ = 0;
     };
 
@@ -138,7 +140,9 @@ struct Euclidean //: public DataSpace<T>
     {
       cout<<"cluster "<<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
         <<w_ <<"\t dead? "<<this->isDead()
-        <<"  center: "<<this->centroid().transpose()<<endl;
+        <<"  center: "<<this->centroid().transpose()<<endl
+        <<"  xSum: "<<this->xSum_.transpose()<<endl;
+      assert(this->centroid()(0) == this->centroid()(0));
     };
 
     DependentCluster* clone(){return new DependentCluster(*this);}

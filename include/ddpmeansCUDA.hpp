@@ -120,8 +120,25 @@ VectorXu DDPMeansCUDA<T,DS>::initLabels()
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
   GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
 
+  d_ages_.set(this->ages());
+  d_ws_.set(this->weights());
+
+  // TODO not too too sure about this
+  Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
+  for(uint32_t k=0; k<this->K_; ++k)
+    if(this->cls_[k]->isInstantiated())
+      ps.col(k) = this->cls_[k]->centroid();
+    else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
+      ps.col(k) = this->clsPrev_[k]->centroid();
+  d_p_.set(ps);
+
+//  d_p_.print();
+//  d_ages_.print();
+//  d_ws_.print();
+//
   ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), 
       d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
       this->cl0_.Q(), this->cl0_.tau(), this->K_, this->N_, d_asgnIdces.data());
   return d_asgnIdces.get();      
 }
+

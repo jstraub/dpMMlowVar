@@ -235,16 +235,15 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   this->cld_->updateData(spx);
   this->N_ = this->cld_->N();
 
-  if(true)
+  if(false && this->K_ > 0)
   {
     VectorXu idActions = initLabels();
     for(uint32_t k=0; k<this->K_; ++k)
       if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
-        { // instantiated an old cluster
-          cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
-          cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
-          this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
-        }
+      { // instantiated an old cluster
+        cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
+        cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
+        this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
       }
   }
 };

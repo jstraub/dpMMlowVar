@@ -31,7 +31,9 @@ class DMeansPaletteEncoder{
 			paletteOut.open(fldrnm + "/palette.log", ios_base::write);
 			this->fldrnm = fldrnm;
 			fr = 0;
+			doneFirst = false;
 		}
+		bool doneFirst;
 		string fldrnm;
 		int fr;
 		ofstream paletteDiffsOut, paletteOut;
@@ -81,59 +83,67 @@ class DMeansPaletteEncoder{
 				}
 			}
 			ostringstream oss;
-			oss << fldrnm << "/" << setw(7) << setfill('0') << fr << ".png";
+			oss << fldrnm << "/res-" << setw(7) << setfill('0') << fr << ".png";
 			imwrite(oss.str(), res, compression_params);
 		}
-
-		void firstFrame(Mat& firstFrame, const VXu& z, const MXf& p){
-			int rw = nextFrame.rows;
-			int cl = nextFrame.cols;
+		Mat posterize(int rw, int cl, VXu z, MXf p){
 			vector<int> compression_params;
 			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
 			compression_params.push_back(9); //9 means maximum compression/slowest
-
-			vector<int> zs;
-			for(int i = 0; i < rw; i++){
-				for (int j = 0; j < cl; j++){
-					zs.push_back(z(i*cl+j));
-					prevPaletteIds(i, j) = z(i*cl+j);
+			Mat frameLabOut(rw, cl, CV_32FC3);
+			Mat frameOutF(rw, cl, CV_32FC3);
+			Mat frameOut(rw, cl, CV_8UC3);
+			int idx = 0;
+			for(int y = 0; y < rw; y++){
+				for (int x = 0; x < cl; x++){
+					Vec3f& clr = frameLabOut.at<Vec3f>(y, x);
+					clr.val[0] = p(0, z(idx));
+					clr.val[1] = p(1, z(idx));
+					clr.val[2] = p(2, z(idx));
+      					idx ++;
 				}
 			}
-			paletteDiffsOut << rw << " " << cl << endl;
-			paletteDiffsOut << zs.size() << endl;
-			for(int i = 0; i < zs.size(); i++){
-				paletteDiffsOut << zs[i] << endl;
-			}
-
-
-			for (int i = 0; i < p.cols(); i++){
-				if (find(paletteToColorSeq.begin(), paletteToColorSeq.end(), i) == paletteToColorSeq.end()){
-					paletteToFrameStart[i] = fr;
-				}
-				paletteToColorSeq[i].push_back(p.col(i));
-			}
-			outputResiduals(firstFrame, z, p);
-			fr++;
+			cvtColor(frameLabOut, frameOutF, CV_Lab2RGB);
+			frameOutF.convertTo(frameOut, CV_8U, 255.0);
+			//Mat medianFrame;
+			//medianBlur(frameOut, medianFrame, 3);
+			ostringstream oss;
+			oss << fldrnm << "/post-" << setw(7) << setfill('0') << fr << ".png";
+			imwrite(oss.str(), frameOut, compression_params);
 		}
 		void addFrame(Mat& nextFrame, const VXu& z, const MXf& p){
 			int rw = nextFrame.rows;
 			int cl = nextFrame.cols;
-
-			//output the palette differences
-			vector<int> diffrws, diffcls, newzs;
-			for(int i = 0; i < rw; i++){
-				for (int j = 0; j < cl; j++){
-					if(z(i*cl+j) != prevPaletteIds(i, j)){
-						diffrws.push_back(i);
-						diffcls.push_back(j);
-						newzs.push_back(z(i*cl+j));
+			if (doneFirst){
+				//output the palette differences
+				vector<int> diffrws, diffcls, newzs;
+				for(int i = 0; i < rw; i++){
+					for (int j = 0; j < cl; j++){
+						if(z(i*cl+j) != prevPaletteIds(i, j)){
+							diffrws.push_back(i);
+							diffcls.push_back(j);
+							newzs.push_back(z(i*cl+j));
+						}
+						prevPaletteIds(i, j) = z(i*cl+j);
 					}
-					prevPaletteIds(i, j) = z(i*cl+j);
 				}
-			}
-			paletteDiffsOut<<newzs.size() << endl;
-			for(int i = 0; i < newzs.size(); i++){
-				paletteDiffsOut << diffrws[i] << " " << diffcls[i] << " " << newzs[i] << endl;
+				paletteDiffsOut<<newzs.size() << endl;
+				for(int i = 0; i < newzs.size(); i++){
+					paletteDiffsOut << diffrws[i] << " " << diffcls[i] << " " << newzs[i] << endl;
+				}
+			} else {
+				vector<int> zs;
+				for(int i = 0; i < rw; i++){
+					for (int j = 0; j < cl; j++){
+						zs.push_back(z(i*cl+j));
+						prevPaletteIds(i, j) = z(i*cl+j);
+					}
+				}
+				paletteDiffsOut << rw << " " << cl << endl;
+				paletteDiffsOut << zs.size() << endl;
+				for(int i = 0; i < zs.size(); i++){
+					paletteDiffsOut << zs[i] << endl;
+				}
 			}
 
 			outputResiduals(nextFrame, z, p);
@@ -146,72 +156,130 @@ class DMeansPaletteEncoder{
 			}
 			fr++;
 		}
-		void finalFrame(Mat& lastFrame, const VXu& z, const MXf& p){
-			addFrame(lastFrame, z, p);
-			
-			//spline the palette sequence 
-			for (auto it = paletteToColorSeq.begin(), it != paletteToColorSeq.end(); ++it){
-				int stfr = paletteToFrameStart[it->first];
-				vector<V3f>& clrseq = it->second;
-				vector<int> toAdd;
-				toAdd.push_back(0);
-				toAdd.push_back(clrseq.size()-1);
-				double maxerr = 10.0;
-				while(maxerr > 1.0){
-					vector<double> r_seq, g_seq, b_seq;
-					vector<double> frms;
-					for(int i = 0; i < toAdd.size(); i++){
-						frms.push_back(toAdd[i]+stfr);
-						r_seq.push_back(clrseq[toAdd[i]](0));
-						g_seq.push_back(clrseq[toAdd[i]](1));
-						b_seq.push_back(clrseq[toAdd[i]](2));
-					}
-					tk::spline s_r, s_g, s_b;
-					s_r.set_points(frms, r_seq);
-					s_g.set_points(frms, g_seq);
-					s_b.set_points(frms, b_seq);
-					maxerr = -1;
-					int maxid = -1;
-					for(int i = 0; i < clrseq.size(); i++){
-						double pxerr = 
-							  (s_r(stfr+i) - r_seq[i])*(s_r(stfr+i) - r_seq[i])
-							 + (s_g(stfr+i) - g_seq[i])*(s_g(stfr+i) - g_seq[i])
-							 + (s_b(stfr+i) - b_seq[i])*(s_b(stfr+i) - b_seq[i]);
-						if (pxerr > maxerr){
-							maxerr = pxerr;
-							maxid = i;
-						}
-					}
-					if(maxerr > 1.0){
-						toAdd.push_back(maxid);
-					}
-				}
-				//output the spline
-				vector<double> r_seq, g_seq, b_seq;
-				vector<double> frms;
-				for(int i = 0; i < toAdd.size(); i++){
-					frms.push_back(toAdd[i]+stfr);
-					r_seq.push_back(clrseq[toAdd[i]](0));
-					g_seq.push_back(clrseq[toAdd[i]](1));
-					b_seq.push_back(clrseq[toAdd[i]](2));
-				}
-				tk::spline s_r, s_g, s_b;
-				s_r.set_points(frms, r_seq);
-				s_g.set_points(frms, g_seq);
-				s_b.set_points(frms, b_seq);
-				//TODO output
-				paletteOut << "You didn't implement this yet, dummy :)" <<endl;
-			}
+		void outputPaletteSplines(){
+			////spline the palette sequence 
+			//for (auto it = paletteToColorSeq.begin(), it != paletteToColorSeq.end(); ++it){
+			//	int stfr = paletteToFrameStart[it->first];
+			//	vector<V3f>& clrseq = it->second;
+			//	vector<int> toAdd;
+			//	toAdd.push_back(0);
+			//	toAdd.push_back(clrseq.size()-1);
+			//	double maxerr = 10.0;
+			//	while(maxerr > 1.0){
+			//		vector<double> r_seq, g_seq, b_seq;
+			//		vector<double> frms;
+			//		for(int i = 0; i < toAdd.size(); i++){
+			//			frms.push_back(toAdd[i]+stfr);
+			//			r_seq.push_back(clrseq[toAdd[i]](0));
+			//			g_seq.push_back(clrseq[toAdd[i]](1));
+			//			b_seq.push_back(clrseq[toAdd[i]](2));
+			//		}
+			//		tk::spline s_r, s_g, s_b;
+			//		s_r.set_points(frms, r_seq);
+			//		s_g.set_points(frms, g_seq);
+			//		s_b.set_points(frms, b_seq);
+			//		maxerr = -1;
+			//		int maxid = -1;
+			//		for(int i = 0; i < clrseq.size(); i++){
+			//			double pxerr = 
+			//				  (s_r(stfr+i) - r_seq[i])*(s_r(stfr+i) - r_seq[i])
+			//				 + (s_g(stfr+i) - g_seq[i])*(s_g(stfr+i) - g_seq[i])
+			//				 + (s_b(stfr+i) - b_seq[i])*(s_b(stfr+i) - b_seq[i]);
+			//			if (pxerr > maxerr){
+			//				maxerr = pxerr;
+			//				maxid = i;
+			//			}
+			//		}
+			//		if(maxerr > 1.0){
+			//			toAdd.push_back(maxid);
+			//		}
+			//	}
+			//	//output the spline
+			//	vector<double> r_seq, g_seq, b_seq;
+			//	vector<double> frms;
+			//	for(int i = 0; i < toAdd.size(); i++){
+			//		frms.push_back(toAdd[i]+stfr);
+			//		r_seq.push_back(clrseq[toAdd[i]](0));
+			//		g_seq.push_back(clrseq[toAdd[i]](1));
+			//		b_seq.push_back(clrseq[toAdd[i]](2));
+			//	}
+			//	tk::spline s_r, s_g, s_b;
+			//	s_r.set_points(frms, r_seq);
+			//	s_g.set_points(frms, g_seq);
+			//	s_b.set_points(frms, b_seq);
+			//	//TODO output
+			//	paletteOut << "You didn't implement this yet, dummy :)" <<endl;
+			//}
 
 			paletteDiffsOut.close();
 			paletteOut.close();
 		}
+		
 };
 
-int makeDirectory(const char* name);
-shared_ptr<MXf> extractVectorData(Mat& frame);
-Mat posterize(int rw, int cl, VXu z, MXf p);
-void printProgress(string pre, double pct);
+int makeDirectory(const char* name){
+	if(mkdir(name, S_IRWXU) == -1){
+		if (errno != EEXIST){ //if the folder exists, who cares just go for it
+			cout << "Couldn't create " << name << "/ for writing frames" << endl;
+			switch(errno){
+				case EACCES:
+					cout << "Need higher permissions" << endl;
+					break;
+				case ENAMETOOLONG:
+					cout << "Folder name too long" << endl;
+					break;
+				case ENOSPC:
+					cout << "Not enough space" << endl;
+					break;
+				case ENOENT:
+					cout << "Something wrong with the path..." << endl;
+					break;
+				default:
+					cout << "Unknown error" << endl;
+			}
+			return -1;
+		}
+	}
+	return 0;
+}
+
+void printProgress(string pre, double pct){
+	cout << pre << ": [";
+	int nEq = pct*50;
+	for (int i = 0; i < nEq; i++){
+		cout << "=";
+	}
+	for (int i = nEq; i < 50; i++){
+		cout << " ";
+	}
+	cout << "] " << (int)(pct*100) << "%" << 
+	///////////////////////////////space buffer after text to prevent weird looking output///////////////////////
+	"                                                                                                     \r"; //
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	cout << flush;
+	return;
+}
+
+shared_ptr<MXf> extractVectorData(Mat& frame){
+	Mat framef, frameLab;
+	frame.convertTo(framef, CV_32F, 1.0/255.0);
+	cvtColor(framef, frameLab, CV_RGB2Lab);
+	MXf* data = new MXf(3, frame.rows*frame.cols);
+	int idx = 0;
+	for(int y = 0; y < frame.rows; y++){
+		for (int x = 0; x <frame.cols; x++){
+    			const Vec3f& veclab = frameLab.at<Vec3f>(y, x);
+			(*data)(0, idx) = veclab.val[0];
+			(*data)(1, idx) = veclab.val[1];
+			(*data)(2, idx) = veclab.val[2];
+			idx++;
+		}
+	}
+	//cout << "RGB: " << frame.at<Vec3b>(0, 0) << " Lab: " << frameLab.at<Vec3f>(0, 0) << " data: " << data[0].v.transpose() << endl;
+	return shared_ptr<MXf>(data);
+}
+
+
 
 int main(int argc, char** argv){
 	// Set up the program options.
@@ -285,9 +353,12 @@ int main(int argc, char** argv){
 
 	//set up the DDP Means object
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-    shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
-    DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
-    DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
+    	shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+    	DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
+    	DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
+
+	//set up the palette encoder
+	DMeansPaletteEncoder dmpe(vm["frame_folder_name"].as<string>());
 
 	//loop over frames, resize if necessary, and cluster
 	int fr = 1;
@@ -306,109 +377,18 @@ int main(int argc, char** argv){
 		clusterer->nextTimeStep(data);
 		do{
 			clusterer->updateLabels();
-    	clusterer->updateCenters();
+    			clusterer->updateCenters();
 		}while (!clusterer->converged());
 		clusterer->updateState();
-    	const VXu& z = clusterer->z();
-    	const MXf& p = clusterer->centroids();
-    	//posterize the video
-    	if(vm.count("posterize")){
-			Mat posterizedFrame = posterize(frame.rows, frame.cols, z, p);
-			ostringstream oss;
-			oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
-			imwrite(oss.str(), posterizedFrame, compression_params);
-		}
-		if(vm.count("compress")){
-
-		}
+    		const VXu& z = clusterer->z();
+    		const MXf& p = clusterer->centroids();
+    		//posterize /compress the video
+		dpme.posterize(frame.rows, frame.cols, z, p);
+		dpme.addFrame(frame, z, p);
 	}
+	dpme.outputPaletteSplines();
 	cout << endl;
 	delete clusterer;
 	return 0;
 }
 
-int makeDirectory(const char* name){
-	if(mkdir(name, S_IRWXU) == -1){
-		if (errno != EEXIST){ //if the folder exists, who cares just go for it
-			cout << "Couldn't create " << name << "/ for writing frames" << endl;
-			switch(errno){
-				case EACCES:
-					cout << "Need higher permissions" << endl;
-					break;
-				case ENAMETOOLONG:
-					cout << "Folder name too long" << endl;
-					break;
-				case ENOSPC:
-					cout << "Not enough space" << endl;
-					break;
-				case ENOENT:
-					cout << "Something wrong with the path..." << endl;
-					break;
-				default:
-					cout << "Unknown error" << endl;
-			}
-			return -1;
-		}
-	}
-	return 0;
-}
-
-void printProgress(string pre, double pct){
-	cout << pre << ": [";
-	int nEq = pct*50;
-	for (int i = 0; i < nEq; i++){
-		cout << "=";
-	}
-	for (int i = nEq; i < 50; i++){
-		cout << " ";
-	}
-	cout << "] " << (int)(pct*100) << "%" << 
-	///////////////////////////////space buffer after text to prevent weird looking output///////////////////////
-	"                                                                                                     \r"; //
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	cout << flush;
-	return;
-}
-
-shared_ptr<MXf> extractVectorData(Mat& frame){
-	Mat framef, frameLab;
-	frame.convertTo(framef, CV_32F, 1.0/255.0);
-	cvtColor(framef, frameLab, CV_RGB2Lab);
-	MXf* data = new MXf(3, frame.rows*frame.cols);
-	int idx = 0;
-	for(int y = 0; y < frame.rows; y++){
-		for (int x = 0; x <frame.cols; x++){
-    			const Vec3f& veclab = frameLab.at<Vec3f>(y, x);
-			(*data)(0, idx) = veclab.val[0];
-			(*data)(1, idx) = veclab.val[1];
-			(*data)(2, idx) = veclab.val[2];
-			idx++;
-		}
-	}
-	//cout << "RGB: " << frame.at<Vec3b>(0, 0) << " Lab: " << frameLab.at<Vec3f>(0, 0) << " data: " << data[0].v.transpose() << endl;
-	return shared_ptr<MXf>(data);
-}
-
-Mat posterize(int rw, int cl, VXu z, MXf p){
-	Mat frameLabOut(rw, cl, CV_32FC3);
-	Mat frameOutF(rw, cl, CV_32FC3);
-	Mat frameOut(rw, cl, CV_8UC3);
-	int idx = 0;
-	for(int y = 0; y < rw; y++){
-		for (int x = 0; x < cl; x++){
-			Vec3f& clr = frameLabOut.at<Vec3f>(y, x);
-			clr.val[0] = p(0, z(idx));
-			clr.val[1] = p(1, z(idx));
-			clr.val[2] = p(2, z(idx));
-      		idx ++;
-		}
-	}
-	cvtColor(frameLabOut, frameOutF, CV_Lab2RGB);
-//  imshow("compressed",frameOutF);
-//  waitKey(1);
-	frameOutF.convertTo(frameOut, CV_8U, 255.0);
-	return frameOut;
-	//Mat medianFrame;
-	//medianBlur(frameOut, medianFrame, 3);
-	//return medianFrame;
-}

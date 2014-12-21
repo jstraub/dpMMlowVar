@@ -160,6 +160,7 @@ struct Euclidean //: public DataSpace<T>
       reInstantiate();
     };
 
+    T maxDist() const { return this->lambda_;};
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     {
       if(this->isInstantiated())

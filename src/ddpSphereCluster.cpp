@@ -10,7 +10,8 @@
 #include <errno.h>
 #include <boost/program_options.hpp>
 #include <ddpmeansCUDA.hpp>
-#include <euclideanData.hpp>
+#include <sphericalData.hpp>
+#include <opencvHelper.hpp>
 
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;
 typedef Eigen::MatrixXf MXf;
@@ -33,9 +34,9 @@ int main(int argc, char** argv){
       ("input,i", po::value<string>()->required(), "path to folder with surface normals")
       ("frame_folder_name,f", po::value<string>()->default_value("frames"), "The folder to store frames in")
       ("seed,s", po::value<int>()->default_value(time(0)), "Seed for the random number generator")
-      ("lambda,l", po::value<double>()->required(), "The value of lambda")
-      ("T_Q,t", po::value<double>()->required(), "The value of T_Q")
-      ("k_tau,k", po::value<double>()->required(), "The value of k_tau")
+      ("lambda,l", po::value<double>()->required(), "The value of lambda (in deg)")
+      ("T_Q,t", po::value<double>()->required(), "The value of T_Q (determines Q) - how many frames does a point survive")
+      ("beta,b", po::value<double>()->required(), "The value of beta")
   	  ;
 
   	po::variables_map vm;
@@ -54,17 +55,16 @@ int main(int argc, char** argv){
 	if(makeDirectory(vm["frame_folder_name"].as<string>().c_str()) == -1){return -1;}
 
 	//pull double constants from the command line using stream
-	double lambda = vm["lambda"].as<double>(); 
+	double lambda = cos(vm["lambda"].as<double>()*M_PI/180.0) -1.; 
 	double T_Q = vm["T_Q"].as<double>();
-	double k_tau = vm["k_tau"].as<double>();
-	double Q = lambda/T_Q;
-	double tau = (T_Q*(k_tau-1.0)+1.0)/(T_Q-1.0);
+	double beta = vm["beta"].as<double>();
+	double Q = T_Q == 0.? -2. : lambda/T_Q;
 	
 	//set up the DDP Means object
 	shared_ptr<MXf> tmp(new MXf(3, 1));
   shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
-  DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
-    DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
+  DDPMeansCUDA<float,Spherical<float> > *clusterer = new
+    DDPMeansCUDA<float,Spherical<float> >(cld, lambda, Q, beta);
 
 	//loop over frames, resize if necessary, and cluster
 	int fr = 0;
@@ -75,6 +75,7 @@ int main(int argc, char** argv){
 		if(frame.rows == 0 || frame.cols == 0) break;
 
 		shared_ptr<MXf> data = extractVectorData(frame);
+    std::cout<<"spherical data size: "<<data->rows()<<"x"<<data->cols()<<std::endl; 
 		clusterer->nextTimeStep(data);
 		do{
 			clusterer->updateLabels();
@@ -89,6 +90,7 @@ int main(int argc, char** argv){
 //		ostringstream oss;
 //		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
 //		imwrite(oss.str(), compressedFrame, compression_params);
+    ++ fr;
 	}
 	cout << endl;
 	delete clusterer;
@@ -143,10 +145,10 @@ shared_ptr<MXf> extractVectorData(Mat& frame){
 	int idx = 0;
 	for(int y = 0; y < frame.rows; y++){
 		for (int x = 0; x <frame.cols; x++){
-      const Vec3f& veclab = frameLab.at<Vec3f>(y, x);
-      (*data)(0, idx) = veclab.val[0];
-      (*data)(1, idx) = veclab.val[1];
-      (*data)(2, idx) = veclab.val[2];
+      const Vec3f& vec = frame.at<Vec3f>(y, x);
+      (*data)(0, idx) = vec.val[0];
+      (*data)(1, idx) = vec.val[1];
+      (*data)(2, idx) = vec.val[2];
       idx++;
     }
 	}

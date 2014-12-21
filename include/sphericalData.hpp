@@ -118,6 +118,7 @@ struct Spherical //: public DataSpace<T>
     uint32_t N() const {return N_;};
     uint32_t& N(){return N_;};
     const Matrix<T,Dynamic,1>& centroid() const {return centroid_;};
+    Matrix<T,Dynamic,1>& centroid() {return centroid_;};
     const Matrix<T,Dynamic,1>& xSum() const {return xSum_;};
   };
 
@@ -178,7 +179,7 @@ struct Spherical //: public DataSpace<T>
     {
       T phi, theta, eta;
       T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-              dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
+              Spherical::dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
       Spherical::solveProblem2(this->xSum_ , zeta, t_, w_, beta_, phi,theta,eta);
       w_ = w_ == 0.0? this->xSum_.norm() : w_ * cos(theta) + beta_*t_*cos(phi)
         + this->xSum_.norm()*cos(eta);
@@ -189,7 +190,7 @@ struct Spherical //: public DataSpace<T>
     {
       T phi, theta, eta;
       T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-              dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
+              Spherical::dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
       Spherical::solveProblem2(this->xSum_ , zeta, t_, w_, beta_, phi,theta,eta);
 
       // rotate point from mean_k towards previous mean by angle eta?
@@ -203,6 +204,7 @@ struct Spherical //: public DataSpace<T>
       reInstantiate();
     };
 
+    T maxDist() const { return this->lambda_+1.;};
     T dist (const Matrix<T,Dynamic,1>& x_i) const
     {
       if(this->isInstantiated())
@@ -211,7 +213,8 @@ struct Spherical //: public DataSpace<T>
         T phi, theta, eta;
         T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
                 Spherical::dist(x_i,this->centroid_) )));
-        Spherical::solveProblem2(x_i, zeta, t_, w_, beta_, phi,theta,eta);
+        // apprixmation here for small angles -> same as on GPU
+        Spherical::solveProblem2Approx(x_i, zeta, t_, w_, beta_, phi,theta,eta);
 
         return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
           + cos(eta); // no minus 1 here cancels with Z(beta) from the two other assignments
@@ -231,7 +234,7 @@ struct Spherical //: public DataSpace<T>
   { return a.transpose()*b; };
 
   static T dissimilarity(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b)
-  { return acos(min(1.0,max(-1.0,(a.transpose()*b)(0)))); };
+  { return acos(min(static_cast<T>(1.0),max(static_cast<T>(-1.0),(a.transpose()*b)(0)))); };
 
   static bool closer(const T a, const T b)
   { return a > b; };
@@ -240,6 +243,10 @@ struct Spherical //: public DataSpace<T>
 
   static void solveProblem1(T gamma, T age, const T beta, T& phi, T& theta); 
   static void solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
+      const T beta, T& phi, T& theta, T& eta); 
+
+  static void solveProblem1Approx(T gamma, T age, const T beta, T& phi, T& theta); 
+  static void solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta, T age, T w,
       const T beta, T& phi, T& theta, T& eta); 
 
   static Matrix<T,Dynamic,1> computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
@@ -308,6 +315,65 @@ void Spherical<T>::solveProblem2(const Matrix<T,Dynamic,1>& xSum, T zeta,
   {
     T sinPhi = sin(phi);
     T cosPhi = cos(phi);
+    T f = - zeta + asin(beta/L2xSum *sinPhi) + age * phi + asin(beta/w *sinPhi);
+    T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
+        beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -
+        beta*beta*sinPhi*sinPhi); 
+
+    T dPhi = f/df;
+
+    phi = phi - dPhi; // Newton iteration
+//    cout<<"@i="<<i<<": "<<"f="<<f<<" df="<<df<<" phi="<<phi<<"\t"<<dPhi<<endl;
+    if(fabs(dPhi) < 1e-6) break;
+  }
+
+  theta = asin(beta/w *sin(phi));
+  eta = asin(beta/L2xSum *sin(phi));
+};
+
+
+template<class T>
+void Spherical<T>::solveProblem1Approx(T gamma, T age, const T beta, T& phi, T& theta)
+{
+  // solves
+  // (1)  sin(phi) beta = sin(theta)
+  // (2)  gamma = T phi + theta
+  // for phi and theta
+  phi = 0.0; 
+
+  for (uint32_t i=0; i< 10; ++i)
+  {
+    T sinPhi = phi;
+    T cosPhi = 1.;
+    T f = - gamma + age*phi + asin(beta*sinPhi);
+    // mathematica
+    T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi); 
+    T dPhi = f/df;
+    phi = phi - dPhi; // Newton iteration
+//    cout<<"@i="<<i<<": "<<phi<<"\t"<<dPhi<<endl;
+    if(fabs(dPhi) < 1e-6) break;
+  }
+
+  theta = asin(beta*sin(phi));
+};
+
+
+template<class T>
+void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta, 
+    T age, T w, const T beta, T& phi, T& theta, T& eta)
+{
+  // solves
+  // w sin(theta) = beta sin(phi) = ||xSum||_2 sin(eta) 
+  // eta + T phi + theta = zeta = acos(\mu0^T xSum/||xSum||_2)
+  phi = 0.0;
+
+  //  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
+
+  T L2xSum = xSum.norm();
+  for (uint32_t i=0; i< 10; ++i)
+  {
+    T sinPhi = phi;
+    T cosPhi = 1.;
     T f = - zeta + asin(beta/L2xSum *sinPhi) + age * phi + asin(beta/w *sinPhi);
     T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
         beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -

@@ -114,6 +114,18 @@ target_link_libraries(ddpImageCluster
   opencv_highgui
   )
 
+add_executable(ddpSphereCluster ./src/ddpSphereCluster.cpp
+  )
+target_link_libraries(ddpSphereCluster
+  dpMMlowVar
+  boost_system
+  boost_random
+  boost_program_options
+  opencv_core
+  opencv_imgproc
+  opencv_highgui
+  )
+
 INSTALL(TARGETS dpMMlowVar ddpImageCluster #dpStickGMM dpDirMM
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib

@@ -1,0 +1,156 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <Eigen/Dense>
+#include <sys/stat.h>
+#include <errno.h>
+#include <boost/program_options.hpp>
+#include <ddpmeansCUDA.hpp>
+#include <euclideanData.hpp>
+
+typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;
+typedef Eigen::MatrixXf MXf;
+typedef Eigen::Vector3f V3f;
+
+using namespace std;
+using namespace cv;
+namespace po = boost::program_options;
+
+int makeDirectory(const char* name);
+shared_ptr<MXf> extractVectorData(Mat& frame);
+Mat compress(int rw, int cl, VXu z, MXf p);
+
+void printProgress(string pre, double pct);
+int main(int argc, char** argv){
+	// Set up the program options.
+  	po::options_description desc("Option Flags");
+  	desc.add_options()
+  	  ("help,h", "produce help message")
+      ("input,i", po::value<string>()->required(), "path to folder with surface normals")
+      ("frame_folder_name,f", po::value<string>()->default_value("frames"), "The folder to store frames in")
+      ("seed,s", po::value<int>()->default_value(time(0)), "Seed for the random number generator")
+      ("lambda,l", po::value<double>()->required(), "The value of lambda")
+      ("T_Q,t", po::value<double>()->required(), "The value of T_Q")
+      ("k_tau,k", po::value<double>()->required(), "The value of k_tau")
+  	  ;
+
+  	po::variables_map vm;
+  	po::store(po::parse_command_line(argc, argv, desc), vm);
+  	po::notify(vm);    
+
+	//if the user asked for help, display it and quit
+	if(vm.count("help")){
+		cout << desc << endl;
+		return 0;
+	}
+
+	string inputPath = vm["input"].as<string>();
+
+	//make the directory for storing frames if it doesn't already exist
+	if(makeDirectory(vm["frame_folder_name"].as<string>().c_str()) == -1){return -1;}
+
+	//pull double constants from the command line using stream
+	double lambda = vm["lambda"].as<double>(); 
+	double T_Q = vm["T_Q"].as<double>();
+	double k_tau = vm["k_tau"].as<double>();
+	double Q = lambda/T_Q;
+	double tau = (T_Q*(k_tau-1.0)+1.0)/(T_Q-1.0);
+	
+	//set up the DDP Means object
+	shared_ptr<MXf> tmp(new MXf(3, 1));
+  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+  DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
+    DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
+
+	//loop over frames, resize if necessary, and cluster
+	int fr = 0;
+	for(;;){
+    char fileName[100];
+    sprintf(fileName,"/%05d.bin",fr);
+		Mat frame = imreadBinary(inputPath+std::string(fileName));
+		if(frame.rows == 0 || frame.cols == 0) break;
+
+		shared_ptr<MXf> data = extractVectorData(frame);
+		clusterer->nextTimeStep(data);
+		do{
+			clusterer->updateLabels();
+    	clusterer->updateCenters();
+		}while (!clusterer->converged());
+		clusterer->updateState();
+    const VXu& z = clusterer->z();
+    const MXf& p = clusterer->centroids();
+    cout<<p<<endl;
+    cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
+//		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
+//		ostringstream oss;
+//		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
+//		imwrite(oss.str(), compressedFrame, compression_params);
+	}
+	cout << endl;
+	delete clusterer;
+	return 0;
+}
+
+int makeDirectory(const char* name){
+	if(mkdir(name, S_IRWXU) == -1){
+		if (errno != EEXIST){ //if the folder exists, who cares just go for it
+			cout << "Couldn't create " << name << "/ for writing frames" << endl;
+			switch(errno){
+				case EACCES:
+					cout << "Need higher permissions" << endl;
+					break;
+				case ENAMETOOLONG:
+					cout << "Folder name too long" << endl;
+					break;
+				case ENOSPC:
+					cout << "Not enough space" << endl;
+					break;
+				case ENOENT:
+					cout << "Something wrong with the path..." << endl;
+					break;
+				default:
+					cout << "Unknown error" << endl;
+			}
+			return -1;
+		}
+	}
+	return 0;
+}
+
+void printProgress(string pre, double pct){
+	cout << pre << ": [";
+	int nEq = pct*50;
+	for (int i = 0; i < nEq; i++){
+		cout << "=";
+	}
+	for (int i = nEq; i < 50; i++){
+		cout << " ";
+	}
+	cout << "] " << (int)(pct*100) << "%" << 
+	///////////////////////////////space buffer after text to prevent weird looking output///////////////////////
+	"                                                                                                     \r"; //
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	cout << flush;
+	return;
+}
+
+shared_ptr<MXf> extractVectorData(Mat& frame){
+	MXf* data = new MXf(3, frame.rows*frame.cols);
+	int idx = 0;
+	for(int y = 0; y < frame.rows; y++){
+		for (int x = 0; x <frame.cols; x++){
+      const Vec3f& veclab = frameLab.at<Vec3f>(y, x);
+      (*data)(0, idx) = veclab.val[0];
+      (*data)(1, idx) = veclab.val[1];
+      (*data)(2, idx) = veclab.val[2];
+      idx++;
+    }
+	}
+	//cout << "RGB: " << frame.at<Vec3b>(0, 0) << " Lab: " << frameLab.at<Vec3f>(0, 0) << " data: " << data[0].v.transpose() << endl;
+	return shared_ptr<MXf>(data);
+}
+

@@ -27,8 +27,8 @@ namespace po = boost::program_options;
 class DMeansPaletteEncoder{
 	public:
 		DMeansPaletteEncoder(string fldrnm){
-			paletteDiffsOut.open(fldrnm + "/framediffs.log", ios_base::write);
-			paletteOut.open(fldrnm + "/palette.log", ios_base::write);
+			paletteDiffsOut.open( (fldrnm + "/framediffs.log").c_str(), ios_base::out | ios_base::trunc);
+			paletteOut.open( (fldrnm + "/palette.log").c_str(), ios_base::out | ios_base::trunc);
 			this->fldrnm = fldrnm;
 			fr = 0;
 			doneFirst = false;
@@ -86,7 +86,7 @@ class DMeansPaletteEncoder{
 			oss << fldrnm << "/res-" << setw(7) << setfill('0') << fr << ".png";
 			imwrite(oss.str(), res, compression_params);
 		}
-		Mat posterize(int rw, int cl, VXu z, MXf p){
+		void posterize(int rw, int cl, VXu z, MXf p){
 			vector<int> compression_params;
 			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
 			compression_params.push_back(9); //9 means maximum compression/slowest
@@ -149,7 +149,7 @@ class DMeansPaletteEncoder{
 			outputResiduals(nextFrame, z, p);
 
 			for (int i = 0; i < p.cols(); i++){
-				if (find(paletteToColorSeq.begin(), paletteToColorSeq.end(), i) == paletteToColorSeq.end()){
+				if (paletteToColorSeq.find(i) == paletteToColorSeq.end()){
 					paletteToFrameStart[i] = fr;
 				}
 				paletteToColorSeq[i].push_back(p.col(i));
@@ -294,8 +294,6 @@ int main(int argc, char** argv){
   	  ("lambda,l", po::value<double>()->required(), "The value of lambda")
   	  ("T_Q,t", po::value<double>()->required(), "The value of T_Q")
   	  ("k_tau,k", po::value<double>()->required(), "The value of k_tau")
-  	  ("posterize,p", "Specify that the video frames should be posterized")
-  	  ("compress,c", "Specify that the video should be compressed")
   	  ;
 
   	po::variables_map vm;
@@ -305,10 +303,6 @@ int main(int argc, char** argv){
 	//if the user asked for help, display it and quit
 	if(vm.count("help")){
 		cout << desc << endl;
-		return 0;
-	}
-	if (!vm.count("posterize") &&!vm.count("compress")){
-		cout << "You must either specify --posterize or --compress"<< endl;
 		return 0;
 	}
 	
@@ -383,10 +377,10 @@ int main(int argc, char** argv){
     		const VXu& z = clusterer->z();
     		const MXf& p = clusterer->centroids();
     		//posterize /compress the video
-		dpme.posterize(frame.rows, frame.cols, z, p);
-		dpme.addFrame(frame, z, p);
+		dmpe.posterize(frame.rows, frame.cols, z, p);
+		dmpe.addFrame(frame, z, p);
 	}
-	dpme.outputPaletteSplines();
+	dmpe.outputPaletteSplines();
 	cout << endl;
 	delete clusterer;
 	return 0;

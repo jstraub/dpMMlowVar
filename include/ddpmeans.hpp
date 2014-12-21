@@ -31,6 +31,7 @@ public:
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
+  virtual void createReviveFrom(uint32_t i);
 
   virtual bool converged(T eps=1e-6) 
   {
@@ -133,6 +134,35 @@ VectorXu DDPMeans<T,DS>::initLabels()
   return VectorXu::Ones(this->K_)*UNASSIGNED;
 }
 
+
+template<class T, class DS>
+void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
+{
+  cout<<"i "<<i
+    <<" x @ i "<<this->cld_->x()->col(i).transpose()
+    <<" "<<this->cld_->x()->col(i).norm()
+    <<" with K= "<<this->K_<<endl;
+
+  T sim = 0.;
+  uint32_t z_i = this->indOfClosestCluster(i,sim);
+  if(z_i == this->K_) 
+  { // start a new cluster
+    this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
+          typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
+    this->cls_[z_i]->globalId = this->globalMaxInd_++;
+    this->K_ ++;
+    cout<<"new cluster "<<(this->K_-1)<<endl;
+  } 
+  else if(!this->cls_[z_i]->isInstantiated())
+  { // instantiated an old cluster
+    this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
+    cout<<"revieve cluster "<<z_i<<endl;
+  }
+
+  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+}
+
 template<class T, class DS>
 void DDPMeans<T,DS>::updateLabels()
 {
@@ -143,27 +173,7 @@ void DDPMeans<T,DS>::updateLabels()
     idAction = optimisticLabelsAssign(i0);
     if(idAction != UNASSIGNED)
     {
-      cout<<"idAction "<<idAction<<endl;
-      cout<<" x @ idAction "<<this->cld_->x()->col(idAction).transpose()
-        << " "<<this->cld_->x()->col(idAction).norm()<<endl;
-      cout<<"K= "<<this->K_<<endl;
-      T sim = 0.;
-      uint32_t z_i = this->indOfClosestCluster(idAction,sim);
-      if(z_i == this->K_) 
-      { // start a new cluster
-        this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-              typename DS::DependentCluster(this->cld_->x()->col(idAction),cl0_)));
-        this->cls_[z_i]->globalId = this->globalMaxInd_++;
-        this->K_ ++;
-        cout<<"new cluster "<<(this->K_-1)<<endl;
-      } 
-      else if(!this->cls_[z_i]->isInstantiated())
-      { // instantiated an old cluster
-        this->cls_[z_i]->reInstantiate(this->cld_->x()->col(idAction));
-        cout<<"revieve cluster "<<z_i<<endl;
-      }
-      cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
-        <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+      createReviveFrom(idAction);
       i0 = idAction;
     }
     cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
@@ -253,13 +263,8 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
       }
   }
 
-  if(this->K_ > 0)
-  { // revive cluster from the first data-point
-
-  }else
-  { // add new cluster from the first data-point
-
-  }
+  // revive or add cluster from the first data-point
+  createReviveFrom(0);
 };
 
 template<class T, class DS>

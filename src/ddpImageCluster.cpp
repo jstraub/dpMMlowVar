@@ -11,20 +11,208 @@
 #include <boost/program_options.hpp>
 #include <ddpmeansCUDA.hpp>
 #include <euclideanData.hpp>
+#include "spline.h"
 
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;
+typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> MXu;
 typedef Eigen::MatrixXf MXf;
+typedef Eigen::MatrixXi MXi;
 typedef Eigen::Vector3f V3f;
+typedef Eigen::Vector3i V3i;
 
 using namespace std;
 using namespace cv;
 namespace po = boost::program_options;
 
+class DMeansPaletteEncoder{
+	public:
+		DMeansPaletteEncoder(string fldrnm){
+			paletteDiffsOut.open(fldrnm + "/framediffs.log", ios_base::write);
+			paletteOut.open(fldrnm + "/palette.log", ios_base::write);
+			this->fldrnm = fldrnm;
+			fr = 0;
+		}
+		string fldrnm;
+		int fr;
+		ofstream paletteDiffsOut, paletteOut;
+		MXu prevPaletteIds;
+		map<int, vector<V3f> > paletteToColorSeq;
+		map<int, int > paletteToFrameStart;
+
+		void outputResiduals(Mat& frame, const VXu& z, const MXf& p){
+			int rw = frame.rows;
+			int cl = frame.cols;
+			vector<int> compression_params;
+			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+			compression_params.push_back(9); //9 means maximum compression/slowest
+
+			//now compute the residual image and output
+			//change the true frame to RGB
+			Mat tru(rw, cl, CV_8UC3);
+			Mat truF(rw, cl, CV_8UC3);
+			cvtColor(frame, truF, CV_Lab2RGB);
+			truF.convertTo(tru, CV_8U, 255.0);
+			//change the posterized frame to RGB
+			Mat postLab(rw, cl, CV_32FC3);
+			Mat postF(rw, cl, CV_32FC3);
+			Mat post(rw, cl, CV_8UC3);
+			int idx = 0;
+			for(int y = 0; y < rw; y++){
+				for (int x = 0; x < cl; x++){
+					Vec3f& clr = postLab.at<Vec3f>(y, x);
+					clr.val[0] = p(0, z(idx));
+					clr.val[1] = p(1, z(idx));
+					clr.val[2] = p(2, z(idx));
+    		  		idx ++;
+				}
+			}
+			cvtColor(postLab, postF, CV_Lab2RGB);
+			postF.convertTo(post, CV_8U, 255.0);
+			//get the residual image
+			Mat res(rw, cl, CV_8UC3);
+			for(int i = 0; i < rw; i++){
+				for (int j = 0; j < cl; j++){
+					Vec3f& clr = res.at<Vec3f>(i, j);
+					Vec3f& clrt = tru.at<Vec3f>(i, j);
+					Vec3f& clrp = post.at<Vec3f>(i, j);
+				int tmp = 127 +clrt.val[0] - clrp.val[0]; clr.val[0] = tmp;
+					tmp = 127 +clrt.val[1] - clrp.val[1]; clr.val[1] = tmp;
+					tmp = 127 +clrt.val[2] - clrp.val[2]; clr.val[2] = tmp;
+				}
+			}
+			ostringstream oss;
+			oss << fldrnm << "/" << setw(7) << setfill('0') << fr << ".png";
+			imwrite(oss.str(), res, compression_params);
+		}
+
+		void firstFrame(Mat& firstFrame, const VXu& z, const MXf& p){
+			int rw = nextFrame.rows;
+			int cl = nextFrame.cols;
+			vector<int> compression_params;
+			compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+			compression_params.push_back(9); //9 means maximum compression/slowest
+
+			vector<int> zs;
+			for(int i = 0; i < rw; i++){
+				for (int j = 0; j < cl; j++){
+					zs.push_back(z(i*cl+j));
+					prevPaletteIds(i, j) = z(i*cl+j);
+				}
+			}
+			paletteDiffsOut << rw << " " << cl << endl;
+			paletteDiffsOut << zs.size() << endl;
+			for(int i = 0; i < zs.size(); i++){
+				paletteDiffsOut << zs[i] << endl;
+			}
+
+
+			for (int i = 0; i < p.cols(); i++){
+				if (find(paletteToColorSeq.begin(), paletteToColorSeq.end(), i) == paletteToColorSeq.end()){
+					paletteToFrameStart[i] = fr;
+				}
+				paletteToColorSeq[i].push_back(p.col(i));
+			}
+			outputResiduals(firstFrame, z, p);
+			fr++;
+		}
+		void addFrame(Mat& nextFrame, const VXu& z, const MXf& p){
+			int rw = nextFrame.rows;
+			int cl = nextFrame.cols;
+
+			//output the palette differences
+			vector<int> diffrws, diffcls, newzs;
+			for(int i = 0; i < rw; i++){
+				for (int j = 0; j < cl; j++){
+					if(z(i*cl+j) != prevPaletteIds(i, j)){
+						diffrws.push_back(i);
+						diffcls.push_back(j);
+						newzs.push_back(z(i*cl+j));
+					}
+					prevPaletteIds(i, j) = z(i*cl+j);
+				}
+			}
+			paletteDiffsOut<<newzs.size() << endl;
+			for(int i = 0; i < newzs.size(); i++){
+				paletteDiffsOut << diffrws[i] << " " << diffcls[i] << " " << newzs[i] << endl;
+			}
+
+			outputResiduals(nextFrame, z, p);
+
+			for (int i = 0; i < p.cols(); i++){
+				if (find(paletteToColorSeq.begin(), paletteToColorSeq.end(), i) == paletteToColorSeq.end()){
+					paletteToFrameStart[i] = fr;
+				}
+				paletteToColorSeq[i].push_back(p.col(i));
+			}
+			fr++;
+		}
+		void finalFrame(Mat& lastFrame, const VXu& z, const MXf& p){
+			addFrame(lastFrame, z, p);
+			
+			//spline the palette sequence 
+			for (auto it = paletteToColorSeq.begin(), it != paletteToColorSeq.end(); ++it){
+				int stfr = paletteToFrameStart[it->first];
+				vector<V3f>& clrseq = it->second;
+				vector<int> toAdd;
+				toAdd.push_back(0);
+				toAdd.push_back(clrseq.size()-1);
+				double maxerr = 10.0;
+				while(maxerr > 1.0){
+					vector<double> r_seq, g_seq, b_seq;
+					vector<double> frms;
+					for(int i = 0; i < toAdd.size(); i++){
+						frms.push_back(toAdd[i]+stfr);
+						r_seq.push_back(clrseq[toAdd[i]](0));
+						g_seq.push_back(clrseq[toAdd[i]](1));
+						b_seq.push_back(clrseq[toAdd[i]](2));
+					}
+					tk::spline s_r, s_g, s_b;
+					s_r.set_points(frms, r_seq);
+					s_g.set_points(frms, g_seq);
+					s_b.set_points(frms, b_seq);
+					maxerr = -1;
+					int maxid = -1;
+					for(int i = 0; i < clrseq.size(); i++){
+						double pxerr = 
+							  (s_r(stfr+i) - r_seq[i])*(s_r(stfr+i) - r_seq[i])
+							 + (s_g(stfr+i) - g_seq[i])*(s_g(stfr+i) - g_seq[i])
+							 + (s_b(stfr+i) - b_seq[i])*(s_b(stfr+i) - b_seq[i]);
+						if (pxerr > maxerr){
+							maxerr = pxerr;
+							maxid = i;
+						}
+					}
+					if(maxerr > 1.0){
+						toAdd.push_back(maxid);
+					}
+				}
+				//output the spline
+				vector<double> r_seq, g_seq, b_seq;
+				vector<double> frms;
+				for(int i = 0; i < toAdd.size(); i++){
+					frms.push_back(toAdd[i]+stfr);
+					r_seq.push_back(clrseq[toAdd[i]](0));
+					g_seq.push_back(clrseq[toAdd[i]](1));
+					b_seq.push_back(clrseq[toAdd[i]](2));
+				}
+				tk::spline s_r, s_g, s_b;
+				s_r.set_points(frms, r_seq);
+				s_g.set_points(frms, g_seq);
+				s_b.set_points(frms, b_seq);
+				//TODO output
+				paletteOut << "You didn't implement this yet, dummy :)" <<endl;
+			}
+
+			paletteDiffsOut.close();
+			paletteOut.close();
+		}
+};
+
 int makeDirectory(const char* name);
 shared_ptr<MXf> extractVectorData(Mat& frame);
-Mat compress(int rw, int cl, VXu z, MXf p);
-
+Mat posterize(int rw, int cl, VXu z, MXf p);
 void printProgress(string pre, double pct);
+
 int main(int argc, char** argv){
 	// Set up the program options.
   	po::options_description desc("Option Flags");
@@ -35,12 +223,12 @@ int main(int argc, char** argv){
   	  ("resize_factor,r", po::value<double>()->default_value(1.0), "The factor to resize the video by")
 	  ("residual_bits,b", po::value<int>()->default_value(0), "The number of residual bits to store")
 	  ("spline_error,e", po::value<double>()->default_value(1.0), "Allowable error on the color dictionary spline")
-	  ("seed,s", po::value<int>()->default_value(time(0)), "Seed for the random number generator")
   	  ("lambda,l", po::value<double>()->required(), "The value of lambda")
   	  ("T_Q,t", po::value<double>()->required(), "The value of T_Q")
   	  ("k_tau,k", po::value<double>()->required(), "The value of k_tau")
+  	  ("posterize,p", "Specify that the video frames should be posterized")
+  	  ("compress,c", "Specify that the video should be compressed")
   	  ;
-
 
   	po::variables_map vm;
   	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -49,6 +237,10 @@ int main(int argc, char** argv){
 	//if the user asked for help, display it and quit
 	if(vm.count("help")){
 		cout << desc << endl;
+		return 0;
+	}
+	if (!vm.count("posterize") &&!vm.count("compress")){
+		cout << "You must either specify --posterize or --compress"<< endl;
 		return 0;
 	}
 	
@@ -92,18 +284,15 @@ int main(int argc, char** argv){
 	cout << "New Frame Dimensions: " << nfr_w << " x " << nfr_h << endl;
 
 	//set up the DDP Means object
-//	mt19937 rng; rng.seed(vm["seed"].as<int>());
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
-  DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
+    shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+    DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
     DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
-//  	DDPMeansCUDA<float,Euclidean<float> > *clusterer = new DDPMeansCUDA<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
-//  	DDPMeans<float,Euclidean<float> > *clusterer = new DDPMeans<float,Euclidean<float> >(tmp, lambda, Q, tau, &rng);
 
 	//loop over frames, resize if necessary, and cluster
 	int fr = 1;
 	for(;;){
-		printProgress(string("Compressing ") + vidname, ((double)fr)/n_fr);
+		printProgress(string("Processing ") + vidname, ((double)fr)/n_fr);
 		Mat frame;
 		cap.grab();
 		bool empty = !cap.retrieve(frame);
@@ -120,14 +309,18 @@ int main(int argc, char** argv){
     	clusterer->updateCenters();
 		}while (!clusterer->converged());
 		clusterer->updateState();
-    const VXu& z = clusterer->z();
-    const MXf& p = clusterer->centroids();
-//    cout<<p<<endl;
-//    cout<<"z min/max: "<<z.maxCoeff()<<" "<<z.minCoeff()<<endl;
-		Mat compressedFrame = compress(frame.rows, frame.cols, z, p);
-		ostringstream oss;
-		oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
-		imwrite(oss.str(), compressedFrame, compression_params);
+    	const VXu& z = clusterer->z();
+    	const MXf& p = clusterer->centroids();
+    	//posterize the video
+    	if(vm.count("posterize")){
+			Mat posterizedFrame = posterize(frame.rows, frame.cols, z, p);
+			ostringstream oss;
+			oss << vm["frame_folder_name"].as<string>() << "/" << setw(7) << setfill('0') << fr++ << ".png";
+			imwrite(oss.str(), posterizedFrame, compression_params);
+		}
+		if(vm.count("compress")){
+
+		}
 	}
 	cout << endl;
 	delete clusterer;
@@ -196,7 +389,7 @@ shared_ptr<MXf> extractVectorData(Mat& frame){
 	return shared_ptr<MXf>(data);
 }
 
-Mat compress(int rw, int cl, VXu z, MXf p){
+Mat posterize(int rw, int cl, VXu z, MXf p){
 	Mat frameLabOut(rw, cl, CV_32FC3);
 	Mat frameOutF(rw, cl, CV_32FC3);
 	Mat frameOut(rw, cl, CV_8UC3);
@@ -207,7 +400,7 @@ Mat compress(int rw, int cl, VXu z, MXf p){
 			clr.val[0] = p(0, z(idx));
 			clr.val[1] = p(1, z(idx));
 			clr.val[2] = p(2, z(idx));
-      idx ++;
+      		idx ++;
 		}
 	}
 	cvtColor(frameLabOut, frameOutF, CV_Lab2RGB);

@@ -35,13 +35,17 @@ IF(BOOST_OLD)
     ./include
     ./cuda
     ${EIGEN3_INCLUDE_DIR}
-    /usr/include
+#    /usr/include
     #/usr/include/eigen3
+    ${Boost_INCLUDE_DIRS}
+    ${CUDA_TOOLKIT_INCLUDE}
     )
   link_directories(
+    ${Boost_LIBRARY_DIRS}
 #    $ENV{WORKSPACE_HOME}/3rdparty/lib
-    /usr/lib
-    /usr/local/cuda-5.5/targets/x86_64-linux/lib/
+#    /usr/lib
+    ${CUDA_LIBRARIES}
+#    /usr/local/cuda-6.5/targets/x86_64-linux/lib/
     )
   # no sampling from chi_squared
   cuda_add_library(dpMMlowVar SHARED
@@ -64,10 +68,14 @@ ELSE(BOOST_OLD)
     ${EIGEN3_INCLUDE_DIR}
     /usr/include
     #/usr/include/eigen3
-    $ENV{WORKSPACE_HOME}/3rdparty/include
+#    $ENV{WORKSPACE_HOME}/3rdparty/include
+    ${Boost_INCLUDE_DIRS}
+    ${CUDA_TOOLKIT_INCLUDE}
     )
   link_directories(
-    $ENV{WORKSPACE_HOME}/3rdparty/lib
+    ${Boost_LIBRARY_DIRS}
+    ${CUDA_LIBRARIES}
+#    $ENV{WORKSPACE_HOME}/3rdparty/lib
     )
   cuda_add_library(dpMMlowVar SHARED
     ./cuda/vectorSum_kernel.cu

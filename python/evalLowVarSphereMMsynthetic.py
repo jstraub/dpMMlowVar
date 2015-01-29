@@ -19,7 +19,6 @@ from vpCluster.manifold.sphere import Sphere
 
 from plots import plotOverParams
 
-
 def mutualInfo(z,zGt):
   ''' assumes same number of clusters in gt and inferred labels '''
   N = float(z.size)
@@ -27,11 +26,19 @@ def mutualInfo(z,zGt):
   K = int(np.max(z)+1)
   print Kgt, K
   mi = 0.0
+  Ndata = np.bincount(z,minlength=K).astype(np.float)
+  NGts = np.bincount(zGt,minlength=Kgt).astype(np.float)
+  Nsqs = np.bincount(z*Kgt+zGt,minlength=Kgt*K).astype(np.float)
   for j in range(K):
     for k in range(Kgt):
-      Njk = float(np.logical_and(z==j,zGt==k).sum())
-      Nj = float((z==j).sum())
-      Nk = float((zGt==k).sum())
+#      indzj = z==j
+#      indzGtk = zGt==k
+#      Njk = np.count_nonzero(np.logical_and(indzj,indzGtk))
+#      Nj = np.count_nonzero(indzj)
+#      Nk = np.count_nonzero(indzGtk)
+      Njk = Nsqs[j*Kgt+k]
+      Nj = Ndata[j]
+      Nk = NGts[k]
       if Njk > 0:
 #        print '{} {} {} {} {} -> += {}'.format(N, Njk,Nj,Nk, N*Njk/(Nj*Nk), Njk/N * np.log(N*Njk/(Nj*Nk)))
         mi += Njk/N * np.log(N*Njk/(Nj*Nk))
@@ -41,19 +48,26 @@ def entropy(z):
   N = float(z.size)
   K = int(np.max(z)+1)
   H = 0.0
+  Ndata = np.bincount(z,minlength=K).astype(np.float)
   for k in range(K):
-    Nk = float((z==k).sum())
-    if Nk > 0:
+#    Nk = np.count_nonzero(z==k)
+    if Ndata[k] > 0:
 #        print '{} {} {} {} {} -> += {}'.format(N, Njk,Nj,Nk, N*Njk/(Nj*Nk), Njk/N * np.log(N*Njk/(Nj*Nk)))
-      H -= Nk/N * np.log(Nk/N)
+      H -= Ndata[k]/N * np.log(Ndata[k]/N)
   return H
 
 def run(cfg,reRun):
-  params = np.array([cfg['lambda']])
   #args = ['../build/dpSubclusterSphereGMM',
 #  args = ['../build/dpStickGMM',
-  args = ['../build/dpMMlowVarCluster',
-    '--seed {}'.format(int(time.time()*100000) - 100000*int(time.time())),
+  if cfg['base'] in ['CrpvMF']:
+    args = ['../../dpMMshared/build/dpmmSampler', '--alpha 1.0']
+    params = np.r_[ cfg['m0'], np.array([cfg['t0'],cfg['a0'],cfg['b0']])]
+  else:
+    params = np.array([cfg['lambda']])
+    args = ['../build/dpMMlowVarCluster',
+        '--shuffle',
+        '--silhouette']
+  args = args + ['--seed {}'.format(int(time.time()*100000) - 100000*int(time.time())),
     '-N {}'.format(N), #TODO: read N,D from file!
     '-D {}'.format(D),
     '-K {}'.format(cfg['K']),
@@ -62,8 +76,6 @@ def run(cfg,reRun):
     '--base '+cfg['base'],
     '-i {}'.format(cfg['rootPath']+cfg['dataPath']),
     '-o {}'.format(cfg['outName']+'.lbl'),
-    '--shuffle',
-    '--silhouette',
     '--params '+' '.join([str(p) for p in params])]
 
   if reRun:
@@ -128,7 +140,8 @@ cfg['nRun'] = 50
 dataPath = './rndSphereDataNu10D3N30000NonOverLap.csv' # very isotropic
 cfg['nParms'] = 50;
 paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
-  'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])])}
+  'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])]),
+  'CrpvMF':np.array([5.0])}
 cfg['T'] = 100
 cfg['nRun'] =  50
 
@@ -146,6 +159,7 @@ bases = ['DPvMFmeans']
 bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
 bases = ['DPvMFmeans','spkm']
+bases = ['CrpvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
@@ -158,8 +172,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = True
 reRun = False
+reRun = True
 
 
 if reRun:
@@ -201,6 +215,11 @@ for i,base in enumerate(bases):
         cfg['lambda'] = np.cos(param*np.pi/180.0)-1. 
       else:
         cfg['lambda'] = 0.
+      if cfg['base'] == 'CrpvMF':
+        cfg['m0'] = np.zeros(D); cfg['m0'][0] = 1.
+        cfg['t0'] = 0.01
+        cfg['a0'] = 3.0
+        cfg['b0'] = 2.7
       for t in range(cfg['nRun']):
         cfg['runId'] = t;
         z,measures = run(cfg,reRun)

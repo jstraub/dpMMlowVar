@@ -127,7 +127,7 @@ void ClData<T>::computeSS()
   Ns_.setZero(K_);
   xSums_.setZero(D_,K_);
 
-#pragma omp prallel for
+#pragma omp parallel for
   for(uint32_t i=0; i<N_; ++i)
   {
     xSums_.col((*z_)(i)) += x_->col(i);
@@ -139,7 +139,7 @@ template<class T>
 void ClData<T>::labelMap(const vector<int32_t>& map)
 {
     // fix labels
-#pragma parallel for
+#pragma omp parallel for
     for(uint32_t i=0; i<this->N_; ++i)
       (*this->z_)(i) = map[ (*this->z_)(i)];
 };

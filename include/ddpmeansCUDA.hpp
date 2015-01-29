@@ -3,19 +3,32 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/random/mersenne_twister.hpp>
+//#include <boost/random/mersenne_twister.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "ddpmeans.hpp"
 #include "clDataGpu.hpp"
 #include "gpuMatrix.hpp"
 
+#include <euclideanData.hpp>
+#include <sphericalData.hpp>
+
 
 using namespace Eigen;
 using std::cout;
 using std::endl;
 
+// for spherical space 
+void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
+    uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double beta,
+    double Q, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t
+    *d_iAction);
+void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, uint32_t
+    *d_Ns, float *d_ages, float *d_ws, float lambda, float beta, float Q,
+    uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
 
+
+// for Eucledian space
 extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
     uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda,
     double Q, double tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction);
@@ -26,10 +39,10 @@ extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
 extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages,
     double *d_ws, double lambda, double Q, double tau, uint32_t K, uint32_t N,
     uint32_t *d_asgnIdces);
-
 extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
     float *d_ws, float lambda, float Q, float tau, uint32_t K, uint32_t N,
     uint32_t *d_asgnIdces);
+
 
 template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
@@ -53,6 +66,8 @@ protected:
   GpuMatrix<T> d_p_;
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
+
+  void setupComputeLabelsGPU(uint32_t iAction);
   uint32_t computeLabelsGPU(uint32_t i0);
 
   virtual VectorXu initLabels();
@@ -70,10 +85,10 @@ template<class T, class DS>
 DDPMeansCUDA<T,DS>::~DDPMeansCUDA()
 {}
 
+
 template<class T, class DS>
-uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
+void DDPMeansCUDA<T,DS>::setupComputeLabelsGPU(uint32_t iAction)
 {
-  uint32_t iAction = UNASSIGNED;
   d_iAction_.set(iAction);
   d_Ns_.set(this->counts());
   d_ages_.set(this->ages());
@@ -94,11 +109,62 @@ uint32_t DDPMeansCUDA<T,DS>::computeLabelsGPU(uint32_t i0)
 //  d_Ns_.print();
 //  cout<<"d_Ns_ "<<d_Ns_.get().transpose()<<endl;
 //  cout<<"d_ages_ "<<d_ages_.get().transpose()<<endl;
+}
 
+template<>
+uint32_t DDPMeansCUDA<float,Euclidean<float> >::computeLabelsGPU(uint32_t i0)
+{
+  uint32_t iAction = UNASSIGNED;
+  this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   ddpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
       d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
       this->cl0_.Q(), this->cl0_.tau(), 0, this->K_, i0, this->N_-i0, 
+      d_iAction_.data());
+//  cout << "------------------AFTER--------------------"<<endl;
+  d_iAction_.get(iAction); 
+  return iAction;
+}
+
+template<>
+uint32_t DDPMeansCUDA<double,Euclidean<double> >::computeLabelsGPU(uint32_t i0)
+{
+  uint32_t iAction = UNASSIGNED;
+  this->setupComputeLabelsGPU(iAction);
+//  cout << "******************BEFORE*******************"<<endl;
+  ddpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
+      d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
+      this->cl0_.Q(), this->cl0_.tau(), 0, this->K_, i0, this->N_-i0, 
+      d_iAction_.data());
+//  cout << "------------------AFTER--------------------"<<endl;
+  d_iAction_.get(iAction); 
+  return iAction;
+}
+
+template<>
+uint32_t DDPMeansCUDA<float,Spherical<float> >::computeLabelsGPU(uint32_t i0)
+{
+  uint32_t iAction = UNASSIGNED;
+  this->setupComputeLabelsGPU(iAction);
+//  cout << "******************BEFORE*******************"<<endl;
+  ddpvMFlabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(),
+      d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->cl0_.lambda(),
+      this->cl0_.beta(), this->cl0_.Q(), 0, this->K_, i0, this->N_-i0,
+      d_iAction_.data());
+//  cout << "------------------AFTER--------------------"<<endl;
+  d_iAction_.get(iAction); 
+  return iAction;
+}
+
+template<>
+uint32_t DDPMeansCUDA<double,Spherical<double> >::computeLabelsGPU(uint32_t i0)
+{
+  uint32_t iAction = UNASSIGNED;
+  this->setupComputeLabelsGPU(iAction);
+//  cout << "******************BEFORE*******************"<<endl;
+  ddpvMFlabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(),
+      d_Ns_.data(), d_ages_.data(), d_ws_.data(), this->cl0_.lambda(),
+      this->cl0_.beta(), this->cl0_.Q(), 0, this->K_, i0, this->N_-i0,
       d_iAction_.data());
 //  cout << "------------------AFTER--------------------"<<endl;
   d_iAction_.get(iAction); 
@@ -115,27 +181,29 @@ template<class T,class DS>
 VectorXu DDPMeansCUDA<T,DS>::initLabels()
 {
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
-  GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
-
-  d_ages_.set(this->ages());
-  d_ws_.set(this->weights());
-
-  // TODO not too too sure about this
-  Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
-  for(uint32_t k=0; k<this->K_; ++k)
-    if(this->cls_[k]->isInstantiated())
-      ps.col(k) = this->cls_[k]->centroid();
-    else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
-      ps.col(k) = this->clsPrev_[k]->centroid();
-  d_p_.set(ps);
-
-//  d_p_.print();
-//  d_ages_.print();
-//  d_ws_.print();
+  return asgnIdces;
+  // TODO: seems to slow down the init!
+//  GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
 //
-  ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), 
-      d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
-      this->cl0_.Q(), this->cl0_.tau(), this->K_, this->N_, d_asgnIdces.data());
-  return d_asgnIdces.get();      
+//  d_ages_.set(this->ages());
+//  d_ws_.set(this->weights());
+//
+//  // TODO not too too sure about this
+//  Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
+//  for(uint32_t k=0; k<this->K_; ++k)
+//    if(this->cls_[k]->isInstantiated())
+//      ps.col(k) = this->cls_[k]->centroid();
+//    else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
+//      ps.col(k) = this->clsPrev_[k]->centroid();
+//  d_p_.set(ps);
+//
+////  d_p_.print();
+////  d_ages_.print();
+////  d_ws_.print();
+////
+//  ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), 
+//      d_ages_.data(), d_ws_.data(), this->cl0_.lambda(), 
+//      this->cl0_.Q(), this->cl0_.tau(), this->K_, this->N_, d_asgnIdces.data());
+//  return d_asgnIdces.get();      
 }
 

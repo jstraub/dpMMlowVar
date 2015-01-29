@@ -170,7 +170,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 };
 
 
-extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
+void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
     uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double beta, 
     double Q, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
 {
@@ -237,7 +237,7 @@ extern void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 };
 
 
-extern void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, 
+void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, 
     uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float beta, 
     float Q, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
 {

@@ -378,6 +378,22 @@ static const char *_cudaGetErrorEnum(cudaError_t error)
               return "cudaErrorLaunchFileScopedSurf";
         case cudaErrorSyncDepthExceeded:
               return "cudaErrorSyncDepthExceeded";
+        case cudaErrorIllegalInstruction:
+              return "cudaErrorIllegalInstruction";
+        case cudaErrorMisalignedAddress:
+              return "cudaErrorMisalignedAddress";
+        case cudaErrorInvalidAddressSpace:
+              return "cudaErrorInvalidAddressSpace";
+        case cudaErrorInvalidPc:
+              return "cudaErrorInvalidPc";
+        case cudaErrorIllegalAddress:
+              return "cudaErrorIllegalAddress";
+        case cudaErrorInvalidPtx:
+              return "cudaErrorInvalidPtx";
+        case cudaErrorInvalidGraphicsContext:
+              return "cudaErrorInvalidGraphicsContext";
+        case cudaErrorHardwareStackError:
+              return "cudaErrorHardwareStackError";
     }
 
    return "cuda error not listed";

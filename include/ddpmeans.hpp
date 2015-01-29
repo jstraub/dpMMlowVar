@@ -31,6 +31,7 @@ public:
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
+  virtual void createReviveFrom(uint32_t i);
 
   virtual bool converged(T eps=1e-6) 
   {
@@ -38,14 +39,14 @@ public:
       && (prevNs_.array() == this->counts().array()).all();
   };
 
-  VectorXf ages(){
-    VectorXf ts(this->K_);
+  Matrix<T,Dynamic,1> ages(){
+    Matrix<T,Dynamic,1> ts(this->K_);
     for(uint32_t k=0; k<this->K_; ++k) ts(k) = this->cls_[k]->t();
     return ts;
   };
 
-  VectorXf weights(){
-    VectorXf ws(this->K_);
+  Matrix<T,Dynamic,1> weights(){
+    Matrix<T,Dynamic,1> ws(this->K_);
     for(uint32_t k=0; k<this->K_; ++k) ws(k) = this->cls_[k]->w();
     return ws;
   };
@@ -88,15 +89,19 @@ template<class T, class DS>
 uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 {
   int z_i = this->K_;
-  sim_closest = this->lambda_;
-  T sim_k = 0.;
-  for (uint32_t k=0; k<this->K_; ++k)
+  if(this->K_ > 0)
   {
-    sim_k = this->cls_[k]->dist(this->cld_->x()->col(i)); 
-    if(DS::closer(sim_k, sim_closest))
+    sim_closest = this->cls_[0]->maxDist();
+    T sim_k = 0.;
+    for (uint32_t k=0; k<this->K_; ++k)
     {
-      sim_closest = sim_k;
-      z_i = k;
+      sim_k = this->cls_[k]->dist(this->cld_->x()->col(i)); 
+//      cout<<"sim_k = "<<sim_k<<" sim_cl = "<<sim_closest<<" closer? "<<DS::closer(sim_k, sim_closest)<<endl;
+      if(DS::closer(sim_k, sim_closest))
+      {
+        sim_closest = sim_k;
+        z_i = k;
+      }
     }
   }
   return z_i;
@@ -129,34 +134,46 @@ VectorXu DDPMeans<T,DS>::initLabels()
   return VectorXu::Ones(this->K_)*UNASSIGNED;
 }
 
+
+template<class T, class DS>
+void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
+{
+  cout<<"i "<<i
+    <<" x @ i "<<this->cld_->x()->col(i).transpose()
+    <<" "<<this->cld_->x()->col(i).norm()
+    <<" with K= "<<this->K_<<endl;
+
+  T sim = 0.;
+  uint32_t z_i = this->indOfClosestCluster(i,sim);
+  if(z_i == this->K_) 
+  { // start a new cluster
+    this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
+          typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
+    this->cls_[z_i]->globalId = this->globalMaxInd_++;
+    this->K_ ++;
+    cout<<"new cluster "<<(this->K_-1)<<endl;
+  } 
+  else if(!this->cls_[z_i]->isInstantiated())
+  { // instantiated an old cluster
+    this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
+    cout<<"revieve cluster "<<z_i<<endl;
+  }
+
+  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+}
+
 template<class T, class DS>
 void DDPMeans<T,DS>::updateLabels()
 {
-  uint32_t idAction = UNASSIGNED;
   uint32_t i0 = 0;
+  uint32_t idAction = UNASSIGNED;
 
   do{
     idAction = optimisticLabelsAssign(i0);
     if(idAction != UNASSIGNED)
     {
-//      cout<<"idAction "<<idAction<<endl;
-//      cout<<" x @ idAction "<<this->cld_->x()->col(idAction).transpose()<<endl;
-//      cout<<"K= "<<this->K_<<endl;
-      T sim = 0.;
-      uint32_t z_i = this->indOfClosestCluster(idAction,sim);
-      if(z_i == this->K_) 
-      { // start a new cluster
-        this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-              typename DS::DependentCluster(this->cld_->x()->col(idAction),cl0_)));
-        this->cls_[z_i]->globalId = this->globalMaxInd_++;
-        this->K_ ++;
-        cout<<"new cluster "<<(this->K_-1)<<endl;
-      } 
-      else if(!this->cls_[z_i]->isInstantiated())
-      { // instantiated an old cluster
-        this->cls_[z_i]->reInstantiate(this->cld_->x()->col(idAction));
-        cout<<"revieve cluster "<<z_i<<endl;
-      }
+      createReviveFrom(idAction);
       i0 = idAction;
     }
     cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
@@ -245,6 +262,9 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
         this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
       }
   }
+
+  // revive or add cluster from the first data-point
+  createReviveFrom(0);
 };
 
 template<class T, class DS>

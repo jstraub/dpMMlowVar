@@ -29,39 +29,39 @@ find_package (CUDA REQUIRED)
 
 message(${EIGEN3_INCLUDE_DIR})
 
-IF(BOOST_OLD)
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DBOOST_OLD")
-  include_directories(
-    ./include
-    ./cuda
-    ${EIGEN3_INCLUDE_DIR}
-#    /usr/include
-    #/usr/include/eigen3
-    ${Boost_INCLUDE_DIRS}
-    ${CUDA_TOOLKIT_INCLUDE}
-    )
-  link_directories(
-    ${Boost_LIBRARY_DIRS}
-#    $ENV{WORKSPACE_HOME}/3rdparty/lib
-#    /usr/lib
-    ${CUDA_LIBRARIES}
-#    /usr/local/cuda-6.5/targets/x86_64-linux/lib/
-    )
-  # no sampling from chi_squared
-  cuda_add_library(dpMMlowVar SHARED
-    ./cuda/vectorSum_kernel.cu
-    ./cuda/ddpvMFlabels_kernel.cu
-    ./cuda/copy_kernel.cu
-    ./cuda/choiceMult_kernel.cu
-    ./cuda/labelMap_kernel.cu
-    ./cuda/ddpLabelsSpecial_kernel.cu
-    )
-  target_link_libraries(dpMMlowVar
-    boost_system
-    boost_random
-    boost_program_options
-    )
-ELSE(BOOST_OLD)
+#IF(BOOST_OLD)
+#  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DBOOST_OLD")
+#  include_directories(
+#    ./include
+#    ./cuda
+#    ${EIGEN3_INCLUDE_DIR}
+##    /usr/include
+#    #/usr/include/eigen3
+#    ${Boost_INCLUDE_DIRS}
+#    ${CUDA_TOOLKIT_INCLUDE}
+#    )
+#  link_directories(
+#    ${Boost_LIBRARY_DIRS}
+##    $ENV{WORKSPACE_HOME}/3rdparty/lib
+##    /usr/lib
+#    ${CUDA_LIBRARIES}
+##    /usr/local/cuda-6.5/targets/x86_64-linux/lib/
+#    )
+#  # no sampling from chi_squared
+#  cuda_add_library(dpMMlowVar SHARED
+#    ./cuda/vectorSum_kernel.cu
+#    ./cuda/ddpvMFlabels_kernel.cu
+#    ./cuda/copy_kernel.cu
+#    ./cuda/choiceMult_kernel.cu
+#    ./cuda/labelMap_kernel.cu
+#    ./cuda/ddpLabelsSpecial_kernel.cu
+#    )
+#  target_link_libraries(dpMMlowVar
+#    boost_system
+#    boost_random
+#    boost_program_options
+#    )
+#ELSE(BOOST_OLD)
   include_directories(
     ./include
     ./cuda
@@ -91,8 +91,8 @@ ELSE(BOOST_OLD)
     boost_random
     boost_program_options
     )
-
-ENDIF(BOOST_OLD)
+#
+#ENDIF(BOOST_OLD)
 
 add_executable(testSO3 ./test/SO3.cpp
   )

@@ -37,6 +37,7 @@ public:
 
   virtual void updateK(uint32_t K){ this->K_ = K;};
   virtual void updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
+  virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   virtual VectorXu& z() { this->d_z_.get(this->z_); return ClData<T>::z();};
   virtual T* d_x(){ return d_x_.data();};
@@ -80,6 +81,19 @@ void ClDataGpu<T>::updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> 
 {
   ClData<T>::updateData(x);
   d_x_.set(this->x_);
+  d_z_.set(this->z_);
+};
+
+template<class T>
+void ClDataGpu<T>::updateData(T* d_x, uint32_t N, uint32_t step, uint32_t
+    offset)
+{
+  d_x_.copyFromGpu(d_x,N,step,offset,this->D_);
+  this->x_->resize(this->D_,this->N_);
+  d_x_.get(*(this->x_)); // copy it for parallel labeling
+
+  ClData<T>::updateData(this->x_);
+//  d_x_.set(this->x_);
   d_z_.set(this->z_);
 };
 

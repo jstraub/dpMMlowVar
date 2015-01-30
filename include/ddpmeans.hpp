@@ -252,7 +252,7 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   this->N_ = this->cld_->N();
 
   if(false && this->K_ > 0)
-  { // seemed to slow down the algorithms confergence
+  { // seemed to slow down the algorithms convergence
     VectorXu idActions = initLabels();
     for(uint32_t k=0; k<this->K_; ++k)
       if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())

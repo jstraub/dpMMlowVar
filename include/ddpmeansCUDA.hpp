@@ -52,6 +52,8 @@ public:
       T lambda, T Q, T tau);
   virtual ~DDPMeansCUDA();
   
+  virtual void nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
+
   void getZfromGpu() {this->cld_->z();};
   uint32_t* d_z(){ return this->cdl_->d_z();};
   
@@ -83,8 +85,39 @@ DDPMeansCUDA<T,DS>::DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
 
 template<class T, class DS>
 DDPMeansCUDA<T,DS>::~DDPMeansCUDA()
-{}
+{};
 
+template<class T, class DS>
+void DDPMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
+    uint32_t offset)
+{
+  this->clsPrev_.clear();
+  for (uint32_t k =0; k< this->K_; ++k)
+  {
+    this->clsPrev_.push_back(shared_ptr<typename
+        DS::DependentCluster>(this->cls_[k]->clone())); 
+    this->cls_[k]->N() = 0;
+  }
+
+  this->Kprev_ = this->K_;
+  this->cld_->updateData(d_x,N,step,offset);
+  this->N_ = this->cld_->N();
+
+//  if(false && this->K_ > 0)
+//  { // seemed to slow down the algorithms convergence
+//    VectorXu idActions = initLabels();
+//    for(uint32_t k=0; k<this->K_; ++k)
+//      if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
+//      { // instantiated an old cluster
+//        cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
+//        cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
+//        this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
+//      }
+//  }
+
+  // revive or add cluster from the first data-point
+  this->createReviveFrom(0);
+};
 
 template<class T, class DS>
 void DDPMeansCUDA<T,DS>::setupComputeLabelsGPU(uint32_t iAction)

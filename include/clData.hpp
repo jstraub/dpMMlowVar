@@ -41,6 +41,7 @@ public:
 
   virtual void updateK(uint32_t K){ K_ = K;};
   virtual void updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
+  virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   virtual VectorXu& z() {return *z_;};
   virtual uint32_t& z(uint32_t i) {return (*z_)(i);};
@@ -119,6 +120,14 @@ void ClData<T>::updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
     z_->resize(N_);
     z_->fill(UNASSIGNED);
   }
+};
+
+template<class T>
+void ClData<T>::updateData(T* d_x, uint32_t N, uint32_t step, uint32_t
+    offset)
+{
+  assert(false);
+  //TODO: implement this
 };
 
 template<class T>

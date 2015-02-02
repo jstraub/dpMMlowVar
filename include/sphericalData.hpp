@@ -133,6 +133,7 @@ struct Spherical //: public DataSpace<T>
     T beta_;
     T lambda_;
     T Q_;
+    Matrix<T,Dynamic,1> prevCentroid_;
 
     public:
 
@@ -175,6 +176,15 @@ struct Spherical //: public DataSpace<T>
         <<"  center: "<<this->centroid().transpose()<<endl;
     };
 
+    const Matrix<T,Dynamic,1>& prevCentroid() const {return prevCentroid_;};
+    Matrix<T,Dynamic,1>& prevCentroid() {return prevCentroid_;};
+
+    void nextTimeStep()
+    {
+      this->N_ = 0;
+      this->prevCentroid_ = this->centroid_;
+    };
+
     void updateWeight()
     {
       T phi, theta, eta;
@@ -190,12 +200,12 @@ struct Spherical //: public DataSpace<T>
     {
       T phi, theta, eta;
       T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-              Spherical::dist(this->xSum_,this->centroid_)/this->xSum_.norm())));
+              Spherical::dist(this->xSum_,this->prevCentroid_)/this->xSum_.norm())));
       Spherical::solveProblem2(this->xSum_ , zeta, t_, w_, beta_, phi,theta,eta);
 
       // rotate point from mean_k towards previous mean by angle eta?
       this->centroid_ = rotationFromAtoB<T>(this->xSum_/this->xSum_.norm(), 
-          this->centroid_, eta/(phi*t_+theta+eta)) * this->xSum_/this->xSum_.norm(); 
+          this->prevCentroid_, eta/(phi*t_+theta+eta)) * this->xSum_/this->xSum_.norm(); 
     };
 
     void reInstantiate(const Matrix<T,Dynamic,Dynamic>& x_i)
@@ -212,7 +222,7 @@ struct Spherical //: public DataSpace<T>
       else{
         T phi, theta, eta;
         T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
-                Spherical::dist(x_i,this->centroid_) )));
+                Spherical::dist(x_i,this->prevCentroid_) )));
         // apprixmation here for small angles -> same as on GPU
         Spherical::solveProblem2Approx(x_i, zeta, t_, w_, beta_, phi,theta,eta);
 

@@ -257,7 +257,8 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   {
     clsPrev_.push_back(shared_ptr<typename
         DS::DependentCluster>(this->cls_[k]->clone())); 
-    this->cls_[k]->N() = 0;
+//    this->cls_[k]->N() = 0;
+    this->cls_[k]->nextTimeStep();
   }
 
   this->Kprev_ = this->K_;
@@ -336,6 +337,7 @@ void DDPMeans<T,DS>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
     {
       cout<<"rotating "<<k<<endl;
       this->cls_[k]->centroid() = dR*this->cls_[k]->centroid();
+      this->cls_[k]->prevCentroid() = dR*this->cls_[k]->prevCentroid();
       this->clsPrev_[k]->centroid() = dR*this->clsPrev_[k]->centroid();
     }
 };

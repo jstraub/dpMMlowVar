@@ -137,29 +137,32 @@ struct Spherical //: public DataSpace<T>
 
     public:
 
-    DependentCluster() : Cluster(), t_(0), w_(0), beta_(1), lambda_(1), Q_(1)
+    DependentCluster() : Cluster(), t_(0), w_(0), beta_(1), lambda_(1), Q_(1),
+      prevCentroid_(centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i) : Cluster(x_i), t_(0),
-      w_(0), beta_(1), lambda_(1), Q_(1)
+      w_(0), beta_(1), lambda_(1), Q_(1), prevCentroid_(centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i, T beta, T lambda, T Q) :
-      Cluster(x_i), t_(0), w_(0), beta_(beta), lambda_(lambda), Q_(Q)
+      Cluster(x_i), t_(0), w_(0), beta_(beta), lambda_(lambda), Q_(Q), 
+      prevCentroid_(centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i, const DependentCluster& cl0) :
       Cluster(x_i), t_(0), w_(0), beta_(cl0.beta()), lambda_(cl0.lambda()),
-      Q_(cl0.Q())
+      Q_(cl0.Q()), prevCentroid_(centroid_)
     {};
 
     DependentCluster(T beta, T lambda, T Q) :
-      Cluster(), t_(0), w_(0), beta_(beta), lambda_(lambda), Q_(Q)
+      Cluster(), t_(0), w_(0), beta_(beta), lambda_(lambda), Q_(Q), 
+      prevCentroid_(centroid_)
     {};
 
     DependentCluster(const DependentCluster& b) :
       Cluster(b.xSum(), b.N()), t_(b.t()), w_(b.w()), beta_(b.beta()),
-      lambda_(b.lambda()), Q_(b.Q())
+      lambda_(b.lambda()), Q_(b.Q()), prevCentroid_(b.prevCentroid())
     {};
 
     DependentCluster* clone(){return new DependentCluster(*this);}
@@ -223,8 +226,11 @@ struct Spherical //: public DataSpace<T>
         T phi, theta, eta;
         T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
                 Spherical::dist(x_i,this->prevCentroid_) )));
+        cout<<"zeta="<<zeta;
         // apprixmation here for small angles -> same as on GPU
         Spherical::solveProblem2Approx(x_i, zeta, t_, w_, beta_, phi,theta,eta);
+        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" w_="<<w_
+          <<" beta="<<beta<<" Q="<<Q_<<" t="<<t_<<endl;
 
         return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
           + cos(eta); // no minus 1 here cancels with Z(beta) from the two other assignments

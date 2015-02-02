@@ -101,29 +101,32 @@ struct Euclidean //: public DataSpace<T>
 
     public:
 
-    DependentCluster() : Cluster(), t_(0), w_(0), tau_(1), lambda_(1), Q_(1)
+    DependentCluster() : Cluster(), t_(0), w_(0), tau_(1), lambda_(1), Q_(1),
+      prevCentroid_(centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i) : Cluster(x_i), t_(0),
-      w_(0), tau_(1), lambda_(1), Q_(1)
+      w_(0), tau_(1), lambda_(1), Q_(1), prevCentroid_(centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i, T tau, T lambda, T Q) :
-      Cluster(x_i), t_(0), w_(0), tau_(tau), lambda_(lambda), Q_(Q)
+      Cluster(x_i), t_(0), w_(0), tau_(tau), lambda_(lambda), Q_(Q),
+      prevCentroid_(centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i, const DependentCluster& cl0) :
       Cluster(x_i), t_(0), w_(0), tau_(cl0.tau()), lambda_(cl0.lambda()),
-      Q_(cl0.Q())
+      Q_(cl0.Q()), prevCentroid_(centroid_)
     {};
 
     DependentCluster(T tau, T lambda, T Q) :
-      Cluster(), t_(0), w_(0), tau_(tau), lambda_(lambda), Q_(Q)
+      Cluster(), t_(0), w_(0), tau_(tau), lambda_(lambda), Q_(Q), 
+      prevCentroid_(centroid_)
     {};
 
     DependentCluster(const DependentCluster& b) :
       Cluster(b.xSum(), b.N()), t_(b.t()), w_(b.w()), tau_(b.tau()),
-      lambda_(b.lambda()), Q_(b.Q())
+      lambda_(b.lambda()), Q_(b.Q()), prevCentroid_(b.prevCentroid())
     {this->centroid_ = b.centroid();};
 
     bool isDead() const {return t_*Q_ > lambda_;};

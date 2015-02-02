@@ -51,8 +51,13 @@ public:
     return ws;
   };
 
-  virtual void rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR);
+  Matrix<T,Dynamic,Dynamic> prevCentroids(){
+    Matrix<T,Dynamic,Dynamic> prevCs(this->D_,this->K_);
+    for(uint32_t k=0; k<this->K_; ++k) prevCs.col(k) = this->clsPrev_[k]->centroid();
+    return prevCs;
+  };
 
+  virtual void rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR);
   virtual void dumpStats(std::ofstream& fout);
 
 protected:

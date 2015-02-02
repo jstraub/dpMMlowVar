@@ -97,7 +97,7 @@ struct Euclidean //: public DataSpace<T>
     T tau_;
     T lambda_;
     T Q_;
-
+    Matrix<T,Dynamic,1> prevCentroid_;
 
     public:
 
@@ -130,6 +130,15 @@ struct Euclidean //: public DataSpace<T>
     bool isNew() const {return t_ == 0;};
 
     void incAge() { ++ t_; };
+
+    const Matrix<T,Dynamic,1>& prevCentroid() const {return prevCentroid_;};
+    Matrix<T,Dynamic,1>& prevCentroid() {return prevCentroid_;};
+
+    void nextTimeStep()
+    {
+      this->N_ = 0;
+      this->prevCentroid_ = this->centroid_;
+    };
 
     void updateWeight()
     {

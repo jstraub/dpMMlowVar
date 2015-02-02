@@ -51,6 +51,10 @@ public:
     return ws;
   };
 
+  virtual void rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR);
+
+  virtual void dumpStats(std::ofstream& fout);
+
 protected:
 
   T Kprev_; // K before updateLabels()
@@ -304,3 +308,25 @@ void DDPMeans<T,DS>::updateState()
   }
 };
 
+template<class T, class DS>
+void DDPMeans<T,DS>::dumpStats(std::ofstream& fout)
+{
+  fout<<this->K_<<" "<<this->cost_<<" ";
+  for(uint32_t k=0; k< this->K_; ++k)
+    fout<<this->cls_[k]->N()<<" ";
+  for(uint32_t k=0; k< this->K_-1; ++k)
+    fout<<this->cls_[k]->globalId<<" ";
+  fout<<this->cls_[this->K_-1]->globalId<<endl;
+};
+
+template<class T, class DS>
+void DDPMeans<T,DS>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
+{
+  for(int32_t k=0; k<this->K_; ++k)
+    if(!this->cls_[k]->isInstantiated())
+    {
+      cout<<"rotating "<<k<<endl;
+      this->cls_[k]->centroid() = dR*this->cls_[k]->centroid();
+      this->clsPrev_[k]->centroid() = dR*this->clsPrev_[k]->centroid();
+    }
+};

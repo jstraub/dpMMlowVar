@@ -26,6 +26,9 @@ public:
   virtual MatrixXu mostLikelyInds(uint32_t n, 
       Matrix<T,Dynamic,Dynamic>& deviates) = 0;
   virtual T avgIntraClusterDeviation() = 0;
+
+  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
+  virtual void updateState(){}; // after converging for a single time instant
   
   const VectorXu& z() const {return (this->cld_->z());};
   VectorXu counts() const {
@@ -85,6 +88,24 @@ Clusterer<T,DS>::Clusterer( const shared_ptr<ClData<T> >& cld)
 {
   for (uint32_t k=0; k<K_; ++k)
     cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
+};
+
+template<class T, class DS>
+void Clusterer<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+{
+  // reset cluster centers
+  cls_.clear();
+  for (uint32_t k=0; k<K_; ++k)
+    cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
+  // update the data
+  this->cld_->updateData(spx);
+  this->N_ = this->cld_->N();
+
+  this->cld_->randomLabels(K_);
+  this->cld_->updateLabels(K_);
+  this->cld_->computeSS();
+  for(uint32_t k=0; k<this->K_; ++k)
+    this->cls_[k]->updateCenter(this->cld_,k);
 };
 
 template<class T, class DS>

@@ -26,7 +26,14 @@ public:
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
 
-  virtual bool converged() {return false;};
+  virtual bool converged(T eps=1e-6) 
+  {
+    return this->counts().size() > 0 && this->counts().size() == prevNs_.size()
+      && (prevNs_.array() == this->counts().array()).all();
+  };
+
+private:
+  VectorXu prevNs_;
 
 };
 
@@ -73,7 +80,7 @@ void KMeans<T,DS>::updateLabels()
   {
     T sim = 0;
     this->cld_->z(i) = indOfClosestCluster(i,sim);
-    cost += sim;
+    cost = cost + sim;
   }
   this->prevCost_ = this->cost_;
   this->cost_ = cost;
@@ -82,6 +89,10 @@ void KMeans<T,DS>::updateLabels()
 template<class T, class DS>
 void KMeans<T,DS>::updateCenters()
 {
+  prevNs_.resize(this->K_);
+  for(uint32_t k=0; k<this->K_; ++k)
+    prevNs_(k) = this->cls_[k]->N();
+
   this->cld_->updateLabels(this->K_);
   this->cld_->computeSS();
   for(uint32_t k=0; k<this->K_; ++k)

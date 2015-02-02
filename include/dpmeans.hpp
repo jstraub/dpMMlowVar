@@ -21,7 +21,6 @@ public:
   virtual ~DPMeans();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
-
   virtual void updateLabels();
   virtual void updateCenters();
 

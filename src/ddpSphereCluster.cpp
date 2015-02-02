@@ -31,12 +31,12 @@ int main(int argc, char** argv){
   	po::options_description desc("Option Flags");
   	desc.add_options()
   	  ("help,h", "produce help message")
-      ("input,i", po::value<string>()->required(), "path to folder with surface normals")
+      ("input,i", po::value<string>(), "path to folder with surface normals")
       ("frame_folder_name,f", po::value<string>()->default_value("frames"), "The folder to store frames in")
       ("seed,s", po::value<int>()->default_value(time(0)), "Seed for the random number generator")
-      ("lambda,l", po::value<double>()->required(), "The value of lambda (in deg)")
-      ("T_Q,t", po::value<double>()->required(), "The value of T_Q (determines Q) - how many frames does a point survive")
-      ("beta,b", po::value<double>()->required(), "The value of beta")
+      ("lambda,l", po::value<double>(), "The value of lambda (in deg)")
+      ("T_Q,t", po::value<double>(), "The value of T_Q (determines Q) - how many frames does a point survive")
+      ("beta,b", po::value<double>(), "The value of beta")
   	  ;
 
   	po::variables_map vm;
@@ -61,10 +61,16 @@ int main(int argc, char** argv){
 	double Q = T_Q == 0.? -2. : lambda/T_Q;
 	
 	//set up the DDP Means object
+//	shared_ptr<MXf> tmp(new MXf(3, 1));
+//  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+////  DDPMeansCUDA<float,Spherical<float> > *clusterer = new
+//  Clusterer<float,Spherical<float> > *clusterer = new
+//    DDPMeansCUDA<float,Spherical<float> >(cld, lambda, Q, beta);
+   
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
-  DDPMeansCUDA<float,Spherical<float> > *clusterer = new
-    DDPMeansCUDA<float,Spherical<float> >(cld, lambda, Q, beta);
+  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,6));
+  Clusterer<float,Spherical<float> > *clusterer = new
+    KMeans<float,Spherical<float> >(cld);
 
 	//loop over frames, resize if necessary, and cluster
 	int fr = 0;
@@ -80,6 +86,7 @@ int main(int argc, char** argv){
 		do{
 			clusterer->updateLabels();
     	clusterer->updateCenters();
+      cout<<"cost = "<<clusterer->cost()<<endl;
 		}while (!clusterer->converged());
 		clusterer->updateState();
     const VXu& z = clusterer->z();
@@ -149,6 +156,7 @@ shared_ptr<MXf> extractVectorData(Mat& frame){
       (*data)(0, idx) = vec.val[0];
       (*data)(1, idx) = vec.val[1];
       (*data)(2, idx) = vec.val[2];
+      data->col(idx) /= data->col(idx).norm();
       idx++;
     }
 	}

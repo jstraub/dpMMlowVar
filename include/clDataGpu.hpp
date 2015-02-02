@@ -72,8 +72,8 @@ void ClDataGpu<T>::updateLabels(uint32_t K)
 //  assert(this->z_->maxCoeff() < this->K_); // no indicators \geq K
 //  assert(this->z_->minCoeff() >= 0); // no indicators \le 0
 //  assert((this->z_->array() < this->K_).all());
-//  // update the labels on the GPU
-//  d_z_.set(this->z_);
+  // update the labels on the GPU
+  d_z_.set(this->z_);
 }
 
 template<class T>

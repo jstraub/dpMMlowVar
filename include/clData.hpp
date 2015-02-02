@@ -12,6 +12,7 @@ using boost::shared_ptr;
 
 #define UNASSIGNED 4294967294
 
+
 /* clustered data */
 template <class T>
 class ClData
@@ -35,9 +36,11 @@ public:
 
   /* after changing z_ outside - we can use update to get new statistics */
   virtual void updateLabels(uint32_t K);
+  virtual void randomLabels(uint32_t K);
   virtual void computeSS();
 
   virtual void labelMap(const vector<int32_t>& map);
+
 
   virtual void updateK(uint32_t K){ K_ = K;};
   virtual void updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
@@ -62,10 +65,45 @@ public:
   virtual const Matrix<T,Dynamic,Dynamic>& xSums() const {return xSums_;};
   virtual Matrix<T,Dynamic,1> xSum(uint32_t k) const {return xSums_.col(k);};
 
+
 };
 
 typedef ClData<float> ClDataf;
 typedef ClData<double> ClDatad;
+
+template<class T, class DS>
+T silhouette(const ClData<T>& cld)
+{ 
+  if(cld.K()<2) return -1.0;
+//  assert(Ns_.sum() == N_);
+  Matrix<T,Dynamic,1> sil(cld.N());
+#pragma omp parallel for
+  for(uint32_t i=0; i<cld.N(); ++i)
+  {
+    Matrix<T,Dynamic,1> b = Matrix<T,Dynamic,1>::Zero(cld.K());
+    for(uint32_t j=0; j<cld.N(); ++j)
+      if(j != i)
+      {
+        b(cld.z(j)) += DS::dissimilarity(cld.x()->col(i),cld.x()->col(j));
+      }
+    for (uint32_t k=0; k<cld.K(); ++k) b /= cld.count(k);
+//    b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
+    T a_i = b(cld.z(i)); // average dist to own cluster
+    T b_i = cld.z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+    for(uint32_t k=0; k<cld.K(); ++k)
+      if(k != cld.z(i) && b(k) == b(k) && b(k) < b_i && cld.count(k) > 0)
+      {
+        b_i = b(k);
+      }
+    if(a_i < b_i)
+      sil(i) = 1.- a_i/b_i;
+    else if(a_i > b_i)
+      sil(i) = b_i/a_i - 1.;
+    else
+      sil(i) = 0.;
+  }
+  return sil.sum()/static_cast<T>(cld.N());
+};
 
 // -------------------------- impl --------------------------------------------
 template<class T>
@@ -86,12 +124,7 @@ ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
   // randomly init z
   if(K_ > 1)
   {
-    std::vector<uint32_t> z(N_);
-    for(uint32_t i=0; i<N_; ++i) z[i] = i%K_;
-     // to destrey symmetry
-    for(uint32_t i=0; i<K_; ++i) z[i] = 0;
-    std::random_shuffle(z.begin(),z.end());
-    for(uint32_t i=0; i<N_; ++i) (*z_)(i) = z[i];
+    this->randomLabels(K_);
     cout<<"init z: "<<(*z_).transpose()<<endl;
   }else if(K==1)
     z_->fill(0.);
@@ -102,6 +135,17 @@ ClData<T>::ClData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
 template<class T>
 ClData<T>::~ClData()
 {};
+
+template<class T>
+void ClData<T>::randomLabels(uint32_t K)
+{
+  std::vector<uint32_t> z(N_);
+  for(uint32_t i=0; i<N_; ++i) z[i] = i%K;
+  // to destreuy symmetry
+  for(uint32_t i=0; i<K_; ++i) z[i] = 0;
+  std::random_shuffle(z.begin(),z.end());
+  for(uint32_t i=0; i<N_; ++i) (*z_)(i) = z[i];
+}
 
 template<class T>
 void ClData<T>::updateLabels(uint32_t K)

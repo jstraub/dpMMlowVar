@@ -53,7 +53,8 @@ public:
 
   Matrix<T,Dynamic,Dynamic> prevCentroids(){
     Matrix<T,Dynamic,Dynamic> prevCs(this->D_,this->K_);
-    for(uint32_t k=0; k<this->K_; ++k) prevCs.col(k) = this->clsPrev_[k]->centroid();
+    for(uint32_t k=0; k<this->clsPrev_.size(); ++k) 
+      prevCs.col(k) = this->clsPrev_[k]->centroid();
     return prevCs;
   };
 

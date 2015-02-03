@@ -226,11 +226,11 @@ struct Spherical //: public DataSpace<T>
         T phi, theta, eta;
         T zeta = acos(max(static_cast<T>(-1.),min(static_cast<T>(1.0),
                 Spherical::dist(x_i,this->prevCentroid_) )));
-        cout<<"zeta="<<zeta;
+//        cout<<"zeta="<<zeta;
         // apprixmation here for small angles -> same as on GPU
         Spherical::solveProblem2Approx(x_i, zeta, t_, w_, beta_, phi,theta,eta);
-        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" w_="<<w_
-          <<" beta="<<beta_<<" Q="<<Q_<<" t="<<t_<<endl;
+//        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" w_="<<w_
+//          <<" beta="<<beta_<<" Q="<<Q_<<" t="<<t_<<endl;
 
         return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
           + cos(eta); // no minus 1 here cancels with Z(beta) from the two other assignments

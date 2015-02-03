@@ -96,7 +96,8 @@ void DDPMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
   {
     this->clsPrev_.push_back(shared_ptr<typename
         DS::DependentCluster>(this->cls_[k]->clone())); 
-    this->cls_[k]->N() = 0;
+//    this->cls_[k]->N() = 0;
+    this->cls_[k]->nextTimeStep();
   }
 
   this->Kprev_ = this->K_;
@@ -132,7 +133,8 @@ void DDPMeansCUDA<T,DS>::setupComputeLabelsGPU(uint32_t iAction)
     if(this->cls_[k]->isInstantiated())
       ps.col(k) = this->cls_[k]->centroid();
     else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
-      ps.col(k) = this->clsPrev_[k]->centroid();
+      ps.col(k) = this->cls_[k]->prevCentroid();
+//      ps.col(k) = this->clsPrev_[k]->centroid();
   d_p_.set(ps);
 
 //  cout<<"ddpvMFlabels_gpu K="<<this->K_<<endl;

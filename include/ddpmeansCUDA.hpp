@@ -91,12 +91,11 @@ template<class T, class DS>
 void DDPMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
     uint32_t offset)
 {
-  this->clsPrev_.clear();
+//  this->clsPrev_.clear();
   for (uint32_t k =0; k< this->K_; ++k)
   {
-    this->clsPrev_.push_back(shared_ptr<typename
-        DS::DependentCluster>(this->cls_[k]->clone())); 
-//    this->cls_[k]->N() = 0;
+//    this->clsPrev_.push_back(shared_ptr<typename
+//        DS::DependentCluster>(this->cls_[k]->clone())); 
     this->cls_[k]->nextTimeStep();
   }
 

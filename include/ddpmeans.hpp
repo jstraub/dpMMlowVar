@@ -53,8 +53,8 @@ public:
 
   Matrix<T,Dynamic,Dynamic> prevCentroids(){
     Matrix<T,Dynamic,Dynamic> prevCs(this->D_,this->K_);
-    for(uint32_t k=0; k<this->clsPrev_.size(); ++k) 
-      prevCs.col(k) = this->clsPrev_[k]->centroid();
+    for(uint32_t k=0; k<this->K_; ++k) 
+      prevCs.col(k) = this->cls_[k]->prevCentroid();
     return prevCs;
   };
 
@@ -68,7 +68,7 @@ protected:
   uint32_t globalMaxInd_;
 
   typename DS::DependentCluster cl0_;
-  vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
+  //vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual VectorXu initLabels();
@@ -195,7 +195,8 @@ void DDPMeans<T,DS>::updateLabels()
   for(uint32_t k=0; k<this->K_; ++k)
     if(!this->cls_[k]->isInstantiated())
     {
-      this->cls_[k]->centroid() = this->clsPrev_[k]->centroid();
+//      this->cls_[k]->centroid() = this->clsPrev_[k]->centroid();
+      this->cls_[k]->centroid() = this->cls_[k]->prevCentroid();
     }
 };
 
@@ -252,12 +253,11 @@ void DDPMeans<T,DS>::updateCenters()
 template<class T, class DS>
 void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
-  this->clsPrev_.clear();
+//  this->clsPrev_.clear();
   for (uint32_t k =0; k< this->K_; ++k)
   {
-    clsPrev_.push_back(shared_ptr<typename
-        DS::DependentCluster>(this->cls_[k]->clone())); 
-//    this->cls_[k]->N() = 0;
+//    clsPrev_.push_back(shared_ptr<typename
+//        DS::DependentCluster>(this->cls_[k]->clone())); 
     this->cls_[k]->nextTimeStep();
   }
 
@@ -338,6 +338,6 @@ void DDPMeans<T,DS>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
       cout<<"rotating "<<k<<endl;
       this->cls_[k]->centroid() = dR*this->cls_[k]->centroid();
       this->cls_[k]->prevCentroid() = dR*this->cls_[k]->prevCentroid();
-      this->clsPrev_[k]->centroid() = dR*this->clsPrev_[k]->centroid();
+//      this->clsPrev_[k]->centroid() = dR*this->clsPrev_[k]->centroid();
     }
 };

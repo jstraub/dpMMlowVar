@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 import os, copy, re
 import fnmatch
 import matplotlib as mpl

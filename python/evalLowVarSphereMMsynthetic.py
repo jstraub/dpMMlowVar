@@ -158,8 +158,8 @@ bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
-bases = ['DPvMFmeans','spkm']
 bases = ['CrpvMF']
+bases = ['DPvMFmeans','spkm']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
@@ -172,9 +172,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = False
 reRun = True
-
+reRun = False
 
 if reRun:
   print cfg
@@ -277,7 +276,8 @@ nmis['spkm'] = nmis['spkm'][indSpkm,:]
 mis['spkm'] = mis['spkm'][indSpkm,:]
 Ns['spkm'] = Ns['spkm'][indSpkm,:]
 Sils['spkm'] = Sils['spkm'][indSpkm,:]
- 
+
+print paramBase
 
 fig = plotOverParams(mis,'MI',paramBase,paramName,baseMap, Ns=Ns,showLeg=False)
 plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"MI")),figure=fig)

@@ -59,18 +59,24 @@ def entropy(z):
 def run(cfg,reRun):
   #args = ['../build/dpSubclusterSphereGMM',
 #  args = ['../build/dpStickGMM',
+  K = cfg['K']
   if cfg['base'] in ['CrpvMF']:
     args = ['../../dpMMshared/build/dpmmSampler', '--alpha 1.0']
     params = np.r_[ cfg['m0'], np.array([cfg['t0'],cfg['a0'],cfg['b0']])]
+  elif cfg['base'] in ['DirvMF']:
+    args = ['../../dpMMshared/build/dpmmSampler', 
+        '--alpha ' + " ".join([str(1.0/float(cfg['K'])) for k in range(cfg['K'])]) ]
+    params = np.r_[cfg['m0'], np.array([cfg['t0'],cfg['a0'],cfg['b0']])]
+    K = 1
   else:
     params = np.array([cfg['lambda']])
     args = ['../build/dpMMlowVarCluster',
-        '--shuffle',
-        '--silhouette']
+        '--shuffle']
   args = args + ['--seed {}'.format(int(time.time()*100000) - 100000*int(time.time())),
+    '--silhouette',
     '-N {}'.format(N), #TODO: read N,D from file!
     '-D {}'.format(D),
-    '-K {}'.format(cfg['K']),
+    '-K {}'.format(K),
     '-T {}'.format(cfg['T']),
     #'--base NiwSphereUnifNoise',
     '--base '+cfg['base'],
@@ -139,11 +145,13 @@ cfg['nRun'] = 50
 
 dataPath = './rndSphereDataNu10D3N30000NonOverLap.csv' # very isotropic
 cfg['nParms'] = 50;
-paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
-  'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])]),
-  'CrpvMF':np.array([5.0])}
-cfg['T'] = 100
-cfg['nRun'] =  50
+paramBase = {
+    'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
+    'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])]),
+    'CrpvMF':np.array([5.0]),
+    'DirvMF':np.array([100])}
+cfg['T'] = 1000 # 100
+cfg['nRun'] = 50
 
 cfg['dataPath'] = dataPath
 
@@ -160,6 +168,7 @@ bases = ['spkm','DPvMFmeans']
 bases = ['spkm']
 bases = ['CrpvMF']
 bases = ['DPvMFmeans','spkm']
+bases = ['DirvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
@@ -172,10 +181,11 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = True
 reRun = False
+reRun = True
 
 if reRun:
+  print bases
   print cfg
   raw_input("are you sure you want to rerun??")
 
@@ -214,11 +224,12 @@ for i,base in enumerate(bases):
         cfg['lambda'] = np.cos(param*np.pi/180.0)-1. 
       else:
         cfg['lambda'] = 0.
-      if cfg['base'] == 'CrpvMF':
+      if cfg['base'] in ['CrpvMF','DirvMF']:
         cfg['m0'] = np.zeros(D); cfg['m0'][0] = 1.
         cfg['t0'] = 0.01
         cfg['a0'] = 3.0
         cfg['b0'] = 2.7
+        cfg['K'] = int(param)
       for t in range(cfg['nRun']):
         cfg['runId'] = t;
         z,measures = run(cfg,reRun)
@@ -227,7 +238,8 @@ for i,base in enumerate(bases):
         MI[j,t] = mutualInfo(z[-1,:],zGt)
         Hz[j,t] = entropy(z[-1,:])
         Hgt[j,t] = entropy(zGt)
-        Ns[base][j,t] = int(np.max(z[-1,:])+1)
+#        Ns[base][j,t] = int(np.max(z[-1,:])+1)
+        Ns[base][j,t] = int(np.unique(z[-1,:]).size)
     np.savetxt(cfg['outName']+'_MI.csv',MI);
     np.savetxt(cfg['outName']+'_Hgt.csv',Hgt);
     np.savetxt(cfg['outName']+'_Hz.csv',Hz);
@@ -241,6 +253,10 @@ for i,base in enumerate(bases):
   vMeasures[base] = 2.* MI / (Hz+Hgt)
   print mis[base].shape, nmis[base].shape, vMeasures[base].shape
 #  print nmis[i,t], 2.*MI[t], Hz[t], Hgt[t]
+  print mis[base]
+  print nmis[base]
+  print Ns[base]
+  print Sils[base]
 
 print "done with the runs"
 

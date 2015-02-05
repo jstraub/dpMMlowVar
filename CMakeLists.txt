@@ -104,6 +104,15 @@ target_link_libraries(testSO3
   boost_unit_test_framework
   )
 
+add_executable(testSpkmCUDA ./test/spkmCUDA.cpp
+  )
+target_link_libraries(testSpkmCUDA
+  dpMMlowVar
+  boost_system
+  boost_random
+  boost_unit_test_framework
+  )
+
 add_executable(testClusterer ./test/kmeans.cpp
   )
 target_link_libraries(testClusterer

@@ -66,6 +66,9 @@ struct Spherical //: public DataSpace<T>
     Cluster() : centroid_(0,1), xSum_(0,1), N_(0)
     {};
 
+    Cluster(uint32_t D) : centroid_(D,1), xSum_(0,1), N_(0)
+    {};
+
     Cluster(const Matrix<T,Dynamic,1>& x_i) : centroid_(x_i), xSum_(x_i), N_(1)
     {};
 
@@ -139,6 +142,10 @@ struct Spherical //: public DataSpace<T>
 
     DependentCluster() : Cluster(), t_(0), w_(0), beta_(1), lambda_(1), Q_(1),
       prevCentroid_(this->centroid_)
+    {};
+
+    DependentCluster(uint32_t D) : Cluster(D), t_(0), w_(0), beta_(1),
+      lambda_(1), Q_(1), prevCentroid_(this->centroid_)
     {};
 
     DependentCluster(const Matrix<T,Dynamic,1>& x_i) : Cluster(x_i), t_(0),

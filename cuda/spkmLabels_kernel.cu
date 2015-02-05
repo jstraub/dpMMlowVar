@@ -28,12 +28,13 @@ __global__ void spkmLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
     q_i[0] = d_q[id*DIM];
     q_i[1] = d_q[id*DIM+1];
     q_i[2] = d_q[id*DIM+2];
-    if (q_i[0]!=q_i[0] || q_i[1]!=q_i[1] || q_i[2]!=q_i[2])
+    if (q_i[0]==q_i[0] && q_i[1]==q_i[1] && q_i[2]==q_i[2])
     {
 #pragma unroll
       for (uint32_t k=0; k<K; ++k)
       {
         T sim_k = min(1.0,max(-1.0,q_i[0]*p_k[0] + q_i[1]*p_k[1] + q_i[2]*p_k[2]));
+//        printf("%d %f",tid,sim_k);
         if(sim_k > sim_closest)
         {
           sim_closest = sim_k;
@@ -68,7 +69,7 @@ __global__ void spkmLabelAssignFlexK_kernel(T *d_q, T *d_p, uint32_t *z,
     q_i[0] = d_q[id*DIM];
     q_i[1] = d_q[id*DIM+1];
     q_i[2] = d_q[id*DIM+2];
-    if (q_i[0]!=q_i[0] || q_i[1]!=q_i[1] || q_i[2]!=q_i[2])
+    if (q_i[0]==q_i[0] && q_i[1]==q_i[1] && q_i[2]==q_i[2])
     {
       for (uint32_t k=0; k<K; ++k)
       {

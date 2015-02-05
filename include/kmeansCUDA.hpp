@@ -34,6 +34,7 @@ public:
   virtual ~KMeansCUDA();
 
   virtual void updateLabels();
+  virtual void updateCenters();
   virtual void nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   void getZfromGpu() {this->cld_->z();};
@@ -44,6 +45,10 @@ protected:
   GpuMatrix<T> d_p_;
   virtual void setupComputeLabelsGPU();
 };
+typedef KMeansCUDA<double, Euclidean<double> > kmeansCUDAd;
+typedef KMeansCUDA<float, Euclidean<float> > kmeansCUDAf;
+typedef KMeansCUDA<double, Spherical<double> > spkmCUDAd;
+typedef KMeansCUDA<float, Spherical<float> > spkmCUDAf;
 
 // ------------------------- impl --------------------------------------
 template<class T, class DS>
@@ -52,24 +57,41 @@ KMeansCUDA<T,DS>::KMeansCUDA( const shared_ptr<ClDataGpu<T> >& cld)
 {}
 
 template<class T, class DS>
+KMeansCUDA<T,DS>::~KMeansCUDA()
+{}
+
+template<class T, class DS>
 void KMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
     uint32_t offset) 
 { 
   this->cls_.clear();
-  for (uint32_t k=0; k<K_; ++k)
-    cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
-
+  for (uint32_t k=0; k<this->K_; ++k)
+    this->cls_.push_back(shared_ptr<typename DS::DependentCluster >(
+          new typename DS::DependentCluster()));
   this->cld_->updateData(d_x,N,step,offset);
   this->N_ = this->cld_->N();
-  this->cld_->randomLabels(K_);
-  this->cld_->updateLabels(K_);
+  this->cld_->randomLabels(this->K_);
+  this->cld_->updateLabels(this->K_);
   this->cld_->computeSS();
   for(uint32_t k=0; k<this->K_; ++k)
     this->cls_[k]->updateCenter(this->cld_,k);
 };
 
 template<class T, class DS>
-void KMeansCUDA<T,DS>::setupComputeLabelsGPU();
+void KMeansCUDA<T,DS>::updateCenters()
+{
+  this->prevNs_.resize(this->K_);
+  for(uint32_t k=0; k<this->K_; ++k)
+    this->prevNs_(k) = this->cls_[k]->N();
+
+//  this->cld_->updateLabels(this->K_);
+  this->cld_->computeSS();
+  for(uint32_t k=0; k<this->K_; ++k)
+    this->cls_[k]->updateCenter(this->cld_,k);
+}
+
+template<class T, class DS>
+void KMeansCUDA<T,DS>::setupComputeLabelsGPU()
 {
   Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
   for(uint32_t k=0; k<this->K_; ++k)
@@ -88,30 +110,30 @@ template<>
 void KMeansCUDA<double,Spherical<double> >::updateLabels()
 {
   this->setupComputeLabelsGPU();
-  spkmLabels_gpu(this->cld->d_x(),d_p_.data(),this->cld->d_z(),
-      this->cld->N());
+  spkmLabels_gpu(this->cld_->d_x(),d_p_.data(),this->cld_->d_z(),
+      this->K_, this->cld_->N());
 }
 
 template<>
 void KMeansCUDA<float,Spherical<float> >::updateLabels()
 {
   this->setupComputeLabelsGPU();
-  spkmLabels_gpu(this->cld->d_x(),d_p_.data(),this->cld->d_z(),
-      this->cld->N());
+  spkmLabels_gpu(this->cld_->d_x(),d_p_.data(),this->cld_->d_z(),
+      this->K_, this->cld_->N());
 }
 
 template<>
 void KMeansCUDA<double,Euclidean<double> >::updateLabels()
 {
   this->setupComputeLabelsGPU();
-  kmeansLabels_gpu(this->cld->d_x(),d_p_.data(),this->cld->d_z(),
-      this->cld->N());
+  kmeansLabels_gpu(this->cld_->d_x(),d_p_.data(),this->cld_->d_z(),
+      this->K_, this->cld_->N());
 }
 
 template<>
 void KMeansCUDA<float,Euclidean<float> >::updateLabels()
 {
   this->setupComputeLabelsGPU();
-  kmeansLabels_gpu(this->cld->d_x(),d_p_.data(),this->cld->d_z(),
-      this->cld->N());
+  kmeansLabels_gpu(this->cld_->d_x(),d_p_.data(),this->cld_->d_z(),
+      this->K_, this->cld_->N());
 }

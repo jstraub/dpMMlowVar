@@ -6,6 +6,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include "clusterer.hpp"
+#include "sphericalData.hpp"
+#include "euclideanData.hpp"
 
 using namespace Eigen;
 using std::cout;
@@ -32,10 +34,15 @@ public:
       && (prevNs_.array() == this->counts().array()).all();
   };
 
-private:
+protected:
   VectorXu prevNs_;
-
 };
+
+typedef KMeans<double, Euclidean<double> > kmeansd;
+typedef KMeans<float, Euclidean<float> > kmeansf;
+typedef KMeans<double, Spherical<double> > spkmd;
+typedef KMeans<float, Spherical<float> > spkmf;
+
 
 // --------------------------- impl -------------------------------------------
 template<class T, class DS>

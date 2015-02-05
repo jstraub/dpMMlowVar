@@ -78,16 +78,18 @@ Clusterer<T,DS>::Clusterer( const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
   cld_(new ClData<T>(spx,K))
 {
   for (uint32_t k=0; k<K_; ++k)
-    cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
+    cls_.push_back(shared_ptr<typename DS::DependentCluster >(
+          new typename DS::DependentCluster(D_)));
 };
 
 template<class T, class DS>
-Clusterer<T,DS>::Clusterer( const shared_ptr<ClData<T> >& cld)
+Clusterer<T,DS>::Clusterer(const shared_ptr<ClData<T> >& cld)
   : K_(cld->K()), D_(cld->D()), N_(cld->N()), cost_(INFINITY), prevCost_(INFINITY),
   cld_(cld)
 {
   for (uint32_t k=0; k<K_; ++k)
-    cls_.push_back(shared_ptr<typename DS::DependentCluster >(new typename DS::DependentCluster()));
+    cls_.push_back(shared_ptr<typename DS::DependentCluster >(
+          new typename DS::DependentCluster(D_)));
 };
 
 template<class T, class DS>

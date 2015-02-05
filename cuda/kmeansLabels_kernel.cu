@@ -29,7 +29,7 @@ __global__ void kmeansLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
     q_i[0] = d_q[id*DIM];
     q_i[1] = d_q[id*DIM+1];
     q_i[2] = d_q[id*DIM+2];
-    if (q_i[0]!=q_i[0] || q_i[1]!=q_i[1] || q_i[2]!=q_i[2])
+    if (q_i[0]==q_i[0] && q_i[1]==q_i[1] && q_i[2]==q_i[2])
     {
 #pragma unroll
       for (uint32_t k=0; k<K; ++k)
@@ -70,7 +70,7 @@ __global__ void kmeansLabelAssignFlexK_kernel(T *d_q, T *d_p, uint32_t *z,
     q_i[0] = d_q[id*DIM];
     q_i[1] = d_q[id*DIM+1];
     q_i[2] = d_q[id*DIM+2];
-    if (q_i[0]!=q_i[0] || q_i[1]!=q_i[1] || q_i[2]!=q_i[2])
+    if (q_i[0]==q_i[0] && q_i[1]==q_i[1] && q_i[2]==q_i[2])
     {
       for (uint32_t k=0; k<K; ++k)
       {

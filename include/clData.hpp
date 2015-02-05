@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <Eigen/Dense>
 
+#include <global.hpp>
+
 using namespace Eigen;
 using std::vector;
 using std::cout;

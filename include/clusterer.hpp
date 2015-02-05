@@ -129,7 +129,7 @@ T Clusterer<T,DS>::silhouette()
       {
         b(cld_->z(j)) += DS::dissimilarity(cld_->x()->col(i),cld_->x()->col(j));
       }
-    for (uint32_t k=0; k<K_; ++k) b /= cls_[k]->N();
+    for (uint32_t k=0; k<K_; ++k) b(k) /= cls_[k]->N();
 //    b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
     T a_i = b(cld_->z(i)); // average dist to own cluster
     T b_i = cld_->z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster

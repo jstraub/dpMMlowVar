@@ -94,10 +94,7 @@ void spkmLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
-  if(K == 0){
-    spkmLabelAssign_kernel<double,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, N);
-  }else if(K == 1){
+  if(K == 1){
     spkmLabelAssign_kernel<double,1,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, N);  
   }else if(K == 2){
@@ -175,10 +172,7 @@ void spkmLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
-  if(K == 0){
-    spkmLabelAssign_kernel<float,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, N);
-  }else if(K == 1){
+  if(K == 1){
     spkmLabelAssign_kernel<float,1,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, N);  
   }else if(K == 2){

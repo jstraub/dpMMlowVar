@@ -85,6 +85,8 @@ message(${EIGEN3_INCLUDE_DIR})
     ./cuda/choiceMult_kernel.cu
     ./cuda/labelMap_kernel.cu
     ./cuda/ddpLabelsSpecial_kernel.cu
+    ./cuda/spkmLabels_kernel.cu
+    ./cuda/kmeansLabels_kernel.cu
     )
   target_link_libraries(dpMMlowVar
     boost_system

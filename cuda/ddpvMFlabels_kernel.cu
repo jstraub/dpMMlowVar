@@ -87,7 +87,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
     uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T beta, T Q, uint32_t *d_iAction, 
     uint32_t i0, uint32_t N)
 {
-  __shared__ T p[DIM*(K+1)]; // TODO: K+1 seems one too much
+  __shared__ T p[DIM*(K+1)]; // K+1 because K might be 0 and 0 size arrays are not appreciated
 //  __shared__ T ages[K+1];
   __shared__ T Ns[K+1];
 //  __shared__ T ws[K+1];
@@ -179,8 +179,7 @@ void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
   if(K == 0){
-    ddpvMFlabelAssign_kernel<double,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    *d_iAction =0;
   }else if(K == 1){
     ddpvMFlabelAssign_kernel<double,1,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
@@ -246,8 +245,7 @@ void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
   if(K == 0){
-    ddpvMFlabelAssign_kernel<float,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
+    *d_iAction = 0;
   }else if(K == 1){
     ddpvMFlabelAssign_kernel<float,1,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);

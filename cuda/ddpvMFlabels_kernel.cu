@@ -87,7 +87,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
     uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T beta, T Q, uint32_t *d_iAction, 
     uint32_t i0, uint32_t N)
 {
-  __shared__ T p[DIM*(K+1)];
+  __shared__ T p[DIM*(K+1)]; // TODO: K+1 seems one too much
 //  __shared__ T ages[K+1];
   __shared__ T Ns[K+1];
 //  __shared__ T ws[K+1];
@@ -123,7 +123,6 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
     }else{
       for (uint32_t k=0; k<K; ++k)
       {
-        //      T dot = (this->ps_.col(k).transpose()*x_i)(0);
         T dot = min(1.0,max(-1.0,q_i[0]*p_k[0] + q_i[1]*p_k[1] + q_i[2]*p_k[2]));
         T zeta = acos(dot);
 

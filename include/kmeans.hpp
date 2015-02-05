@@ -38,7 +38,6 @@ private:
 };
 
 // --------------------------- impl -------------------------------------------
-
 template<class T, class DS>
 KMeans<T,DS>::KMeans(
     const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K)

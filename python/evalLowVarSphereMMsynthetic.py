@@ -57,8 +57,6 @@ def entropy(z):
   return H
 
 def run(cfg,reRun):
-  #args = ['../build/dpSubclusterSphereGMM',
-#  args = ['../build/dpStickGMM',
   K = cfg['K']
   if cfg['base'] in ['CrpvMF']:
     args = ['../../dpMMshared/build/dpmmSampler', '--alpha 1.0']
@@ -70,10 +68,10 @@ def run(cfg,reRun):
     K = 1
   else:
     params = np.array([cfg['lambda']])
-    args = ['../build/dpMMlowVarCluster',
-        '--shuffle']
+    args = ['../build/dpMMlowVarCluster']
   args = args + ['--seed {}'.format(int(time.time()*100000) - 100000*int(time.time())),
     '--silhouette',
+    '--shuffle',
     '-N {}'.format(N), #TODO: read N,D from file!
     '-D {}'.format(D),
     '-K {}'.format(K),
@@ -151,7 +149,7 @@ paramBase = {
     'CrpvMF':np.array([5.0]),
     'DirvMF':np.array([100])}
 cfg['T'] = 1000 # 100
-cfg['nRun'] = 1 #50
+cfg['nRun'] = 50
 
 cfg['dataPath'] = dataPath
 
@@ -166,9 +164,9 @@ bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
 bases = ['CrpvMF']
-bases = ['DPvMFmeans','spkm']
 bases = ['DirvMF']
-bases = ['spkm']
+bases = ['DPvMFmeans','spkm','DirvMF']
+bases = ['spkm','DirvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \

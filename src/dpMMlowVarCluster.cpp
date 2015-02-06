@@ -179,7 +179,7 @@ int main(int argc, char **argv)
       cout<<"   K="<<clustSp->getK()<<" " <<z.size()<<endl;
       if(clustSp->getK()>0)
       {
-        cout<<"  counts=   "<< clustEu->counts().transpose();
+        cout<<"  counts=   "<< clustSp->counts().transpose();
         cout<<" avg deviation  "<<deviation<<endl;
       }
       foutJointLike<<deviation<<endl;

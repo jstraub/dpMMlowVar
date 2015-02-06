@@ -4,9 +4,10 @@
 #include <string>
 #include <boost/program_options.hpp>
 
-#include "spkm.hpp"
+//#include "spkm.hpp"
 #include "kmeans.hpp"
-#include "ddpvMFmeans.hpp"
+//#include "ddpvMFmeans.hpp"
+#include "ddpmeans.hpp"
 #include "timer.hpp"
 
 using namespace Eigen;
@@ -58,7 +59,7 @@ int main(int argc, char **argv)
   uint64_t seed = time(0);
   if(vm.count("seed"))
     seed = static_cast<uint64_t>(vm["seed"].as<int>());
-  mt19937 rndGen(seed);
+//  boost::mt19937 rndGen(seed);
   std::srand(seed);
   uint32_t K=5;
   if (vm.count("K")) K = vm["K"].as<int>();
@@ -123,7 +124,8 @@ int main(int argc, char **argv)
     if(err>0) return 0;
   }
   
-  Clusterer<double> *clusterer = NULL;
+  Clusterer<double, Spherical<double> > *clustSp = NULL;
+  Clusterer<double, Euclidean<double> > *clustEu = NULL;
   if(!base.compare("DPvMFmeans")){
     double lambda = cos(5.0*M_PI/180.0);
     if(vm.count("params"))
@@ -132,14 +134,16 @@ int main(int argc, char **argv)
       cout<<"params length="<<params.size()<<endl;
       lambda = params[0];
     }
-//    clusterer = new DPvMFMeans<double>(spx, K, lambda, &rndGen);
-    clusterer = new DDPvMFMeans<double>(spx, lambda, 1. , 0. , &rndGen);
+//    clustSp = new DPvMFMeans<double>(spx, K, lambda, &rndGen);
+//    clustSp = new DDPvMFMeans<double>(spx, lambda, 1. , 0. , &rndGen);
+    clustSp = new DDPMeans<double,Spherical<double> >(spx, lambda, 1. , 0.);
   }else if(!base.compare("spkm")){
-    clusterer = new SphericalKMeans<double>(spx, K, &rndGen);
+    clustSp = new KMeans<double,Spherical<double> >(spx, K);
+//    clustSp = new SphericalKMeans<double>(spx, K, &rndGen);
 //  }else if(!base.compare("spkmKarcher")){
-//    clusterer = new SphericalKMeansKarcher<double>(spx, K, &rndGen);
+//    clustSp = new SphericalKMeansKarcher<double>(spx, K, &rndGen);
   }else if(!base.compare("kmeans")){
-    clusterer = new KMeans<double>(spx, K, &rndGen);
+    clustEu = new KMeans<double,Euclidean<double> >(spx, K);
   }else{
     cout<<"base "<<base<<" not supported"<<endl;
     return 1;
@@ -150,42 +154,82 @@ int main(int argc, char **argv)
     pathOut = vm["output"].as<string>();
   cout<<"output to "<<pathOut<<endl;
 
+  double silhouette = -1.;
+  MatrixXd deviates;
+  MatrixXd centroids;
+  MatrixXu inds;
   ofstream fout(pathOut.data(),ofstream::out);
   ofstream foutJointLike((pathOut+"_jointLikelihood.csv").data(),ofstream::out);
   Timer watch;
-  for (uint32_t t=0; t<T; ++t)
+  if(clustSp != NULL)
   {
-    cout<<"------------ t="<<t<<" -------------"<<endl;
-    watch.tic();
-    clusterer->updateCenters();
-    watch.toctic("-- updateCenters");
-
-    const VectorXu& z = clusterer->z();
-    for (uint32_t i=0; i<z.size()-1; ++i) 
-      fout<<z(ind[i])<<" ";
-    fout<<z(ind[z.size()-1])<<endl;
-    double deviation = clusterer->avgIntraClusterDeviation();
-
-    cout<<"   K="<<clusterer->getK()<<" " <<z.size()<<endl;
-    if(clusterer->getK()>0)
+    for (uint32_t t=0; t<T; ++t)
     {
-      cout<<"  counts=   "<<counts<double,uint32_t>(z,clusterer->getK()).transpose();
-      cout<<" avg deviation  "<<deviation<<endl;
-    }
-    foutJointLike<<deviation<<endl;
+      cout<<"------------ t="<<t<<" -------------"<<endl;
+      watch.tic();
+      clustSp->updateCenters();
+      watch.toctic("-- updateCenters");
 
-    watch.tic();
-    clusterer->updateLabels();
-    watch.toctic("-- updateLabels");
-    cout<<" cost fct value "<<clusterer->cost()<< "\tconverged? "<<clusterer->converged()<<endl;
-    if(clusterer->converged()) break;
+      const VectorXu& z = clustSp->z();
+      for (uint32_t i=0; i<z.size()-1; ++i) 
+        fout<<z(ind[i])<<" ";
+      fout<<z(ind[z.size()-1])<<endl;
+      double deviation = clustSp->avgIntraClusterDeviation();
+
+      cout<<"   K="<<clustSp->getK()<<" " <<z.size()<<endl;
+      if(clustSp->getK()>0)
+      {
+        cout<<"  counts=   "<< clustEu->counts().transpose();
+        cout<<" avg deviation  "<<deviation<<endl;
+      }
+      foutJointLike<<deviation<<endl;
+
+      watch.tic();
+      clustSp->updateLabels();
+      watch.toctic("-- updateLabels");
+      cout<<" cost fct value "<<clustSp->cost()<< "\tconverged? "<<clustSp->converged()<<endl;
+      if(clustSp->converged()) break;
+    }
+    if(vm.count("silhouette")) silhouette = clustSp->silhouette();
+    if(vm.count("mlInds")) inds = clustSp->mostLikelyInds(10,deviates);
+    if(vm.count("centroids")) centroids = clustSp->centroids();
+  }else if(clustEu != NULL)
+  {
+    for (uint32_t t=0; t<T; ++t)
+    {
+      cout<<"------------ t="<<t<<" -------------"<<endl;
+      watch.tic();
+      clustEu->updateCenters();
+      watch.toctic("-- updateCenters");
+
+      const VectorXu& z = clustEu->z();
+      for (uint32_t i=0; i<z.size()-1; ++i) 
+        fout<<z(ind[i])<<" ";
+      fout<<z(ind[z.size()-1])<<endl;
+      double deviation = clustEu->avgIntraClusterDeviation();
+
+      cout<<"   K="<<clustEu->getK()<<" " <<z.size()<<endl;
+      if(clustEu->getK()>0)
+      {
+        cout<<"  counts=   "<< clustEu->counts().transpose();
+        cout<<" avg deviation  "<<deviation<<endl;
+      }
+      foutJointLike<<deviation<<endl;
+
+      watch.tic();
+      clustEu->updateLabels();
+      watch.toctic("-- updateLabels");
+      cout<<" cost fct value "<<clustEu->cost()<< "\tconverged? "<<clustEu->converged()<<endl;
+      if(clustEu->converged()) break;
+    }
+    if(vm.count("silhouette")) silhouette = clustEu->silhouette();
+    if(vm.count("mlInds")) inds = clustEu->mostLikelyInds(10,deviates);
+    if(vm.count("centroids")) centroids = clustEu->centroids();
   }
-  //TODO do I need updateState for DPvMF means here??
   fout.close();
 
   if(vm.count("silhouette")) 
   {
-    double silhouette = clusterer->silhouette();
     cout<<"silhouette = "<<silhouette<<" saved to "<<(pathOut+"_measures.csv")<<endl;
     fout.open((pathOut+"_measures.csv").data(),ofstream::out);
     fout<<silhouette<<endl;
@@ -194,8 +238,6 @@ int main(int argc, char **argv)
 
   if(vm.count("mlInds")) 
   {
-    MatrixXd deviates;
-    MatrixXu inds = clusterer->mostLikelyInds(10,deviates);
     cout<<"most likely indices"<<endl;
     cout<<inds<<endl;
     cout<<"----------------------------------------"<<endl;
@@ -209,7 +251,7 @@ int main(int argc, char **argv)
   if(vm.count("centroids")) 
   {
     ofstream foutMeans((pathOut+"_means.csv").data(),ofstream::out);
-    foutMeans << clusterer->centroids()<<endl;
+    foutMeans << centroids <<endl;
     foutMeans.close();
   }
 

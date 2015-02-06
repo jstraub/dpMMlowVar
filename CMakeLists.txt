@@ -121,6 +121,15 @@ target_link_libraries(testClusterer
   boost_unit_test_framework
   )
 
+add_executable(dpMMlowVarCluster ./src/dpMMlowVarCluster.cpp
+  )
+target_link_libraries(dpMMlowVarCluster
+  dpMMlowVar
+  boost_system
+  boost_random
+  boost_program_options
+  )
+
 add_executable(ddpImageCluster ./src/ddpImageCluster.cpp
   )
 target_link_libraries(ddpImageCluster

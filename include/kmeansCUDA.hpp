@@ -83,10 +83,10 @@ void KMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
       this->cls_[k]->updateCenter(this->cld_,k);
   }else{
     for (uint32_t k=0; k<this->K_; ++k)
-      if(this->cls_[k]->count() == 0)
+      if(this->cls_[k]->N() == 0)
       {
         int rid = int(floor(N*double(std::rand())/double(RAND_MAX)));
-        this->cls_[k]->centroid() = this->cld_->x().col(rid);
+        this->cls_[k]->centroid() = this->cld_->x()->col(rid);
       }
   }
 };

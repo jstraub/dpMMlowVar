@@ -35,7 +35,8 @@ public:
 
   virtual void updateLabels();
   virtual void updateCenters();
-  virtual void nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
+  virtual void nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step, uint32_t
+      offset, bool reset = false);
 
   void getZfromGpu() {this->cld_->z();};
   uint32_t* d_z(){ return this->cdl_->d_z();};
@@ -62,19 +63,25 @@ KMeansCUDA<T,DS>::~KMeansCUDA()
 
 template<class T, class DS>
 void KMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
-    uint32_t offset) 
+    uint32_t offset, bool reset) 
 { 
-  this->cls_.clear();
-  for (uint32_t k=0; k<this->K_; ++k)
-    this->cls_.push_back(shared_ptr<typename DS::DependentCluster >(
-          new typename DS::DependentCluster()));
+  if(reset)
+  {
+    this->cls_.clear();
+    for (uint32_t k=0; k<this->K_; ++k)
+      this->cls_.push_back(shared_ptr<typename DS::DependentCluster >(
+            new typename DS::DependentCluster()));
+  }
   this->cld_->updateData(d_x,N,step,offset);
   this->N_ = this->cld_->N();
-  this->cld_->randomLabels(this->K_);
-  this->cld_->updateLabels(this->K_);
-  this->cld_->computeSS();
-  for(uint32_t k=0; k<this->K_; ++k)
-    this->cls_[k]->updateCenter(this->cld_,k);
+  if(reset)
+  {
+    this->cld_->randomLabels(this->K_);
+    this->cld_->updateLabels(this->K_);
+    this->cld_->computeSS();
+    for(uint32_t k=0; k<this->K_; ++k)
+      this->cls_[k]->updateCenter(this->cld_,k);
+  }
 };
 
 template<class T, class DS>

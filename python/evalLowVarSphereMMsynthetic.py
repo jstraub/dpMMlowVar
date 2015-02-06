@@ -151,7 +151,7 @@ paramBase = {
     'CrpvMF':np.array([5.0]),
     'DirvMF':np.array([100])}
 cfg['T'] = 1000 # 100
-cfg['nRun'] = 50
+cfg['nRun'] = 1 #50
 
 cfg['dataPath'] = dataPath
 
@@ -165,10 +165,10 @@ else:
 bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
-bases = ['spkm']
 bases = ['CrpvMF']
 bases = ['DPvMFmeans','spkm']
 bases = ['DirvMF']
+bases = ['spkm']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \

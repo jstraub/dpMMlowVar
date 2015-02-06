@@ -57,8 +57,8 @@ struct Euclidean //: public DataSpace<T>
       assert(this->centroid()(0) == this->centroid()(0));
       if(N_ > 0)
         centroid_ = xSum_/N_;
-      else
-        centroid_ = xSum_;
+//      else
+//        centroid_ = xSum_;
     };
 
     void updateSS(const shared_ptr<ClData<T> >& cld, uint32_t k)
@@ -73,6 +73,12 @@ struct Euclidean //: public DataSpace<T>
       updateCenter();
 //      cout<<centroid_.transpose()<<endl;
     };
+
+    void resetCenter(const shared_ptr<ClData<T> >& cld)
+    {
+      int rid = int(floor(cld->N()*double(std::rand())/double(RAND_MAX)));
+      centroid_ = cld->x()->col(rid);
+    }
 
     void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
         const uint32_t k)

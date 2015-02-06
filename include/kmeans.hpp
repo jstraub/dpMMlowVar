@@ -103,7 +103,10 @@ void KMeans<T,DS>::updateCenters()
   this->cld_->updateLabels(this->K_);
   this->cld_->computeSS();
   for(uint32_t k=0; k<this->K_; ++k)
-    this->cls_[k]->updateCenter(this->cld_,k);
+    if(this->cls_[k]->N() == 0)
+      this->cls_[k]->resetCenter(this->cld_);
+    else
+      this->cls_[k]->updateCenter(this->cld_,k);
 }
 
 template<class T, class DS>

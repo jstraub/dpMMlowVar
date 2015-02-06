@@ -34,6 +34,12 @@ public:
       && (prevNs_.array() == this->counts().array()).all();
   };
 
+  virtual bool convergedCounts(uint32_t dCounts) 
+  {
+    return this->counts().size() > 0 && this->counts().size() == prevNs_.size()
+      && ((prevNs_.array() - this->counts().array()).abs() < dCounts ).all();
+  };
+
 
 protected:
   VectorXu prevNs_;

@@ -59,6 +59,8 @@ public:
 
   virtual T silhouette();
 
+//  virtual void dumpStats(std::ofstream& fout);
+
 protected:
   uint32_t K_;
   const uint32_t D_;
@@ -78,8 +80,11 @@ Clusterer<T,DS>::Clusterer( const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
   cld_(new ClData<T>(spx,K))
 {
   for (uint32_t k=0; k<K_; ++k)
+  {
     cls_.push_back(shared_ptr<typename DS::DependentCluster >(
           new typename DS::DependentCluster(D_)));
+    cls_[k]->globalId = k;
+  }
 };
 
 template<class T, class DS>
@@ -88,8 +93,11 @@ Clusterer<T,DS>::Clusterer(const shared_ptr<ClData<T> >& cld)
   cld_(cld)
 {
   for (uint32_t k=0; k<K_; ++k)
+  {
     cls_.push_back(shared_ptr<typename DS::DependentCluster >(
           new typename DS::DependentCluster(D_)));
+    cls_[k]->globalId = k;
+  }
 };
 
 template<class T, class DS>
@@ -147,3 +155,14 @@ T Clusterer<T,DS>::silhouette()
   }
   return sil.sum()/static_cast<T>(N_);
 };
+
+//template<class T, class DS>
+//void Clusterer<T,DS>::dumpStats(std::ofstream& fout)
+//{
+//  fout<<this->K_<<" "<<this->cost_<<" ";
+//  for(uint32_t k=0; k< this->K_; ++k)
+//    fout<<this->cls_[k]->N()<<" ";
+//  for(uint32_t k=0; k< this->K_-1; ++k)
+//    fout<<this->cls_[k]->globalId<<" ";
+//  fout<<this->cls_[this->K_-1]->globalId<<endl;
+//};

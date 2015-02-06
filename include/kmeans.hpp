@@ -34,6 +34,7 @@ public:
       && (prevNs_.array() == this->counts().array()).all();
   };
 
+
 protected:
   VectorXu prevNs_;
 };
@@ -164,3 +165,4 @@ T KMeans<T,DS>::avgIntraClusterDeviation()
   }
   return deviates.sum()/ this->N_;
 }
+

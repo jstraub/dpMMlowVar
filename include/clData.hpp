@@ -183,11 +183,13 @@ void ClData<T>::computeSS()
   xSums_.setZero(D_,K_);
 
 #pragma omp parallel for
-  for(uint32_t i=0; i<N_; ++i)
-  {
-    xSums_.col((*z_)(i)) += x_->col(i);
-    Ns_((*z_)(i))++;
-  }
+  for(uint32_t k=0; k<K_; ++k)
+    for(uint32_t i=0; i<N_; ++i)
+      if(k == (*z_)(i))
+    {
+      xSums_.col(k) += x_->col(i);
+      Ns_(k)++;
+    }
 }
 
 template<class T>

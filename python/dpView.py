@@ -64,7 +64,6 @@ cfg['rootPath'] = '/home/jstraub/workspace/research/vpCluster/data/'
 cfg['rootPath'] = '~/workspace/research/vpCluster/data/'
 cfg['outputPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/'
 cfg['rootPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
-cfg['rootDataPath'] = '/data/vision/fisher/data1/nyu_depth_v2/extracted/'
 #cfg['base'] = 'DpNiwSphereFull';
 #cfg['base'] = 'spkm';
 #cfg['base'] = 'DpNiw';
@@ -168,9 +167,9 @@ for ind in rndInds:
     print '  ** rerun False but '+cfg['outName'] + '_measures.csv not existing => run inference!'
     reRun = True;
 
-  print 'processing '+cfg['rootDataPath']+cfg['dataPath']
+  print 'processing '+cfg['rootPath']+cfg['dataPath']
   rgbd = RgbdFrame(460.0) # correct: 540
-  rgbd.load(cfg['rootDataPath']+cfg['dataPath'])
+  rgbd.load(cfg['rootPath']+cfg['dataPath'])
   if 'disp' in mode:
     rgbd.showRgbd(fig=fig0)
   rgbd.getPc()

@@ -32,7 +32,7 @@ int main(int argc, char **argv)
       "same")
     ("K,K", po::value<int>(), "number of initial clusters ")
     ("base", po::value<string>(), 
-      "which base measure to use (only spkm, kmeans, DPvMFMeans right now)")
+      "which base measure to use (only spkm, kmeans, DPvMFmeans right now)")
     ("params,p", po::value< vector<double> >()->multitoken(), 
       "parameters of the base measure")
     ("input,i", po::value<string>(), 

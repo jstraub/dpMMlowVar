@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <clData.hpp>
 
+using namespace Eigen;
 using std::min;
 using std::max;
 
@@ -49,7 +50,8 @@ inline Matrix<T,Dynamic,Dynamic> rotationFromAtoB(const Matrix<T,Dynamic,1>& a,
       (cos(alpha)-1.)*(b*b.transpose() + c*c.transpose());
   }
   return bRa;
-}
+};
+
 
 template<typename T>
 struct Spherical //: public DataSpace<T>
@@ -282,6 +284,73 @@ struct Spherical //: public DataSpace<T>
   static Matrix<T,Dynamic,1> computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
       const VectorXu& z, const uint32_t k, uint32_t* N_k);
 };
+
+template<>
+double silhouetteClD<double, Spherical<double> >(const ClData<double>& cld)
+{ 
+  if(cld.K()<2) return -1.0;
+//  assert(Ns_.sum() == N_);
+  Matrix<double,Dynamic,1> sil(cld.N());
+  Matrix<double,Dynamic,Dynamic> xSums = cld.xSums();
+#pragma omp parallel for
+  for(uint32_t i=0; i<cld.N(); ++i)
+  {
+    Matrix<double,Dynamic,1> b = Matrix<double,Dynamic,1>::Zero(cld.K());
+    for(uint32_t k=0; k<cld.K(); ++k)
+      if (k == cld.z(i))
+        b(k) = 1.-(cld.x()->col(i).transpose()*(xSums.col(k) - cld.x()->col(i)))(0)/static_cast<double>(cld.count(k));
+      else
+        b(k) = 1.-(cld.x()->col(i).transpose()*xSums.col(k))(0)/static_cast<double>(cld.count(k));
+    double a_i = b(cld.z(i)); // average dist to own cluster
+    double b_i = cld.z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+    for(uint32_t k=0; k<cld.K(); ++k)
+      if(k != cld.z(i) && b(k) == b(k) && b(k) < b_i && cld.count(k) > 0)
+      {
+        b_i = b(k);
+      }
+    if(a_i < b_i)
+      sil(i) = 1.- a_i/b_i;
+    else if(a_i > b_i)
+      sil(i) = b_i/a_i - 1.;
+    else
+      sil(i) = 0.;
+  }
+  return sil.sum()/static_cast<double>(cld.N());
+};
+
+template<>
+float silhouetteClD<float, Spherical<float> >(const ClData<float>& cld)
+{ 
+  if(cld.K()<2) return -1.0;
+//  assert(Ns_.sum() == N_);
+  Matrix<float,Dynamic,1> sil(cld.N());
+  Matrix<float,Dynamic,Dynamic> xSums = cld.xSums();
+#pragma omp parallel for
+  for(uint32_t i=0; i<cld.N(); ++i)
+  {
+    Matrix<float,Dynamic,1> b = Matrix<float,Dynamic,1>::Zero(cld.K());
+    for(uint32_t k=0; k<cld.K(); ++k)
+      if (k == cld.z(i))
+        b(k) = 1.-(cld.x()->col(i).transpose()*(xSums.col(k) - cld.x()->col(i)))(0)/static_cast<float>(cld.count(k));
+      else
+        b(k) = 1.-(cld.x()->col(i).transpose()*xSums.col(k))(0)/static_cast<float>(cld.count(k));
+    float a_i = b(cld.z(i)); // average dist to own cluster
+    float b_i = cld.z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+    for(uint32_t k=0; k<cld.K(); ++k)
+      if(k != cld.z(i) && b(k) == b(k) && b(k) < b_i && cld.count(k) > 0)
+      {
+        b_i = b(k);
+      }
+    if(a_i < b_i)
+      sil(i) = 1.- a_i/b_i;
+    else if(a_i > b_i)
+      sil(i) = b_i/a_i - 1.;
+    else
+      sil(i) = 0.;
+  }
+  return sil.sum()/static_cast<float>(cld.N());
+};
+
 
 // ================================ impl ======================================
 

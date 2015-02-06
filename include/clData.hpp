@@ -49,7 +49,7 @@ public:
   virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   virtual VectorXu& z() {return *z_;};
-  virtual uint32_t& z(uint32_t i) {return (*z_)(i);};
+  virtual uint32_t& z(uint32_t i) const {return (*z_)(i);};
   virtual const spVectorXu& labels() const {return z_;};
   virtual const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x() const {return x_;};
 
@@ -74,7 +74,7 @@ typedef ClData<float> ClDataf;
 typedef ClData<double> ClDatad;
 
 template<class T, class DS>
-T silhouette(const ClData<T>& cld)
+T silhouetteClD(const ClData<T>& cld)
 { 
   if(cld.K()<2) return -1.0;
 //  assert(Ns_.sum() == N_);

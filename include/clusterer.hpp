@@ -125,35 +125,37 @@ Clusterer<T,DS>::~Clusterer()
 template<class T, class DS>
 T Clusterer<T,DS>::silhouette()
 { 
-  if(K_<2) return -1.0;
-//  assert(Ns_.sum() == N_);
-  Matrix<T,Dynamic,1> sil(N_);
-#pragma omp parallel for
-  for(uint32_t i=0; i<N_; ++i)
-  {
-    Matrix<T,Dynamic,1> b = Matrix<T,Dynamic,1>::Zero(K_);
-    for(uint32_t j=0; j<N_; ++j)
-      if(j != i)
-      {
-        b(cld_->z(j)) += DS::dissimilarity(cld_->x()->col(i),cld_->x()->col(j));
-      }
-    for (uint32_t k=0; k<K_; ++k) b(k) /= cls_[k]->N();
-//    b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
-    T a_i = b(cld_->z(i)); // average dist to own cluster
-    T b_i = cld_->z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
-    for(uint32_t k=0; k<K_; ++k)
-      if(k != cld_->z(i) && b(k) == b(k) && b(k) < b_i && cls_[k]->N() > 0)
-      {
-        b_i = b(k);
-      }
-    if(a_i < b_i)
-      sil(i) = 1.- a_i/b_i;
-    else if(a_i > b_i)
-      sil(i) = b_i/a_i - 1.;
-    else
-      sil(i) = 0.;
-  }
-  return sil.sum()/static_cast<T>(N_);
+  this->cld_->computeSS();
+  return silhouetteClD<T,DS>(*this->cld_);
+//  if(K_<2) return -1.0;
+////  assert(Ns_.sum() == N_);
+//  Matrix<T,Dynamic,1> sil(N_);
+//#pragma omp parallel for
+//  for(uint32_t i=0; i<N_; ++i)
+//  {
+//    Matrix<T,Dynamic,1> b = Matrix<T,Dynamic,1>::Zero(K_);
+//    for(uint32_t j=0; j<N_; ++j)
+//      if(j != i)
+//      {
+//        b(cld_->z(j)) += DS::dissimilarity(cld_->x()->col(i),cld_->x()->col(j));
+//      }
+//    for (uint32_t k=0; k<K_; ++k) b(k) /= cls_[k]->N();
+////    b *= Ns_.cast<T>().cwiseInverse(); // Assumes Ns are up to date!
+//    T a_i = b(cld_->z(i)); // average dist to own cluster
+//    T b_i = cld_->z(i)==0 ? b(1) : b(0); // avg dist do closest other cluster
+//    for(uint32_t k=0; k<K_; ++k)
+//      if(k != cld_->z(i) && b(k) == b(k) && b(k) < b_i && cls_[k]->N() > 0)
+//      {
+//        b_i = b(k);
+//      }
+//    if(a_i < b_i)
+//      sil(i) = 1.- a_i/b_i;
+//    else if(a_i > b_i)
+//      sil(i) = b_i/a_i - 1.;
+//    else
+//      sil(i) = 0.;
+//  }
+//  return sil.sum()/static_cast<T>(N_);
 };
 
 //template<class T, class DS>

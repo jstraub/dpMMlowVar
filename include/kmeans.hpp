@@ -36,9 +36,14 @@ public:
 
   virtual bool convergedCounts(uint32_t dCounts) 
   {
-    cout<<(prevNs_.cast<int>().array() - this->counts().cast<int>().array()).abs()<< endl;
-    return this->counts().size() > 0 && this->counts().size() == prevNs_.size()
-      && ((prevNs_.cast<int>().array() - this->counts().cast<int>().array()).abs() < dCounts ).all();
+    if(this->counts().size() > 0 && this->counts().size() == prevNs_.size())
+    {
+      int dC = 0;
+      for(uint32_t k=0; k<this->counts().size(); ++k)
+        dC += abs(int(prevNs_(k)) - int(this->counts()(k)));
+      return dC < dCounts;
+    }
+    return false;
   };
 
 

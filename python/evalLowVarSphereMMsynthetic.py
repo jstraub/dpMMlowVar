@@ -163,7 +163,6 @@ else:
 bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
-bases = ['spkm']
 bases = ['CrpvMF']
 bases = ['DirvMF']
 bases = ['DPvMFmeans','spkm','DirvMF']

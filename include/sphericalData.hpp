@@ -94,7 +94,8 @@ struct Spherical //: public DataSpace<T>
 
     void updateCenter()
     {
-      centroid_ = xSum_/xSum_.norm();
+      if(N_ > 0)
+        centroid_ = xSum_/xSum_.norm();
     };
 
     void updateSS(const shared_ptr<ClData<T> >& cld, uint32_t k)
@@ -108,6 +109,12 @@ struct Spherical //: public DataSpace<T>
       updateSS(cld,k); 
       updateCenter();
     };
+
+    void resetCenter(const shared_ptr<ClData<T> >& cld)
+    {
+      int rid = int(floor(cld->N()*double(std::rand())/double(RAND_MAX)));
+      centroid_ = cld->x()->col(rid);
+    }
 
     void computeCenter(const Matrix<T,Dynamic,Dynamic>& x,  const VectorXu& z,
         const uint32_t k)

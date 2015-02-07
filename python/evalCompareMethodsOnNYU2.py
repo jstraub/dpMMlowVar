@@ -34,8 +34,8 @@ baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
 cfg['T'] = 100
 
-reIndex = True;
 reIndex = False;
+reIndex = True;
 
 nFiles = 0
 for base in cfg['base']:
@@ -55,11 +55,11 @@ if reIndex:
     name =name[:-1]
     found = []; #[None for base in cfg['base']]
     for j,base in enumerate(cfg['base']):
-      for K in paramBase[base]:
+      for param in paramBase[base]:
         if base == 'spkm':
-          searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,K,base,cfg['T'],0.)
+          searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,param,base,cfg['T'],0.)
         else:
-          searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,1,base,cfg['T'],K)
+          searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,1,base,cfg['T'],param)
         for candidate in candidates:
           if fnmatch.fnmatch(candidate, searchStr):
             found.append(candidate)

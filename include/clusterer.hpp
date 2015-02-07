@@ -43,6 +43,8 @@ public:
     return ps;
   };
 
+  uint32_t globalInd(uint32_t k) const {return cls_[k]->globalId;};
+
   // natural distance to be used by the algorithm
 //  virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
   // closer in the sense of distance defined above

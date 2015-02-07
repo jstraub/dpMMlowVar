@@ -151,10 +151,10 @@ VectorXu DDPMeans<T,DS>::initLabels()
 template<class T, class DS>
 void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
 {
-//  cout<<"i "<<i
-//    <<" x @ i "<<this->cld_->x()->col(i).transpose()
-//    <<" "<<this->cld_->x()->col(i).norm()
-//    <<" with K= "<<this->K_<<endl;
+  cout<<"i "<<i
+    <<" x @ i "<<this->cld_->x()->col(i).transpose()
+    <<" "<<this->cld_->x()->col(i).norm()
+    <<" with K= "<<this->K_<<endl;
 
   T sim = 0.;
   uint32_t z_i = this->indOfClosestCluster(i,sim);

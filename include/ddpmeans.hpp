@@ -164,16 +164,16 @@ void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
           typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
     this->cls_[z_i]->globalId = this->globalMaxInd_++;
     this->K_ ++;
-//    cout<<"new cluster "<<(this->K_-1)<<endl;
+    cout<<"new cluster "<<(this->K_-1)<<endl;
   } 
   else if(!this->cls_[z_i]->isInstantiated())
   { // instantiated an old cluster
     this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
-//    cout<<"revieve cluster "<<z_i<<endl;
+    cout<<"revieve cluster "<<z_i<<endl;
   }
 
-//  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
-//    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
 }
 
 template<class T, class DS>
@@ -288,11 +288,8 @@ void DDPMeans<T,DS>::updateState()
   for(uint32_t k=0; k<this->K_; ++k)
   {
     if(this->cls_[k]->isInstantiated()) this->cls_[k]->updateWeight();
-
     this->cls_[k]->incAge();
-
     if(this->cls_[k]->isDead()) toRemove[k] = true;
-
     this->cls_[k]->print();
   }
 

@@ -151,10 +151,10 @@ VectorXu DDPMeans<T,DS>::initLabels()
 template<class T, class DS>
 void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
 {
-  cout<<"i "<<i
-    <<" x @ i "<<this->cld_->x()->col(i).transpose()
-    <<" "<<this->cld_->x()->col(i).norm()
-    <<" with K= "<<this->K_<<endl;
+//  cout<<"i "<<i
+//    <<" x @ i "<<this->cld_->x()->col(i).transpose()
+//    <<" "<<this->cld_->x()->col(i).norm()
+//    <<" with K= "<<this->K_<<endl;
 
   T sim = 0.;
   uint32_t z_i = this->indOfClosestCluster(i,sim);
@@ -164,16 +164,16 @@ void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
           typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
     this->cls_[z_i]->globalId = this->globalMaxInd_++;
     this->K_ ++;
-    cout<<"new cluster "<<(this->K_-1)<<endl;
+//    cout<<"new cluster "<<(this->K_-1)<<endl;
   } 
   else if(!this->cls_[z_i]->isInstantiated())
   { // instantiated an old cluster
     this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
-    cout<<"revieve cluster "<<z_i<<endl;
+//    cout<<"revieve cluster "<<z_i<<endl;
   }
 
-  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
-    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+//  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+//    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
 }
 
 template<class T, class DS>
@@ -311,9 +311,9 @@ void DDPMeans<T,DS>::updateState()
 
   if(nRemoved > 0)
   {
-    cout<<"labelMap: ";
-    for(int32_t k=0; k<this->K_+nRemoved; ++k) cout<<labelMap[k]<<" ";
-    cout<<endl;
+//    cout<<"labelMap: ";
+//    for(int32_t k=0; k<this->K_+nRemoved; ++k) cout<<labelMap[k]<<" ";
+//    cout<<endl;
     this->cld_->labelMap(labelMap);
   }
 };

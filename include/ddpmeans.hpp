@@ -78,7 +78,7 @@ protected:
 template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T Q, T tau)
-  : DPMeans<T,DS>(spx,0,lambda), cl0_(tau,lambda,Q)
+  : DPMeans<T,DS>(spx,0,lambda), cl0_(tau,lambda,Q), globalMaxInd_(0)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean
 };
@@ -86,7 +86,7 @@ DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
 template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<ClData<T> >& cld, 
     T lambda, T Q, T tau)
-  : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q)
+  : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q), globalMaxInd_(0)
 {
   this->Kprev_ = cld->K(); // so that centers are initialized directly from sample mean
 };

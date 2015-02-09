@@ -41,6 +41,7 @@ public:
       int dC = 0;
       for(uint32_t k=0; k<this->counts().size(); ++k)
         dC += abs(int(prevNs_(k)) - int(this->counts()(k)));
+      cout<<"d counts: "<<dC<<" max: "<<dCounts<<endl;
       return dC < dCounts;
     }
     return false;

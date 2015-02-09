@@ -62,6 +62,7 @@ if reIndex:
           searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,1,base,cfg['T'],param)
         for candidate in candidates:
           if fnmatch.fnmatch(candidate, searchStr):
+#            print candidate, param, base
             found.append(candidate)
             break
           

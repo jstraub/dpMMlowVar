@@ -245,7 +245,8 @@ struct Spherical //: public DataSpace<T>
 //        cout<<"zeta="<<zeta;
         // apprixmation here for small angles -> same as on GPU
         Spherical::solveProblem2Approx(x_i, zeta, t_, w_, beta_, phi,theta,eta);
-        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" w_="<<w_
+        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" zeta="<<zeta
+          <<" w_="<<w_
           <<" beta="<<beta_<<" Q="<<Q_<<" t="<<t_<<endl;
 
         return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
@@ -473,7 +474,7 @@ void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta,
   {
     T sinPhi = phi;
     T cosPhi = 1.;
-    T f = - zeta + asin(beta/L2xSum *sinPhi) + age * phi + asin(beta/w *sinPhi);
+    T f = - zeta + (beta/L2xSum *sinPhi) + age * phi + (beta/w *sinPhi);
     T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
         beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -
         beta*beta*sinPhi*sinPhi); 
@@ -485,7 +486,7 @@ void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta,
     if(fabs(dPhi) < 1e-6) break;
   }
 
-  theta = asin(beta/w *sin(phi));
-  eta = asin(beta/L2xSum *sin(phi));
+  theta = (beta/w *(phi));
+  eta = (beta/L2xSum *(phi));
 };
 

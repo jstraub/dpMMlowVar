@@ -35,8 +35,8 @@ public:
 
   virtual bool converged(T eps=1e-6) 
   {
-    return this->counts().size() > 0 && this->counts().size() == prevNs_.size()
-      && (prevNs_.array() == this->counts().array()).all();
+    return this->counts().size() > 0 && this->counts().size() == this->prevNs_.size()
+      && (this->prevNs_.array() == this->counts().array()).all();
   };
 
   Matrix<T,Dynamic,1> ages(){
@@ -64,7 +64,7 @@ public:
 protected:
 
   T Kprev_; // K before updateLabels()
-  VectorXu prevNs_;
+//  VectorXu prevNs_;
   uint32_t globalMaxInd_;
 
   typename DS::DependentCluster cl0_;
@@ -106,10 +106,10 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
     for (uint32_t k=0; k<this->K_; ++k)
     {
       sim_k = this->cls_[k]->dist(this->cld_->x()->col(i)); 
-      cout<<"sim_k = "<<sim_k<<" sim_cl = "<<sim_closest
-        <<" closer? "<<DS::closer(sim_k, sim_closest)
-        <<" mu="<<this->cls_[k]->centroid().transpose()
-        <<" x="<<this->cld_->x()->col(i).transpose()<<endl;
+//      cout<<"sim_k = "<<sim_k<<" sim_cl = "<<sim_closest
+//        <<" closer? "<<DS::closer(sim_k, sim_closest)
+//        <<" mu="<<this->cls_[k]->centroid().transpose()
+//        <<" x="<<this->cld_->x()->col(i).transpose()<<endl;
       if(DS::closer(sim_k, sim_closest))
       {
         sim_closest = sim_k;
@@ -151,10 +151,10 @@ VectorXu DDPMeans<T,DS>::initLabels()
 template<class T, class DS>
 void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
 {
-  cout<<"i "<<i
-    <<" x @ i "<<this->cld_->x()->col(i).transpose()
-    <<" "<<this->cld_->x()->col(i).norm()
-    <<" with K= "<<this->K_<<endl;
+//  cout<<"i "<<i
+//    <<" x @ i "<<this->cld_->x()->col(i).transpose()
+//    <<" "<<this->cld_->x()->col(i).norm()
+//    <<" with K= "<<this->K_<<endl;
 
   T sim = 0.;
   uint32_t z_i = this->indOfClosestCluster(i,sim);
@@ -172,8 +172,8 @@ void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
     cout<<"revieve cluster "<<z_i<<endl;
   }
 
-  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
-    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+//  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+//    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
 }
 
 template<class T, class DS>
@@ -228,9 +228,9 @@ void DDPMeans<T,DS>::updateLabelsSerial()
 template<class T, class DS>
 void DDPMeans<T,DS>::updateCenters()
 {
-  prevNs_.resize(this->K_);
+  this->prevNs_.resize(this->K_);
   for(uint32_t k=0; k<this->K_; ++k)
-    prevNs_(k) = this->cls_[k]->N();
+    this->prevNs_(k) = this->cls_[k]->N();
 
   this->cld_->updateK(this->K_);
   this->cld_->computeSS();

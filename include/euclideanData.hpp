@@ -164,7 +164,8 @@ struct Euclidean //: public DataSpace<T>
 
     void print() const 
     {
-      cout<<"cluster "<<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
+      cout<<"cluster globId="<<globalId
+        <<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
         <<w_ <<"\t dead? "<<this->isDead()
         <<"  center: "<<this->centroid().transpose()<<endl
         <<"  xSum: "<<this->xSum_.transpose()<<endl;

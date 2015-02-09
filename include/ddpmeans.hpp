@@ -106,10 +106,10 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
     for (uint32_t k=0; k<this->K_; ++k)
     {
       sim_k = this->cls_[k]->dist(this->cld_->x()->col(i)); 
-//      cout<<"sim_k = "<<sim_k<<" sim_cl = "<<sim_closest
-//        <<" closer? "<<DS::closer(sim_k, sim_closest)
-//        <<" mu="<<this->cls_[k]->centroid().transpose()
-//        <<" x="<<this->cld_->x()->col(i).transpose()<<endl;
+      cout<<"sim_k = "<<sim_k<<" sim_cl = "<<sim_closest
+        <<" closer? "<<DS::closer(sim_k, sim_closest)
+        <<" mu="<<this->cls_[k]->centroid().transpose()
+        <<" x="<<this->cld_->x()->col(i).transpose()<<endl;
       if(DS::closer(sim_k, sim_closest))
       {
         sim_closest = sim_k;
@@ -172,8 +172,8 @@ void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
     cout<<"revieve cluster "<<z_i<<endl;
   }
 
-//  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
-//    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
 }
 
 template<class T, class DS>

@@ -190,8 +190,11 @@ struct Spherical //: public DataSpace<T>
 
     void print() const 
     {
-      cout<<"cluster " <<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
-        <<w_ <<"\t dead? "<<this->isDead()
+      cout<<"cluster globId="<<globalId
+        <<"\tN="<<this->N_ 
+        <<"\tage="<<t_ 
+        <<"\tweight="<<w_ 
+        <<"\t dead? "<<this->isDead()
         <<"  center: "<<this->centroid().transpose()<<endl;
     };
 

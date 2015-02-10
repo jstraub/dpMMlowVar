@@ -159,7 +159,11 @@ void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
   for (uint32_t k=0; k<this->K_+1; ++k)
   {
     uint32_t i = ids(k);
-    if (i == UNASSIGNED) continue;
+    if (i == UNASSIGNED) 
+    {
+      cout<<"skipping cluster "<<k<<endl;
+      continue;
+    }
 
     T sim = 0.;
     uint32_t z_i = this->indOfClosestCluster(i,sim);
@@ -169,12 +173,12 @@ void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
             typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
       this->cls_[z_i]->globalId = this->globalMaxInd_++;
       this->K_ ++;
-      //    cout<<"new cluster "<<(this->K_-1)<<endl;
+          cout<<"new cluster "<<(this->K_-1)<<endl;
     } 
     else if(!this->cls_[z_i]->isInstantiated())
     { // instantiated an old cluster
       this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
-      //    cout<<"revieve cluster "<<z_i<<endl;
+          cout<<"revieve cluster "<<z_i<<endl;
     }
   }
 

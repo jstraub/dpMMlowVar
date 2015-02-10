@@ -156,7 +156,7 @@ void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
 //    <<" "<<this->cld_->x()->col(i).norm()
 //    <<" with K= "<<this->K_<<endl;
 
-  for (uint32_t k=0; k<this->K_+1; ++k)
+  for (uint32_t k=0; k<ids.size(); ++k)
   {
     uint32_t i = ids(k);
     if (i == UNASSIGNED) 

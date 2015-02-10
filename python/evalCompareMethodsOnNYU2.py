@@ -23,8 +23,8 @@ cfg['base'] = ['DPvMFmeans','spkm'];
 
 cfg['outName'] = '../results/nyuEval'
 
-paramBase = {'spkm':np.array([2,3,4,5,6,7,8,9]), 'DPvMFmeans':np.array([np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,80.,90.,100.,110.,115.,120.,130.,140.]])} #,150.]])}
-# TODO waiting for 70, 80, 140, 150
+paramBase = {'spkm':np.array([2,3,4,5,6,7,8,9]), 
+    'DPvMFmeans':np.array([np.cos(lamb*np.pi/180.0)-1. for lamb in [70.,80.,90.,95.,100.,110.,115.,120.,130.,140.]])} 
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \

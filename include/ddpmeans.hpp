@@ -161,7 +161,7 @@ void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
     uint32_t i = ids(k);
     if (i == UNASSIGNED) 
     {
-      cout<<"skipping cluster "<<k<<endl;
+//      cout<<"skipping cluster "<<k<<endl;
       continue;
     }
 
@@ -173,12 +173,12 @@ void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
             typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
       this->cls_[z_i]->globalId = this->globalMaxInd_++;
       this->K_ ++;
-          cout<<"new cluster "<<(this->K_-1)<<endl;
+//          cout<<"new cluster "<<(this->K_-1)<<endl;
     } 
     else if(!this->cls_[z_i]->isInstantiated())
     { // instantiated an old cluster
       this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
-          cout<<"revieve cluster "<<z_i<<endl;
+//          cout<<"revieve cluster "<<z_i<<endl;
     }
   }
 
@@ -194,7 +194,7 @@ void DDPMeans<T,DS>::updateLabels()
 
   do{
     idAction = optimisticLabelsAssign(i0);
-    cout<<idAction.transpose()<<endl;
+//    cout<<idAction.transpose()<<endl;
     if(!(idAction.array() == UNASSIGNED).all())
     {
       createReviveFrom(idAction);

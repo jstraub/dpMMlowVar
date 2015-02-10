@@ -32,7 +32,7 @@ baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
   'DPvMFmeans':'DP-vMF-means'}
 
 #cfg['base'] += [ 'K_{}-base_spkm'.format(k) for k in range(4,8) ]
-cfg['T'] = 100
+cfg['T'] = 500
 
 reIndex = False;
 reIndex = True;
@@ -62,10 +62,9 @@ if reIndex:
           searchStr = '{}*K_{}-*{}*T_{}*lambda_{}_measures.csv'.format(name,1,base,cfg['T'],param)
         for candidate in candidates:
           if fnmatch.fnmatch(candidate, searchStr):
-#            print candidate, param, base
             found.append(candidate)
             break
-          
+#    print len(found), found      
     if len(found) == nFiles : #found[0] is None and not found[1] is None:
       print found
       cfctFiles.append(found)

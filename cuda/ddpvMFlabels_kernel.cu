@@ -53,31 +53,34 @@ __device__ inline T distToUninstantiatedSmallAngleApprox( T zeta, T age, T beta,
   // for phi and theta
 
 
-  // TODO: hacky -- could solve this analytically!
+  T phi = zeta/ (beta*(1.+1./w) + age);
+  T theta = zeta/( 1.+ w*(1. + age/beta) );
+  T eta = zeta/(1. + 1./w + age/beta);
+  // DONE: hacky -- could solve this analytically!
 
-  T phi =  0.0;
-  T dPhi = 0.0;
-  for (uint32_t i=0; i< I; ++i)
-  {
-//    T a = (beta*phi);
-//    T b = (beta/w *phi);
-    T f = -zeta + (beta*phi) + (age * phi) + (beta/w *phi);
-    T df = beta + age + (beta/w);
-//    T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi) 
-//      + (beta*cosPhi)/sqrt(w*w - beta*beta*sinPhi*sinPhi); 
-
-//    T phiPrev = phi;
-//    T dPhiPrev = dPhi;
-
-    dPhi = f/df;
-    phi = phi - dPhi; // Newton iteration
-//    printf("i=%d: prev: dPhi=%f; phi=%f; curr: dPhi=%f phi=%f zeta=%f; w=%f; Q=%f; f=%f; df=%f; beta=%f %f %f \n",i,dPhiPrev,phiPrev,dPhi,phi,zeta,w,Q,f,df,beta,a,b);
-//    printf("i=%d: dPhi=%f zeta=%f; age=%f; beta=%f; w=%f; Q=%f; thresh=%f; \n",i,dPhi,zeta,age,beta,w,Q,thresh);
-    if(fabs(dPhi) < thresh) break;
-  }
-
-  T theta = asin(beta/w *sin(phi));
-  T eta = asin(beta*sin(phi));
+//  T phi =  0.0;
+//  T dPhi = 0.0;
+//  for (uint32_t i=0; i< I; ++i)
+//  {
+////    T a = (beta*phi);
+////    T b = (beta/w *phi);
+//    T f = -zeta + (beta*phi) + (age * phi) + (beta/w *phi);
+//    T df = beta + age + (beta/w);
+////    T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi) 
+////      + (beta*cosPhi)/sqrt(w*w - beta*beta*sinPhi*sinPhi); 
+//
+////    T phiPrev = phi;
+////    T dPhiPrev = dPhi;
+//
+//    dPhi = f/df;
+//    phi = phi - dPhi; // Newton iteration
+////    printf("i=%d: prev: dPhi=%f; phi=%f; curr: dPhi=%f phi=%f zeta=%f; w=%f; Q=%f; f=%f; df=%f; beta=%f %f %f \n",i,dPhiPrev,phiPrev,dPhi,phi,zeta,w,Q,f,df,beta,a,b);
+////    printf("i=%d: dPhi=%f zeta=%f; age=%f; beta=%f; w=%f; Q=%f; thresh=%f; \n",i,dPhi,zeta,age,beta,w,Q,thresh);
+//    if(fabs(dPhi) < thresh) break;
+//  }
+//
+//  T theta = asin(beta/w *sin(phi));
+//  T eta = asin(beta*sin(phi));
 
   return w*(cos(theta)-1.0) + age*(Q+beta*(cos(phi)-1.)) + cos(eta);
 }

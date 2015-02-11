@@ -164,9 +164,9 @@ bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
 bases = ['CrpvMF']
-bases = ['DirvMF']
 bases = ['DPvMFmeans','spkm','DirvMF']
 bases = ['spkm','DirvMF']
+bases = ['DirvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
@@ -179,8 +179,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = False
 reRun = True
+reRun = False
 
 if reRun:
   print bases
@@ -290,6 +290,11 @@ nmis['spkm'] = nmis['spkm'][indSpkm,:]
 mis['spkm'] = mis['spkm'][indSpkm,:]
 Ns['spkm'] = Ns['spkm'][indSpkm,:]
 Sils['spkm'] = Sils['spkm'][indSpkm,:]
+
+if 'DirvMF' in bases:
+  print "DirvMF NMI:        {} +- {}".format(nmis['DirvMF'].mean(), nmis['DirvMF'].std())
+  print "DirvMF silhouette: {} +- {}".format(Sils['DirvMF'].mean(), Sils['DirvMF'].std())
+  print "DirvMF Ns:         {} +- {}".format(Ns['DirvMF'].mean(), Ns['DirvMF'].std())
 
 print paramBase
 

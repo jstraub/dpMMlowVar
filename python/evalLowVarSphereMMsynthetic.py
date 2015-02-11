@@ -151,8 +151,8 @@ paramBase = {
     'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])]),
     'CrpvMF':np.array([10]),
     'DirvMF':np.array([100])}
-cfg['T'] = 100 #1100 # 100
-cfg['nRun'] = 1 #50
+cfg['T'] = 1100 # 100
+cfg['nRun'] = 50
 
 cfg['dataPath'] = dataPath
 
@@ -167,10 +167,10 @@ bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
 bases = ['DPvMFmeans','spkm','DirvMF']
-bases = ['DirvMF']
 bases = ['spkm']
 bases = ['spkm','DPvMFmeans']
 bases = ['CrpvMF']
+bases = ['DirvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
@@ -183,8 +183,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = False
 reRun = True
+reRun = False
 
 if reRun:
   print bases

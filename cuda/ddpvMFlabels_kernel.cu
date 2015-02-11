@@ -94,16 +94,13 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 //  __shared__ T ages[K+1];
   __shared__ T Ns[K+1];
 //  __shared__ T ws[K+1];
-  __shared__ uint32_t iAction[BLK_SIZE*(K+1)]; // id of first action (revieval/new) for one core
+  __shared__ uint32_t iAction[BLK_SIZE]; // id of first action (revieval/new) for one core
 
   const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
   // caching and init
-#pragma unroll
-  for (uint32_t k=0; k<K+1;++k)
-    iAction[tid*(K+1)+k] = UNASSIGNED;
-
+  iAction[tid] = UNASSIGNED;
   if(tid < DIM*K) p[tid] = d_p[tid];
 //  if(tid < K) ages[tid] = d_ages[tid];
 //  if (K>=1) return;
@@ -150,7 +147,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
       }
       if (z_i == K || Ns[z_i] == 0)
       {
-        iAction[tid*(K+1)+z_i] = min(iAction[tid*(K+1)+z_i],id);
+        iAction[tid] = id;
         break; // save id at which an action occured and break out because after
         // that id anything more would be invalid.
       }
@@ -164,16 +161,13 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
   for(int s=(BLK_SIZE)/2; s>1; s>>=1) {
     if(tid < s)
     {
-      for (uint32_t k=0; k<K+1;++k)
-        iAction[tid*(K+1)+k] = min(iAction[tid*(K+1)+k], iAction[(s+tid)*(K+1)+k]);
+      iAction[tid] = min(iAction[tid], iAction[s+tid]);
     }
     __syncthreads();
   }
-
-  if(tid < K+1) {
+  if(tid == 0) {
     // reduce the last two remaining matrixes directly into global memory
-//    atomicMin(d_iAction, min(iAction[0],iAction[1]));
-    atomicMin(d_iAction+tid, min(iAction[tid],iAction[K+1+tid]));
+    atomicMin(d_iAction, min(iAction[0],iAction[1]));
   }
 };
 

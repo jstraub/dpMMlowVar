@@ -36,7 +36,7 @@ public:
   virtual void computeSS();
 
   virtual void updateK(uint32_t K){ this->K_ = K;};
-  virtual void updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
+  virtual void updateData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
   virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   virtual VectorXu& z() { this->d_z_.get(this->z_); return ClData<T>::z();};
@@ -77,7 +77,7 @@ void ClDataGpu<T>::updateLabels(uint32_t K)
 }
 
 template<class T>
-void ClDataGpu<T>::updateData(const boost::shared_ptr<Matrix<T,Dynamic,Dynamic> >& x)
+void ClDataGpu<T>::updateData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x)
 {
   ClData<T>::updateData(x);
   d_x_.set(this->x_);

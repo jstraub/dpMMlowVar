@@ -34,6 +34,19 @@ public:
       && (prevNs_.array() == this->counts().array()).all();
   };
 
+  virtual bool convergedCounts(uint32_t dCounts) 
+  {
+    if(this->counts().size() > 0 && this->counts().size() == prevNs_.size())
+    {
+      int dC = 0;
+      for(uint32_t k=0; k<this->counts().size(); ++k)
+        dC += abs(int(prevNs_(k)) - int(this->counts()(k)));
+      cout<<"d counts: "<<dC<<" max: "<<dCounts<<endl;
+      return dC < dCounts;
+    }
+    return false;
+  };
+
 
 protected:
   VectorXu prevNs_;

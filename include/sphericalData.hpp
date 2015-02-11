@@ -190,8 +190,11 @@ struct Spherical //: public DataSpace<T>
 
     void print() const 
     {
-      cout<<"cluster " <<"\tN="<<this->N_ <<"\tage="<<t_ <<"\tweight="
-        <<w_ <<"\t dead? "<<this->isDead()
+      cout<<"cluster globId="<<globalId
+        <<"\tN="<<this->N_ 
+        <<"\tage="<<t_ 
+        <<"\tweight="<<w_ 
+        <<"\t dead? "<<this->isDead()
         <<"  center: "<<this->centroid().transpose()<<endl;
     };
 
@@ -245,7 +248,8 @@ struct Spherical //: public DataSpace<T>
 //        cout<<"zeta="<<zeta;
         // apprixmation here for small angles -> same as on GPU
         Spherical::solveProblem2Approx(x_i, zeta, t_, w_, beta_, phi,theta,eta);
-//        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" w_="<<w_
+//        cout<<" phi="<<phi<<" theta="<<theta<<" eta="<<eta<<" zeta="<<zeta
+//          <<" w_="<<w_
 //          <<" beta="<<beta_<<" Q="<<Q_<<" t="<<t_<<endl;
 
         return w_*(cos(theta)-1.) + t_*beta_*(cos(phi)-1.) + Q_*t_
@@ -464,28 +468,33 @@ void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta,
   // solves
   // w sin(theta) = beta sin(phi) = ||xSum||_2 sin(eta) 
   // eta + T phi + theta = zeta = acos(\mu0^T xSum/||xSum||_2)
-  phi = 0.0;
+  
+  phi = zeta/ (beta*(1.+1./w) + age);
+  theta = zeta/( 1.+ w*(1. + age/beta) );
+  eta = zeta/(1. + 1./w + age/beta);
 
-  //  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
-
-  T L2xSum = xSum.norm();
-  for (uint32_t i=0; i< 10; ++i)
-  {
-    T sinPhi = phi;
-    T cosPhi = 1.;
-    T f = - zeta + asin(beta/L2xSum *sinPhi) + age * phi + asin(beta/w *sinPhi);
-    T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
-        beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -
-        beta*beta*sinPhi*sinPhi); 
-
-    T dPhi = f/df;
-
-    phi = phi - dPhi; // Newton iteration
-//    cout<<"@i="<<i<<": "<<"f="<<f<<" df="<<df<<" phi="<<phi<<"\t"<<dPhi<<endl;
-    if(fabs(dPhi) < 1e-6) break;
-  }
-
-  theta = asin(beta/w *sin(phi));
-  eta = asin(beta/L2xSum *sin(phi));
+//  phi = 0.0;
+//
+//  //  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
+//
+//  T L2xSum = xSum.norm();
+//  for (uint32_t i=0; i< 10; ++i)
+//  {
+//    T sinPhi = phi;
+//    T cosPhi = 1.;
+//    T f = - zeta + (beta/L2xSum *sinPhi) + age * phi + (beta/w *sinPhi);
+//    T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
+//        beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -
+//        beta*beta*sinPhi*sinPhi); 
+//
+//    T dPhi = f/df;
+//
+//    phi = phi - dPhi; // Newton iteration
+////    cout<<"@i="<<i<<": "<<"f="<<f<<" df="<<df<<" phi="<<phi<<"\t"<<dPhi<<endl;
+//    if(fabs(dPhi) < 1e-6) break;
+//  }
+//
+//  theta = (beta/w *(phi));
+//  eta = (beta/L2xSum *(phi));
 };
 

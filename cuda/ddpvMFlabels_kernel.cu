@@ -53,31 +53,34 @@ __device__ inline T distToUninstantiatedSmallAngleApprox( T zeta, T age, T beta,
   // for phi and theta
 
 
-  // TODO: hacky -- could solve this analytically!
+  T phi = zeta/ (beta*(1.+1./w) + age);
+  T theta = zeta/( 1.+ w*(1. + age/beta) );
+  T eta = zeta/(1. + 1./w + age/beta);
+  // DONE: hacky -- could solve this analytically!
 
-  T phi =  0.0;
-  T dPhi = 0.0;
-  for (uint32_t i=0; i< I; ++i)
-  {
-//    T a = (beta*phi);
-//    T b = (beta/w *phi);
-    T f = -zeta + (beta*phi) + (age * phi) + (beta/w *phi);
-    T df = beta + age + (beta/w);
-//    T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi) 
-//      + (beta*cosPhi)/sqrt(w*w - beta*beta*sinPhi*sinPhi); 
-
-//    T phiPrev = phi;
-//    T dPhiPrev = dPhi;
-
-    dPhi = f/df;
-    phi = phi - dPhi; // Newton iteration
-//    printf("i=%d: prev: dPhi=%f; phi=%f; curr: dPhi=%f phi=%f zeta=%f; w=%f; Q=%f; f=%f; df=%f; beta=%f %f %f \n",i,dPhiPrev,phiPrev,dPhi,phi,zeta,w,Q,f,df,beta,a,b);
-//    printf("i=%d: dPhi=%f zeta=%f; age=%f; beta=%f; w=%f; Q=%f; thresh=%f; \n",i,dPhi,zeta,age,beta,w,Q,thresh);
-    if(fabs(dPhi) < thresh) break;
-  }
-
-  T theta = asin(beta/w *sin(phi));
-  T eta = asin(beta*sin(phi));
+//  T phi =  0.0;
+//  T dPhi = 0.0;
+//  for (uint32_t i=0; i< I; ++i)
+//  {
+////    T a = (beta*phi);
+////    T b = (beta/w *phi);
+//    T f = -zeta + (beta*phi) + (age * phi) + (beta/w *phi);
+//    T df = beta + age + (beta/w);
+////    T df = age + (beta*cosPhi)/sqrt(1.-beta*beta*sinPhi*sinPhi) 
+////      + (beta*cosPhi)/sqrt(w*w - beta*beta*sinPhi*sinPhi); 
+//
+////    T phiPrev = phi;
+////    T dPhiPrev = dPhi;
+//
+//    dPhi = f/df;
+//    phi = phi - dPhi; // Newton iteration
+////    printf("i=%d: prev: dPhi=%f; phi=%f; curr: dPhi=%f phi=%f zeta=%f; w=%f; Q=%f; f=%f; df=%f; beta=%f %f %f \n",i,dPhiPrev,phiPrev,dPhi,phi,zeta,w,Q,f,df,beta,a,b);
+////    printf("i=%d: dPhi=%f zeta=%f; age=%f; beta=%f; w=%f; Q=%f; thresh=%f; \n",i,dPhi,zeta,age,beta,w,Q,thresh);
+//    if(fabs(dPhi) < thresh) break;
+//  }
+//
+//  T theta = asin(beta/w *sin(phi));
+//  T eta = asin(beta*sin(phi));
 
   return w*(cos(theta)-1.0) + age*(Q+beta*(cos(phi)-1.)) + cos(eta);
 }
@@ -91,13 +94,16 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 //  __shared__ T ages[K+1];
   __shared__ T Ns[K+1];
 //  __shared__ T ws[K+1];
-  __shared__ uint32_t iAction[BLK_SIZE]; // id of first action (revieval/new) for one core
+  __shared__ uint32_t iAction[BLK_SIZE*(K+1)]; // id of first action (revieval/new) for one core
 
   const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
   // caching and init
-  iAction[tid] = UNASSIGNED;
+#pragma unroll
+  for (uint32_t k=0; k<K+1;++k)
+    iAction[tid*(K+1)+k] = UNASSIGNED;
+
   if(tid < DIM*K) p[tid] = d_p[tid];
 //  if(tid < K) ages[tid] = d_ages[tid];
 //  if (K>=1) return;
@@ -144,7 +150,7 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
       }
       if (z_i == K || Ns[z_i] == 0)
       {
-        iAction[tid] = id;
+        iAction[tid*(K+1)+z_i] = min(iAction[tid*(K+1)+z_i],id);
         break; // save id at which an action occured and break out because after
         // that id anything more would be invalid.
       }
@@ -158,13 +164,16 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
   for(int s=(BLK_SIZE)/2; s>1; s>>=1) {
     if(tid < s)
     {
-      iAction[tid] = min(iAction[tid], iAction[s+tid]);
+      for (uint32_t k=0; k<K+1;++k)
+        iAction[tid*(K+1)+k] = min(iAction[tid*(K+1)+k], iAction[(s+tid)*(K+1)+k]);
     }
     __syncthreads();
   }
-  if(tid == 0) {
+
+  if(tid < K+1) {
     // reduce the last two remaining matrixes directly into global memory
-    atomicMin(d_iAction, min(iAction[0],iAction[1]));
+//    atomicMin(d_iAction, min(iAction[0],iAction[1]));
+    atomicMin(d_iAction+tid, min(iAction[tid],iAction[K+1+tid]));
   }
 };
 

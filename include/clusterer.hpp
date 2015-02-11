@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <fstream>
 #include <global.hpp>
 #include <clData.hpp>
 
@@ -43,6 +44,8 @@ public:
     return ps;
   };
 
+  uint32_t globalInd(uint32_t k) const {return cls_[k]->globalId;};
+
   // natural distance to be used by the algorithm
 //  virtual T dist(const Matrix<T,Dynamic,1>& a, const Matrix<T,Dynamic,1>& b) = 0;
   // closer in the sense of distance defined above
@@ -59,7 +62,7 @@ public:
 
   virtual T silhouette();
 
-//  virtual void dumpStats(std::ofstream& fout);
+  virtual void dumpStats(std::ofstream& fout);
 
 protected:
   uint32_t K_;
@@ -158,13 +161,13 @@ T Clusterer<T,DS>::silhouette()
 //  return sil.sum()/static_cast<T>(N_);
 };
 
-//template<class T, class DS>
-//void Clusterer<T,DS>::dumpStats(std::ofstream& fout)
-//{
-//  fout<<this->K_<<" "<<this->cost_<<" ";
-//  for(uint32_t k=0; k< this->K_; ++k)
-//    fout<<this->cls_[k]->N()<<" ";
-//  for(uint32_t k=0; k< this->K_-1; ++k)
-//    fout<<this->cls_[k]->globalId<<" ";
-//  fout<<this->cls_[this->K_-1]->globalId<<endl;
-//};
+template<class T, class DS>
+void Clusterer<T,DS>::dumpStats(std::ofstream& fout)
+{
+  fout<<this->K_<<" "<<this->cost_<<" ";
+  for(uint32_t k=0; k< this->K_; ++k)
+    fout<<this->cls_[k]->N()<<" ";
+  for(uint32_t k=0; k< this->K_-1; ++k)
+    fout<<(this->cls_[k]->globalId)<<" ";
+  fout<<(this->cls_[this->K_-1]->globalId)<<endl;
+};

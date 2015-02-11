@@ -31,12 +31,12 @@ public:
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
-  virtual void createReviveFrom(uint32_t i);
+  virtual void createReviveFrom(const VectorXu& ids);
 
   virtual bool converged(T eps=1e-6) 
   {
-    return this->counts().size() > 0 && this->counts().size() == prevNs_.size()
-      && (prevNs_.array() == this->counts().array()).all();
+    return this->counts().size() > 0 && this->counts().size() == this->prevNs_.size()
+      && (this->prevNs_.array() == this->counts().array()).all();
   };
 
   Matrix<T,Dynamic,1> ages(){
@@ -64,13 +64,13 @@ public:
 protected:
 
   T Kprev_; // K before updateLabels()
-  VectorXu prevNs_;
+//  VectorXu prevNs_;
   uint32_t globalMaxInd_;
 
   typename DS::DependentCluster cl0_;
   //vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
 
-  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
+  virtual VectorXu optimisticLabelsAssign(uint32_t i0);
   virtual VectorXu initLabels();
 };
 
@@ -78,7 +78,7 @@ protected:
 template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, 
     T lambda, T Q, T tau)
-  : DPMeans<T,DS>(spx,0,lambda), cl0_(tau,lambda,Q)
+  : DPMeans<T,DS>(spx,0,lambda), cl0_(tau,lambda,Q), globalMaxInd_(0)
 {
   this->Kprev_ = 0; // so that centers are initialized directly from sample mean
 };
@@ -86,7 +86,7 @@ DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
 template<class T, class DS>
 DDPMeans<T,DS>::DDPMeans(const shared_ptr<ClData<T> >& cld, 
     T lambda, T Q, T tau)
-  : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q)
+  : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q), globalMaxInd_(0)
 {
   this->Kprev_ = cld->K(); // so that centers are initialized directly from sample mean
 };
@@ -121,9 +121,9 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 }
 
 template<class T,class DS>
-uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
+VectorXu DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
 {
-  uint32_t idAction = UNASSIGNED;
+  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
 #pragma omp parallel for 
   for(uint32_t i=i0; i<this->N_; ++i)
   {
@@ -133,7 +133,7 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
     { // note this as starting position
 #pragma omp critical
       {
-        if(idAction > i) idAction = i;
+        if(idAction(z_i) > i) idAction(z_i) = i;
       }
     }
     this->cld_->z(i) = z_i;
@@ -149,48 +149,59 @@ VectorXu DDPMeans<T,DS>::initLabels()
 
 
 template<class T, class DS>
-void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
+void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
 {
-  cout<<"i "<<i
-    <<" x @ i "<<this->cld_->x()->col(i).transpose()
-    <<" "<<this->cld_->x()->col(i).norm()
-    <<" with K= "<<this->K_<<endl;
+//  cout<<"i "<<i
+//    <<" x @ i "<<this->cld_->x()->col(i).transpose()
+//    <<" "<<this->cld_->x()->col(i).norm()
+//    <<" with K= "<<this->K_<<endl;
 
-  T sim = 0.;
-  uint32_t z_i = this->indOfClosestCluster(i,sim);
-  if(z_i == this->K_) 
-  { // start a new cluster
-    this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-          typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
-    this->cls_[z_i]->globalId = this->globalMaxInd_++;
-    this->K_ ++;
-    cout<<"new cluster "<<(this->K_-1)<<endl;
-  } 
-  else if(!this->cls_[z_i]->isInstantiated())
-  { // instantiated an old cluster
-    this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
-    cout<<"revieve cluster "<<z_i<<endl;
+  for (uint32_t k=0; k<ids.size(); ++k)
+  {
+    uint32_t i = ids(k);
+    if (i == UNASSIGNED) 
+    {
+//      cout<<"skipping cluster "<<k<<endl;
+      continue;
+    }
+
+    T sim = 0.;
+    uint32_t z_i = this->indOfClosestCluster(i,sim);
+    if(z_i == this->K_) 
+    { // start a new cluster
+      this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
+            typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
+      this->cls_[z_i]->globalId = this->globalMaxInd_++;
+      this->K_ ++;
+//          cout<<"new cluster "<<(this->K_-1)<<endl;
+    } 
+    else if(!this->cls_[z_i]->isInstantiated())
+    { // instantiated an old cluster
+      this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
+//          cout<<"revieve cluster "<<z_i<<endl;
+    }
   }
 
-  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
-    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
+//  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
+//    <<": "<<this->cls_[z_i]->centroid().transpose()<<endl;
 }
 
 template<class T, class DS>
 void DDPMeans<T,DS>::updateLabels()
 {
   uint32_t i0 = 0;
-  uint32_t idAction = UNASSIGNED;
+  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
 
   do{
     idAction = optimisticLabelsAssign(i0);
-    if(idAction != UNASSIGNED)
+//    cout<<idAction.transpose()<<endl;
+    if(!(idAction.array() == UNASSIGNED).all())
     {
       createReviveFrom(idAction);
-      i0 = idAction;
+      i0 = idAction.minCoeff();
     }
     cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
-  }while(idAction != UNASSIGNED);
+  }while(!(idAction.array() == UNASSIGNED).all());
   // if a cluster runs out of labels reset it to the previous mean!
   for(uint32_t k=0; k<this->K_; ++k)
     if(!this->cls_[k]->isInstantiated())
@@ -228,9 +239,9 @@ void DDPMeans<T,DS>::updateLabelsSerial()
 template<class T, class DS>
 void DDPMeans<T,DS>::updateCenters()
 {
-  prevNs_.resize(this->K_);
+  this->prevNs_.resize(this->K_);
   for(uint32_t k=0; k<this->K_; ++k)
-    prevNs_(k) = this->cls_[k]->N();
+    this->prevNs_(k) = this->cls_[k]->N();
 
   this->cld_->updateK(this->K_);
   this->cld_->computeSS();
@@ -278,7 +289,9 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   }
 
   // revive or add cluster from the first data-point
-  createReviveFrom(0);
+  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  idAction(0) = 0; // revive from first datapoint - decides internally which cluster
+  createReviveFrom(idAction);
 };
 
 template<class T, class DS>
@@ -288,11 +301,8 @@ void DDPMeans<T,DS>::updateState()
   for(uint32_t k=0; k<this->K_; ++k)
   {
     if(this->cls_[k]->isInstantiated()) this->cls_[k]->updateWeight();
-
     this->cls_[k]->incAge();
-
     if(this->cls_[k]->isDead()) toRemove[k] = true;
-
     this->cls_[k]->print();
   }
 
@@ -311,9 +321,9 @@ void DDPMeans<T,DS>::updateState()
 
   if(nRemoved > 0)
   {
-    cout<<"labelMap: ";
-    for(int32_t k=0; k<this->K_+nRemoved; ++k) cout<<labelMap[k]<<" ";
-    cout<<endl;
+//    cout<<"labelMap: ";
+//    for(int32_t k=0; k<this->K_+nRemoved; ++k) cout<<labelMap[k]<<" ";
+//    cout<<endl;
     this->cld_->labelMap(labelMap);
   }
 };

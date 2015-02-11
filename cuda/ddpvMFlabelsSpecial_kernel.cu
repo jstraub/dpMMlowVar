@@ -7,12 +7,6 @@
 #define N_PER_T 16
 #define BLOCK_SIZE 256
 
-template<typename T>
-__device__ inline T distToUninstantiated( T distsq, T age, T w, T Q, T tau, T thresh)
-{
-  return Q*age+1.0/(1.0+1.0/w+age*tau)*distsq;
-}
-
 
 template<typename T, uint32_t K, uint32_t BLK_SIZE>
 __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_asgnIdces, uint32_t N)
@@ -36,8 +30,7 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
   {
     T max_sim_k = 0;
-    T max_r = 0.;
-    uint32_t max_r_k = UNASSIGNED;
+    uint32_t max_k = UNASSIGNED;
     T sim_k = 0.;
     T* p_k = oldp;
     T q_i[DIM];
@@ -46,20 +39,18 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
     q_i[2] = d_q[id*DIM+2];
     if (q_i[0] ==q_i[0] && q_i[1] ==q_i[1] && q_i[2]==q_i[2])// only do this for q not nan
     {
-      for (uint32_t k=0; k<K; ++k) {
-        T distsq = (q_i[0] - p_k[0])*(q_i[0] - p_k[0])
-        		 +(q_i[1] - p_k[1])*(q_i[1] - p_k[1])
-        		 +(q_i[2] - p_k[2])*(q_i[2] - p_k[2]);
-        sim_k = distToUninstantiated<T>(distsq,d_ages[k],d_ws[k],Q,tau,1e-6);
-        if(sim_k < lambda && asgnCosts[K*tid+k]-sim_k > max_r)
+      for (uint32_t k=0; k<K; ++k) 
+      {
+        const T dot = min(1.0,max(-1.0,q_i[0]*p_k[0] + q_i[1]*p_k[1] + q_i[2]*p_k[2]));
+        const sim_k = distToUninstantiatedSmallAngleApprox<T,10>(acos(dot),d_ages[k],beta,d_ws[k],Q,1e-6);
+        if(sim_k < lambda && max_sim_k > sim_k)
         {
           max_sim_k = sim_k;
-          max_r = asgnCosts[K*tid+k]-sim_k;
-          max_r_k = k;
+          max_k = k;
         }
         p_k += DIM;
       }
-      if(max_r_k < K){
+      if(max_k < K && asgnCosts[K*tid+max_k] < max_sim_k){
       	asgnCosts[K*tid+max_r_k] = max_sim_k;
         asgnIdces[K*tid+max_r_k] = id;
       }
@@ -74,7 +65,7 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
     if(tid < s)
     {
       for(uint32_t k = 0; k < K; ++k){
-        if(asgnCosts[K*tid+k] < asgnCosts[K*(s+tid)+k]){
+        if(asgnCosts[K*tid+k] > asgnCosts[K*(s+tid)+k]){
           asgnCosts[K*tid+k] = asgnCosts[K*(s+tid)+k];
           asgnIdces[K*tid+k] = asgnIdces[K*(s+tid)+k];
         } 
@@ -85,7 +76,9 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
 
   //reduce the 2 remaining into the output d_asgnCosts/d_asgnIndices
   if(tid < K) {
-    if(asgnCosts[tid] < asgnCosts[K+tid]){
+    if(asgnCosts[tid] > asgnCosts[K+tid]){r
+      // leads to the smallest index of minimal cost value (but only minimal wrt to its block)
+      // this is not the argmin over all values - that is probably not possible atomically
       atomicMin(&d_asgnIdces[tid], asgnIdces[tid]);
     } else {
       atomicMin(&d_asgnIdces[tid], asgnIdces[K+tid]);

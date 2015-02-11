@@ -71,7 +71,7 @@ cfg['base'] = args.base;
 #cfg['base'] = 'DPvMFmeans';
 #cfg['base'] = 'spkm';
 cfg['K'] = args.K0
-cfg['T'] = 100
+cfg['T'] = 500 # max number of iterations
 cfg['delta'] = 12. #18.
 cfg['nu'] =   3 + 10000.0 
 if cfg['base'] == 'DPvMFmeans':

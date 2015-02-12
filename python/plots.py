@@ -24,6 +24,7 @@ def plotOverParams(values,name,paramBase,paramName,baseMap,bases ,Ns=None,showLe
 
   fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
   ax1 = plt.subplot(111)
+  leg1 = []
   for base in bases:
     if base == 'spkm':
       valMean = values[base].mean(axis=1)

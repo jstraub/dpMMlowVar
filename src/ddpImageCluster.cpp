@@ -9,9 +9,10 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <boost/program_options.hpp>
-#include <ddpmeansCUDA.hpp>
-#include <euclideanData.hpp>
-#include "spline.h"
+
+#include <dpMMlowVar/ddpmeansCUDA.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
+#include <dpMMlowVar/spline.h>
 
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, Eigen::Dynamic> MXu;

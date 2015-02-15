@@ -9,9 +9,10 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <boost/program_options.hpp>
-#include <ddpmeansCUDA.hpp>
-#include <sphericalData.hpp>
-#include <opencvHelper.hpp>
+
+#include <dpMMlowVar/ddpmeansCUDA.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
+#include <dpMMlowVar/opencvHelper.hpp>
 
 typedef Eigen::Matrix<unsigned int, Eigen::Dynamic, 1> VXu;
 typedef Eigen::MatrixXf MXf;

@@ -1,117 +1,116 @@
+
 #include <stdint.h>
+#include <dpMMlowVar/helper_cuda.h>
 
-#include <cuda_runtime.h>
-#include <helper_cuda.h>
+  __device__ uint wang_hash(uint seed)
+  {
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return seed;
+  }
 
-__device__ uint wang_hash(uint seed)
-{
-  seed = (seed ^ 61) ^ (seed >> 16);
-  seed *= 9;
-  seed = seed ^ (seed >> 4);
-  seed *= 0x27d4eb2d;
-  seed = seed ^ (seed >> 15);
-  return seed;
-}
-
-__device__ uint rand_xorshift(uint rng_state)
-{
-  // Xorshift algorithm from George Marsaglia's paper
-  rng_state ^= (rng_state << 13);
-  rng_state ^= (rng_state >> 17);
-  rng_state ^= (rng_state << 5);
-  return rng_state;
-}
+  __device__ uint rand_xorshift(uint rng_state)
+  {
+    // Xorshift algorithm from George Marsaglia's paper
+    rng_state ^= (rng_state << 13);
+    rng_state ^= (rng_state >> 17);
+    rng_state ^= (rng_state << 5);
+    return rng_state;
+  }
 
 #define N_PER_THREAD 1
 
-template<typename T>
-__global__ void choiceMult_kernel(T* pdfs, uint32_t *z, uint32_t N, uint32_t M,
-  uint32_t seed)
-{
-  //int tid = threadIdx.x;
-  int idx = (threadIdx.x + blockIdx.x*blockDim.x)*N_PER_THREAD;
-  if(idx <= N-N_PER_THREAD)
+  template<typename T>
+  __global__ void choiceMult_kernel(T* pdfs, uint32_t *z, uint32_t N, uint32_t M,
+    uint32_t seed)
   {
-#pragma unroll
-    for(uint32_t k=0; k<N_PER_THREAD; ++k)
+    //int tid = threadIdx.x;
+    int idx = (threadIdx.x + blockIdx.x*blockDim.x)*N_PER_THREAD;
+    if(idx <= N-N_PER_THREAD)
     {
-      int idk = idx+k;
-      // obtain 32 bit random int and map it into 0.0 to 1.0
-      T rnd = (wang_hash(idk+seed)*2.3283064365386963e-10);
-      T cdf = pdfs[idk];
-      uint32_t z_i = M-1;
-      for (int i=1; i<M; ++i)
+#pragma unroll
+      for(uint32_t k=0; k<N_PER_THREAD; ++k)
       {
-        if(rnd <= cdf)
+        int idk = idx+k;
+        // obtain 32 bit random int and map it into 0.0 to 1.0
+        T rnd = (wang_hash(idk+seed)*2.3283064365386963e-10);
+        T cdf = pdfs[idk];
+        uint32_t z_i = M-1;
+        for (int i=1; i<M; ++i)
         {
-          z_i = i-1;
-          break;
+          if(rnd <= cdf)
+          {
+            z_i = i-1;
+            break;
+          }
+          cdf += pdfs[idk+i*N];
         }
-        cdf += pdfs[idk+i*N];
+        z[idk] = z_i;
       }
-      z[idk] = z_i;
     }
   }
-}
 
-template<typename T>
-__global__ void choiceMultLogPdf_kernel(T* logPdfs, uint32_t *z, 
+  template<typename T>
+  __global__ void choiceMultLogPdf_kernel(T* logPdfs, uint32_t *z, 
+      uint32_t N, uint32_t M, uint32_t seed)
+  {
+    //int tid = threadIdx.x;
+    int idx = (threadIdx.x + blockIdx.x*blockDim.x)*N_PER_THREAD;
+    if(idx <= N-N_PER_THREAD)
+    {
+#pragma unroll
+      for(uint32_t k=0; k<N_PER_THREAD; ++k)
+      {
+        int idk = idx+k;
+        // obtain 32 bit random int and map it into 0.0 to 1.0
+        T rnd = (wang_hash(idk+seed)*2.3283064365386963e-10);
+        T cdf = exp(logPdfs[idk]);
+        uint32_t z_i = M-1;
+        for (int i=1; i<M; ++i)
+        {
+          if(rnd <= cdf)
+          {
+            z_i = i-1;
+            break;
+          }
+          cdf += exp(logPdfs[idk+i*N]);
+        }
+        z[idk] = z_i;
+      }
+    }
+  }
+
+  template<typename T>
+  __global__ void choiceMultLogPdfUnnormalizedGpu_kernel(T* pdfs, uint32_t *z,
     uint32_t N, uint32_t M, uint32_t seed)
-{
-  //int tid = threadIdx.x;
-  int idx = (threadIdx.x + blockIdx.x*blockDim.x)*N_PER_THREAD;
-  if(idx <= N-N_PER_THREAD)
   {
-#pragma unroll
-    for(uint32_t k=0; k<N_PER_THREAD; ++k)
+    //int tid = threadIdx.x;
+    int idx = (threadIdx.x + blockIdx.x*blockDim.x)*N_PER_THREAD;
+    if(idx <= N-N_PER_THREAD)
     {
-      int idk = idx+k;
-      // obtain 32 bit random int and map it into 0.0 to 1.0
-      T rnd = (wang_hash(idk+seed)*2.3283064365386963e-10);
-      T cdf = exp(logPdfs[idk]);
-      uint32_t z_i = M-1;
-      for (int i=1; i<M; ++i)
+#pragma unroll
+      for(uint32_t k=0; k<N_PER_THREAD; ++k)
       {
-        if(rnd <= cdf)
+        int idk = idx+k;
+        // obtain 32 bit random int and map it into 0.0 to 1.0
+        T rnd = (wang_hash(idk+seed)*2.3283064365386963e-10);
+        // normalizer for logPdf
+        T maxLog = -9999999.; 
+        for (int k=0; k<M; ++k)
+          if(maxLog < pdfs[idk + k*N]) 
+            maxLog = pdfs[idk + k*N];
+        T normalizer = 0;
+        for (int k=0; k<M; ++k)
+          normalizer += exp(pdfs[idk + k*N] - maxLog);
+        normalizer = log(normalizer) + maxLog;
+        
+        T cdf = exp(pdfs[idk]-normalizer);
+        uint32_t z_i = M-1;
+        for (int i=1; i<M; ++i)
         {
-          z_i = i-1;
-          break;
-        }
-        cdf += exp(logPdfs[idk+i*N]);
-      }
-      z[idk] = z_i;
-    }
-  }
-}
-
-template<typename T>
-__global__ void choiceMultLogPdfUnnormalizedGpu_kernel(T* pdfs, uint32_t *z,
-  uint32_t N, uint32_t M, uint32_t seed)
-{
-  //int tid = threadIdx.x;
-  int idx = (threadIdx.x + blockIdx.x*blockDim.x)*N_PER_THREAD;
-  if(idx <= N-N_PER_THREAD)
-  {
-#pragma unroll
-    for(uint32_t k=0; k<N_PER_THREAD; ++k)
-    {
-      int idk = idx+k;
-      // obtain 32 bit random int and map it into 0.0 to 1.0
-      T rnd = (wang_hash(idk+seed)*2.3283064365386963e-10);
-      // normalizer for logPdf
-      T maxLog = -9999999.; 
-      for (int k=0; k<M; ++k)
-        if(maxLog < pdfs[idk + k*N]) 
-          maxLog = pdfs[idk + k*N];
-      T normalizer = 0;
-      for (int k=0; k<M; ++k)
-        normalizer += exp(pdfs[idk + k*N] - maxLog);
-      normalizer = log(normalizer) + maxLog;
-      
-      T cdf = exp(pdfs[idk]-normalizer);
-      uint32_t z_i = M-1;
-      for (int i=1; i<M; ++i)
-      {
         if(rnd <= cdf)
         {
           z_i = i-1;

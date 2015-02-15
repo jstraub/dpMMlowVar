@@ -1,7 +1,7 @@
 
-#include "cuda_global.h"
 #include <stdio.h>
 #include <float.h>
+#include "cuda_global.h"
 
 // executions per thread
 #define N_PER_T 16

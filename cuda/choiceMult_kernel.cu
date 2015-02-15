@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include <cuda_runtime.h>
-#include <nvidia/helper_cuda.h>
+#include <helper_cuda.h>
 
 __device__ uint wang_hash(uint seed)
 {

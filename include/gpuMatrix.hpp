@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 
 #include <cuda_runtime.h>
-#include <nvidia/helper_cuda.h> 
+#include <helper_cuda.h> 
 
 #include "global.hpp"
 

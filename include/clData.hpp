@@ -136,7 +136,7 @@ ClData<T>::ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
 
 template<class T>
 ClData<T>::ClData(uint32_t D, uint32_t K)
- : z_(new VectorXu(0)), x_(new Matrix<T,Dynamic,Dynamic>(D,0)), K_(K), N_(0),
+ : z_(new VectorXu(VectorXu::Zero(0))), x_(new Matrix<T,Dynamic,Dynamic>(D,0)), K_(K), N_(0),
   D_(D)
 {
   cout<<"D="<<D_<<" N="<<N_<<" K="<<K_<<endl;

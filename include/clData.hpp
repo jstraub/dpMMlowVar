@@ -33,6 +33,7 @@ public:
   ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
       const spVectorXu& z, uint32_t K);
   ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, uint32_t K);
+  ClData(uint32_t D, uint32_t K);
   virtual ~ClData();
 
   /* after changing z_ outside - we can use update to get new statistics */
@@ -131,6 +132,14 @@ ClData<T>::ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
     z_->fill(0.);
   else
     z_->fill(UNASSIGNED);
+};
+
+template<class T>
+ClData<T>::ClData(uint32_t D, uint32_t K)
+ : z_(new VectorXu(0)), x_(new Matrix<T,Dynamic,Dynamic>(D,0)), K_(K), N_(0),
+  D_(D)
+{
+  cout<<"D="<<D_<<" N="<<N_<<" K="<<K_<<endl;
 };
 
 template<class T>

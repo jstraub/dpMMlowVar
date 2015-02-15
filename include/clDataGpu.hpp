@@ -29,6 +29,7 @@ public:
   ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
       const spVectorXu& z, uint32_t K);
   ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, uint32_t K);
+  ClDataGpu(uint32_t D, uint32_t K);
   virtual ~ClDataGpu(){;};
 
   virtual void labelMap(const vector<int32_t>& map);
@@ -64,6 +65,10 @@ ClDataGpu<T>::ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
   : ClData<T>(x,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
 {cout<<"ClDataGpu constructed"<<endl;};
 
+template<typename T>
+ClDataGpu<T>::ClDataGpu(uint32_t D, uint32_t K)
+  : ClData<T>(D,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
+{cout<<"ClDataGpu constructed"<<endl;};
 
 template<typename T>
 void ClDataGpu<T>::updateLabels(uint32_t K)

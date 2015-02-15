@@ -154,18 +154,16 @@ target_link_libraries(ddpSphereCluster
   opencv_highgui
   )
 
-INSTALL(TARGETS dpMMlowVar ddpImageCluster #dpStickGMM dpDirMM
+INSTALL(TARGETS dpMMlowVar ddpImageCluster dpMMlowVarCluster
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   # ARCHIVE DESTINATION lib
   COMPONENT compLib
   )
 
-install(DIRECTORY src/ DESTINATION src/                                 
-  FILES_MATCHING PATTERN "*.cpp")                                         
-install(DIRECTORY include/ DESTINATION include/                                 
+install(DIRECTORY include/ DESTINATION include/dpMMlowVar/
   FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY cuda/ DESTINATION include/                                 
+install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/                                 
   FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY include/ DESTINATION include/                                 
+install(DIRECTORY include/ DESTINATION include/dpMMlowVar/                                 
   FILES_MATCHING PATTERN "*.hpp") 

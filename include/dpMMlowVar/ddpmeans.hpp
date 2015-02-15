@@ -6,7 +6,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "dpmeans.hpp"
+#include <dpMMlowVar/dpmeans.hpp>
 
 using namespace Eigen;
 using std::cout;

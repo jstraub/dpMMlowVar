@@ -5,10 +5,8 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include <cuda_runtime.h>
-#include <helper_cuda.h> 
-
-#include "global.hpp"
+#include <dpMMlowVar/helper_cuda.h> 
+#include <dpMMlowVar/global.hpp>
 
 using namespace Eigen;
 //#ifdef BOOST_OLD

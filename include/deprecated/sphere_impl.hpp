@@ -413,20 +413,21 @@ Matrix<T,Dynamic,Dynamic> Sphere<T>::Exp_p(const Matrix<T,Dynamic,1>& p,
   return q;
 }
 
-template <typename T>
-Matrix<T,Dynamic,1> Sphere<T>::sampleUnif(mt19937* pRndGen)
-{
-//  Matrix<T,Dynamic,Dynamic> Sigma(Dd,Dd);
-//  Sigma.setZero(Dd,Dd);
-//  Sigma.diagonal() = Matrix<T,Dynamic,1>::Ones(Dd);
-//  Matrix<T,Dynamic,1> mu(Dd);
-//  mu.setZero(Dd,1);
-//  cout<<Sigma<<endl;
-//  cout<<mu<<endl;
-  Normal<T> normal(D_,pRndGen);
-  Matrix<T,Dynamic,1> q = normal.sample();
-  return q/q.norm();
-};
+// ------------------------- deprecated ---------------------
+//template <typename T>
+//Matrix<T,Dynamic,1> Sphere<T>::sampleUnif(mt19937* pRndGen)
+//{
+////  Matrix<T,Dynamic,Dynamic> Sigma(Dd,Dd);
+////  Sigma.setZero(Dd,Dd);
+////  Sigma.diagonal() = Matrix<T,Dynamic,1>::Ones(Dd);
+////  Matrix<T,Dynamic,1> mu(Dd);
+////  mu.setZero(Dd,1);
+////  cout<<Sigma<<endl;
+////  cout<<mu<<endl;
+//  Normal<T> normal(D_,pRndGen);
+//  Matrix<T,Dynamic,1> q = normal.sample();
+//  return q/q.norm();
+//};
 
 //template class Sphere<double>;
 //template class Sphere<float>;

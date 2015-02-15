@@ -3,9 +3,9 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include "gpuMatrix.hpp"
-#include "clData.hpp"
-#include "timer.hpp"
+#include <dpMMlowVar/gpuMatrix.hpp>
+#include <dpMMlowVar/clData.hpp>
+#include <dpMMlowVar/timer.hpp>
 
 using namespace Eigen;
 using std::vector;

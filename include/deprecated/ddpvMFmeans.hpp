@@ -10,7 +10,7 @@
 //#include "sphere.hpp"
 //#include "clusterer.hpp"
 //#include "sphericalKMeans.hpp"
-#include "ddpmeans.hpp"
+#include <dpMMlowVar/ddpmeans.hpp>
 //#include "dpvMFmeans.hpp"
 //#include "dir.hpp"
 //#include "cat.hpp"

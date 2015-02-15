@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "helper_string.h"
+#include <dpMMlowVar/helper_string.h>
 #include <cuda_runtime.h>
 
 //#ifndef STRNCASECMP                                                             

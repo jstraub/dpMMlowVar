@@ -2,12 +2,10 @@
 
 #include <vector>
 #include <fstream>
-#include <global.hpp>
-#include <clData.hpp>
-
 #include <Eigen/Dense>
-#include <boost/shared_ptr.hpp>
 
+#include <dpMMlowVar/global.hpp>
+#include <dpMMlowVar/clData.hpp>
 
 using namespace Eigen;
 using std::vector;

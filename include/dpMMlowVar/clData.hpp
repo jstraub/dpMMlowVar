@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <Eigen/Dense>
 
-#include <global.hpp>
+#include <dpMMlowVar/global.hpp>
 
 using namespace Eigen;
 using std::vector;

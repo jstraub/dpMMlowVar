@@ -3,15 +3,15 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-//#include <boost/random/mersenne_twister.hpp>
-#include <boost/shared_ptr.hpp>
+#include <dpMMlowVar/global.hpp>
 
-#include "ddpmeans.hpp"
-#include "clDataGpu.hpp"
-#include "gpuMatrix.hpp"
 
-#include <euclideanData.hpp>
-#include <sphericalData.hpp>
+#include <dpMMlowVar/ddpmeans.hpp>
+#include <dpMMlowVar/clDataGpu.hpp>
+#include <dpMMlowVar/gpuMatrix.hpp>
+
+#include <dpMMlowVar/euclideanData.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
 
 
 using namespace Eigen;

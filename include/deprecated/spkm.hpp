@@ -3,12 +3,11 @@
 #include <iostream>
 
 #include <boost/random/mersenne_twister.hpp>
-#include <boost/shared_ptr.hpp>
 
-#include "sphere.hpp"
-//#include "karcherMean.hpp"
-#include "kmeans.hpp"
-#include "clusterer.hpp"
+#include <dpMMlowVar/global.hpp>
+#include <dpMMlowVar/sphere.hpp>
+//#include <dpMMlowVar/karcherMean.hpp>
+#include <dpMMlowVar/kmeans.hpp>
 
 using namespace Eigen;
 using std::cout;

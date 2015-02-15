@@ -6,9 +6,9 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "ddpmeans.hpp"
-#include "clDataGpu.hpp"
-#include "gpuMatrix.hpp"
+#include <dpMMlowVar/ddpmeans.hpp>
+#include <dpMMlowVar/clDataGpu.hpp>
+#include <dpMMlowVar/gpuMatrix.hpp>
 
 
 using namespace Eigen;

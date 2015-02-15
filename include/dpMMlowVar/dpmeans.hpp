@@ -5,7 +5,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "kmeans.hpp"
+#include <dpMMlowVar/kmeans.hpp>
 
 using namespace Eigen;
 using std::cout;

@@ -3,11 +3,11 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
+#include <dpMMlowVar/global.hpp>
 
-#include "clusterer.hpp"
-#include "sphericalData.hpp"
-#include "euclideanData.hpp"
+#include <dpMMlowVar/clusterer.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
 
 using namespace Eigen;
 using std::cout;

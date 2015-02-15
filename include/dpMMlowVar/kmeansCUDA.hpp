@@ -3,14 +3,14 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
+#include <dpMMlowVar/global.hpp>
 
-#include "ddpmeans.hpp"
-#include "clDataGpu.hpp"
-#include "gpuMatrix.hpp"
+#include <dpMMlowVar/kmeans.hpp>
+#include <dpMMlowVar/clDataGpu.hpp>
+#include <dpMMlowVar/gpuMatrix.hpp>
 
-#include <euclideanData.hpp>
-#include <sphericalData.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
 
 using namespace Eigen;
 using std::cout;

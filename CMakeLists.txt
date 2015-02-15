@@ -161,9 +161,9 @@ INSTALL(TARGETS dpMMlowVar ddpImageCluster dpMMlowVarCluster
   COMPONENT compLib
   )
 
-install(DIRECTORY include/ DESTINATION include/dpMMlowVar/
+install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
   FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/                                 
-  FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY include/ DESTINATION include/dpMMlowVar/                                 
+#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/                                 
+#  FILES_MATCHING PATTERN "*.h")                                         
+install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/                                 
   FILES_MATCHING PATTERN "*.hpp") 

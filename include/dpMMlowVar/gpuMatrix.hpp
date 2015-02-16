@@ -17,14 +17,15 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
-extern void copy_gpu( double *d_from, double *d_to , uint32_t N, 
+void copy_gpu( double *d_from, double *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
-extern void copy_gpu( float *d_from, float *d_to , uint32_t N, 
+void copy_gpu( float *d_from, float *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
-extern void copy_gpu( uint32_t *d_from, uint32_t *d_to , uint32_t N, 
+void copy_gpu( uint32_t *d_from, uint32_t *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
 
 namespace dplv {
+
 
 template <class T>
 struct GpuMatrix

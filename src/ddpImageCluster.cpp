@@ -23,6 +23,7 @@ typedef Eigen::Vector3i V3i;
 
 using namespace std;
 using namespace cv;
+using namespace dplv;
 namespace po = boost::program_options;
 
 class DMeansPaletteEncoder{

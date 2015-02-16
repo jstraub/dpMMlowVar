@@ -17,6 +17,8 @@ extern void vectorSum_gpu(float *d_x, uint32_t *d_z,
 
 extern void labelMapGpu(uint32_t *d_z, int32_t* d_Map, uint32_t N);
 
+namespace dplv {
+
 template<typename T>
 class ClDataGpu : public ClData<T>
 {
@@ -145,3 +147,4 @@ void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
   labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
 };
 
+}

@@ -18,6 +18,8 @@
 
 using namespace Eigen;
 
+namespace dplv {
+
 template<typename T>
 class Distribution
 {
@@ -103,3 +105,4 @@ inline T logSumExp(const Matrix<T,Dynamic,1>& pdf)
 //  return log((pdf.array()-max).exp().matrix().sum()) + max;
 //}
 
+}

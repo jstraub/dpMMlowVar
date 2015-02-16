@@ -13,6 +13,7 @@ using std::endl;
 
 #define UNASSIGNED 4294967294
 
+namespace dplv {
 
 /* clustered data */
 template <class T>
@@ -208,3 +209,5 @@ void ClData<T>::labelMap(const vector<int32_t>& map)
     for(uint32_t i=0; i<this->N_; ++i)
       (*this->z_)(i) = map[ (*this->z_)(i)];
 };
+
+}

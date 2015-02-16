@@ -4,6 +4,7 @@
 
 #include <dpMMlowVar/clData.hpp>
 
+namespace dplv {
 
 template<typename T>
 struct Euclidean //: public DataSpace<T>
@@ -311,3 +312,5 @@ Matrix<T,Dynamic,1> Euclidean<T>::reInstantiatedOldCluster(const
   const T gamma = 1.0/(1.0/w_k + t_k*tau);
   return (ps_k*gamma + xSum)/(gamma+N_k);
 };
+
+}

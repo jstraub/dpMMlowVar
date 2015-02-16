@@ -12,6 +12,8 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+namespace dplv {
+
 template<class T, class DS>
 class DDPMeans : public DPMeans<T,DS>
 {
@@ -338,3 +340,5 @@ void DDPMeans<T,DS>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
 //      this->clsPrev_[k]->centroid() = dR*this->clsPrev_[k]->centroid();
     }
 };
+
+}

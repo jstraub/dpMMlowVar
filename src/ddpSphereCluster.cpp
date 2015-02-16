@@ -20,6 +20,7 @@ typedef Eigen::Vector3f V3f;
 
 using namespace std;
 using namespace cv;
+using namespace dplv;
 namespace po = boost::program_options;
 
 int makeDirectory(const char* name);

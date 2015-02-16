@@ -44,6 +44,8 @@ extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
     uint32_t *d_asgnIdces);
 
 
+namespace dplv {
+
 template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
 {
@@ -240,3 +242,4 @@ VectorXu DDPMeansCUDA<T,DS>::initLabels()
 //  return d_asgnIdces.get();      
 }
 
+}

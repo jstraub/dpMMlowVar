@@ -13,6 +13,8 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+namespace dplv {
+
 template<class T, class DS>
 class KMeans : public Clusterer<T,DS>
 {
@@ -181,4 +183,4 @@ T KMeans<T,DS>::avgIntraClusterDeviation()
   }
   return deviates.sum()/ this->N_;
 }
-
+}

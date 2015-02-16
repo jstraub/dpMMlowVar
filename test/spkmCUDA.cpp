@@ -12,6 +12,7 @@
 #include <dpMMlowVar/kmeansCUDA.hpp>
 
 using namespace Eigen;
+using namespace dplv;
 using std::cout;
 using std::endl;
 

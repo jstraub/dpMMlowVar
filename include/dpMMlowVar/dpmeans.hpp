@@ -11,6 +11,8 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+namespace dplv {
+
 template<class T, class DS>
 class DPMeans : public KMeans<T,DS>
 {
@@ -131,3 +133,4 @@ void DPMeans<T,DS>::updateCenters()
 //  this->ps_ = psNew;
   this->K_ = kNew;
 };
+}

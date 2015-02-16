@@ -21,6 +21,7 @@ using boost::mt19937;
 #endif
 
 using namespace Eigen;
+using namespace dplv;
 using std::cout;
 using std::endl;
 

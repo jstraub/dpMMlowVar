@@ -11,6 +11,7 @@
 
 using namespace Eigen;
 using namespace std;
+using namespace dplv;
 namespace po = boost::program_options;
 
 typedef double flt;

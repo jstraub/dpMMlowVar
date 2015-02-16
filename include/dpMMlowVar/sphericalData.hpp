@@ -7,6 +7,8 @@ using namespace Eigen;
 using std::min;
 using std::max;
 
+namespace dplv {
+
 /* rotation from point A to B; percentage specifies how far the rotation will 
  * bring us towards B [0,1] */
 template<typename T>
@@ -498,3 +500,4 @@ void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta,
 //  eta = (beta/L2xSum *(phi));
 };
 
+}

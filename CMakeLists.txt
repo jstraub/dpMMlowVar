@@ -64,18 +64,13 @@ message(${EIGEN3_INCLUDE_DIR})
 #ELSE(BOOST_OLD)
   include_directories(
     ./include
-    ./cuda
     ${EIGEN3_INCLUDE_DIR}
-    /usr/include
-    #/usr/include/eigen3
-#    $ENV{WORKSPACE_HOME}/3rdparty/include
     ${Boost_INCLUDE_DIRS}
     ${CUDA_TOOLKIT_INCLUDE}
     )
   link_directories(
     ${Boost_LIBRARY_DIRS}
     ${CUDA_LIBRARIES}
-#    $ENV{WORKSPACE_HOME}/3rdparty/lib
     )
   cuda_add_library(dpMMlowVar SHARED
     ./cuda/vectorSum_kernel.cu

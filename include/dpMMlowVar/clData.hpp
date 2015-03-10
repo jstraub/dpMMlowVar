@@ -44,7 +44,6 @@ public:
 
   virtual void labelMap(const vector<int32_t>& map);
 
-
   virtual void updateK(uint32_t K){ K_ = K;};
   virtual void updateData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
   virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);

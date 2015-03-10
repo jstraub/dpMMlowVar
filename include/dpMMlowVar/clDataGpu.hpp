@@ -48,6 +48,10 @@ public:
   virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   virtual VectorXu& z() { this->d_z_.get(this->z_); return ClData<T>::z();};
+//  virtual const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x()
+//  {
+//    this->d_x_.get(this->x_); return this->x_;
+//  };
   virtual T* d_x(){ return d_x_.data();};
   virtual uint32_t* d_z(){ return d_z_.data();};
 

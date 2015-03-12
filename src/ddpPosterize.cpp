@@ -131,6 +131,8 @@ int main(int argc, char** argv){
   DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
     DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
 
+
+
 	//loop over extracting a frame, possibly resizing it, and clustering
 	int fr = 0;
 	for(;;){

@@ -38,6 +38,7 @@ public:
 
   virtual bool convergedCounts(uint32_t dCounts) 
   {
+//    cout<<this->counts()<<endl<<prevNs_<<endl;
     if(this->counts().size() > 0 && this->counts().size() == prevNs_.size())
     {
       int dC = 0;

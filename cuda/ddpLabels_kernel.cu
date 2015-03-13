@@ -15,8 +15,8 @@ __device__ inline T distToUninstantiated( T distsq, T age, T w, T Q, T tau, T th
 
 template<typename T, uint32_t BLK_SIZE>
 __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, 
-    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_iAction, 
-    uint32_t i0, uint32_t N, uint32_t K)
+    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau, 
+    uint32_t *d_iAction, uint32_t i0, uint32_t N, uint32_t K)
 {
 //  __shared__ T p[DIM*(K+1)];
 ////  __shared__ T ages[K+1];
@@ -76,12 +76,16 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         }
         p_k += DIM;
       }
-      if (z_i == K || d_Ns[z_i] == 0)
+      if (z_i == K) // TODO this means we assign datapoints to uninstantiated and do not break!! || d_Ns[z_i] == 0)
       {
         iAction[tid] = id;
         break; // save id at which an action occured and break out because after
         // that id anything more would be invalid.
       }
+//      if(d_Ns[z_i] == 0)
+//      {
+//        atomicAdd(d_Ns,1);
+//      }
       z[id] = z_i;
     }
   }

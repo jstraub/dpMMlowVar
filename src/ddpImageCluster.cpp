@@ -140,7 +140,7 @@ int main(int argc, char** argv){
 		cap.grab();
 		bool empty = !cap.retrieve(frame);
 		if(empty) break;
-    if(fr < 600) {++ fr; continue;}
+//    if(fr < 100) {++ fr; continue;}
     shared_ptr<MXf> data;
 	  Mat frameresized = frame;
 		if (nfr_w != fr_w || nfr_h != fr_h){
@@ -153,13 +153,24 @@ int main(int argc, char** argv){
 
 		//JULIAN: This is where you cluster vector space data
 //		dmeans::Results<VSModel> res = dynm.cluster(data);
+    Timer t0;
 		clusterer->nextTimeStep(data);
+//    cout<<"serial assign"<<endl;
+//		clusterer->updateLabelsSerial();
+//    			clusterer->updateCenters();
+    Timer t1;
+    uint32_t t = 0;
 		do{
 			clusterer->updateLabels();
-    			clusterer->updateCenters();
-		}while (!clusterer->convergedCounts(nfr_h*nfr_w/100));
+      clusterer->updateCenters();
+      t1.toctic("iteration");
+      ++ t;
+		}while (!clusterer->convergedCounts(nfr_h*nfr_w/100)
+        && t < 10);
 //		}while (!clusterer->converged());
-		clusterer->updateState();
+		clusterer->updateState(false);
+    t0.toctic("whole iteration");
+
     const VXu& z = clusterer->z();
     const MXf& p = clusterer->centroids();
 
@@ -169,7 +180,7 @@ int main(int argc, char** argv){
     cv::Mat postFrame = boundaries(frameresized, z);
 
     cv::imshow("rgb",postFrame);
-    cv::waitKey(30);
+    cv::waitKey(40);
 
 		//JULIAN: This is where you write out the frame + superpixel boundaries
 		ostringstream oss;
@@ -324,7 +335,6 @@ cv::Mat boundaries(cv::Mat frame, VXu z)
 {
   int cl = frame.cols;
   int rw = frame.rows;
-  cout<<"rw="<<rw<< " x "<<cl<< " "<<z.size()<<endl;
   Mat frameOut;
   frame.copyTo(frameOut);
   for(int y = 1; y < rw; y++)
@@ -338,7 +348,6 @@ cv::Mat boundaries(cv::Mat frame, VXu z)
         clr.val[1] = 0;
         clr.val[2] = 0;
       }  }
-  cout<<"done"<<endl;
   return frameOut;
 //  //Mat medianFrame;
 //  //medianBlur(frameOut, medianFrame, 3);

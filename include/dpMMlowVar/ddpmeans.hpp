@@ -30,7 +30,7 @@ public:
   
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
 //  virtual void nextTimeStep(const shared_ptr<ClData<T> >& cld);
-  virtual void updateState(); // after converging for a single time instant
+  virtual void updateState(bool verbose); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   virtual void createReviveFrom(uint32_t i);
@@ -237,7 +237,7 @@ void DDPMeans<T,DS>::updateCenters()
   this->cld_->updateK(this->K_);
   this->cld_->computeSS();
 
-//#pragma omp parallel for 
+#pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
     this->cls_[k]->updateSS(this->cld_,k);
@@ -256,6 +256,7 @@ template<class T, class DS>
 void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
 {
 //  this->clsPrev_.clear();
+//#pragma omp parallel for 
   for (uint32_t k =0; k< this->K_; ++k)
   {
 //    clsPrev_.push_back(shared_ptr<typename
@@ -284,15 +285,16 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
 };
 
 template<class T, class DS>
-void DDPMeans<T,DS>::updateState()
+void DDPMeans<T,DS>::updateState(bool verbose)
 {
   vector<bool> toRemove(this->K_,false);
+//#pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
     if(this->cls_[k]->isInstantiated()) this->cls_[k]->updateWeight();
     this->cls_[k]->incAge();
     if(this->cls_[k]->isDead()) toRemove[k] = true;
-    this->cls_[k]->print();
+    if (verbose) this->cls_[k]->print();
   }
 
   vector<int32_t> labelMap(this->K_);

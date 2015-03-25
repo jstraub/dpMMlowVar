@@ -3,15 +3,15 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-//#include <boost/random/mersenne_twister.hpp>
-#include <boost/shared_ptr.hpp>
+#include <dpMMlowVar/global.hpp>
 
-#include "ddpmeans.hpp"
-#include "clDataGpu.hpp"
-#include "gpuMatrix.hpp"
 
-#include <euclideanData.hpp>
-#include <sphericalData.hpp>
+#include <dpMMlowVar/ddpmeans.hpp>
+#include <dpMMlowVar/clDataGpu.hpp>
+#include <dpMMlowVar/gpuMatrix.hpp>
+
+#include <dpMMlowVar/euclideanData.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
 
 
 using namespace Eigen;
@@ -44,6 +44,8 @@ extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
     uint32_t *d_asgnIdces);
 
 
+namespace dplv {
+
 template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
 {
@@ -66,10 +68,10 @@ protected:
   GpuMatrix<uint32_t> d_Ns_;
   GpuMatrix<T> d_p_;
 
-  virtual VectorXu optimisticLabelsAssign(uint32_t i0);
+  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
 
-  void setupComputeLabelsGPU(const VectorXu& iAction);
-  VectorXu computeLabelsGPU(uint32_t i0);
+  void setupComputeLabelsGPU(uint32_t iAction);
+  uint32_t computeLabelsGPU(uint32_t i0);
 
   virtual VectorXu initLabels();
 };
@@ -79,7 +81,7 @@ template<class T, class DS>
 DDPMeansCUDA<T,DS>::DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
       T lambda, T Q, T tau)
   : DDPMeans<T,DS>(cld,lambda,Q,tau), //d_x_(cld), d_z_(this->N_),
-  d_iAction_(2), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
+  d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
 {}
 
 template<class T, class DS>
@@ -115,13 +117,11 @@ void DDPMeansCUDA<T,DS>::nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step,
 //  }
 
   // revive or add cluster from the first data-point
-  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
-  idAction(0) = 0; // revive from first datapoint - decides internally which cluster
-  this->createReviveFrom(idAction);
+  this->createReviveFrom(0);
 };
 
 template<class T, class DS>
-void DDPMeansCUDA<T,DS>::setupComputeLabelsGPU(const VectorXu& iAction)
+void DDPMeansCUDA<T,DS>::setupComputeLabelsGPU(uint32_t iAction)
 {
   d_iAction_.set(iAction);
   d_Ns_.set(this->counts());
@@ -147,9 +147,9 @@ void DDPMeansCUDA<T,DS>::setupComputeLabelsGPU(const VectorXu& iAction)
 }
 
 template<>
-VectorXu DDPMeansCUDA<float,Euclidean<float> >::computeLabelsGPU(uint32_t i0)
+uint32_t DDPMeansCUDA<float,Euclidean<float> >::computeLabelsGPU(uint32_t i0)
 {
-  VectorXu iAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  uint32_t iAction = UNASSIGNED;
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   ddpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
@@ -162,9 +162,9 @@ VectorXu DDPMeansCUDA<float,Euclidean<float> >::computeLabelsGPU(uint32_t i0)
 }
 
 template<>
-VectorXu DDPMeansCUDA<double,Euclidean<double> >::computeLabelsGPU(uint32_t i0)
+uint32_t DDPMeansCUDA<double,Euclidean<double> >::computeLabelsGPU(uint32_t i0)
 {
-  VectorXu iAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  uint32_t iAction = UNASSIGNED;
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   ddpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
@@ -177,9 +177,9 @@ VectorXu DDPMeansCUDA<double,Euclidean<double> >::computeLabelsGPU(uint32_t i0)
 }
 
 template<>
-VectorXu DDPMeansCUDA<float,Spherical<float> >::computeLabelsGPU(uint32_t i0)
+uint32_t DDPMeansCUDA<float,Spherical<float> >::computeLabelsGPU(uint32_t i0)
 {
-  VectorXu iAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  uint32_t iAction = UNASSIGNED;
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   ddpvMFlabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(),
@@ -192,9 +192,9 @@ VectorXu DDPMeansCUDA<float,Spherical<float> >::computeLabelsGPU(uint32_t i0)
 }
 
 template<>
-VectorXu DDPMeansCUDA<double,Spherical<double> >::computeLabelsGPU(uint32_t i0)
+uint32_t DDPMeansCUDA<double,Spherical<double> >::computeLabelsGPU(uint32_t i0)
 {
-  VectorXu iAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  uint32_t iAction = UNASSIGNED;
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   ddpvMFlabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(),
@@ -207,7 +207,7 @@ VectorXu DDPMeansCUDA<double,Spherical<double> >::computeLabelsGPU(uint32_t i0)
 }
 
 template<class T, class DS>
-VectorXu DDPMeansCUDA<T,DS>::optimisticLabelsAssign(uint32_t i0)
+uint32_t DDPMeansCUDA<T,DS>::optimisticLabelsAssign(uint32_t i0)
 {
   return computeLabelsGPU(0); // TODO make passing i0 work!
 };
@@ -242,3 +242,4 @@ VectorXu DDPMeansCUDA<T,DS>::initLabels()
 //  return d_asgnIdces.get();      
 }
 
+}

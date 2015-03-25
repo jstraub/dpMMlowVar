@@ -4,14 +4,14 @@
 #include <string>
 #include <boost/program_options.hpp>
 
-//#include "spkm.hpp"
-#include "kmeans.hpp"
-//#include "ddpvMFmeans.hpp"
-#include "ddpmeans.hpp"
-#include "timer.hpp"
+#include <dpMMlowVar/kmeans.hpp>
+#include <dpMMlowVar/dpmeans.hpp>
+#include <dpMMlowVar/ddpmeans.hpp>
+#include <dpMMlowVar/timer.hpp>
 
 using namespace Eigen;
 using namespace std;
+using namespace dplv;
 namespace po = boost::program_options;
 
 typedef double flt;

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <Eigen/Dense>
 
-#include <global.hpp>
+#include <dpMMlowVar/global.hpp>
 
 using namespace Eigen;
 using std::vector;
@@ -13,6 +13,7 @@ using std::endl;
 
 #define UNASSIGNED 4294967294
 
+namespace dplv {
 
 /* clustered data */
 template <class T>
@@ -33,6 +34,7 @@ public:
   ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
       const spVectorXu& z, uint32_t K);
   ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, uint32_t K);
+  ClData(uint32_t D, uint32_t K);
   virtual ~ClData();
 
   /* after changing z_ outside - we can use update to get new statistics */
@@ -41,7 +43,6 @@ public:
   virtual void computeSS();
 
   virtual void labelMap(const vector<int32_t>& map);
-
 
   virtual void updateK(uint32_t K){ K_ = K;};
   virtual void updateData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x);
@@ -134,6 +135,14 @@ ClData<T>::ClData(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
 };
 
 template<class T>
+ClData<T>::ClData(uint32_t D, uint32_t K)
+ : z_(new VectorXu(VectorXu::Zero(0))), x_(new Matrix<T,Dynamic,Dynamic>(D,0)), K_(K), N_(0),
+  D_(D)
+{
+  cout<<"D="<<D_<<" N="<<N_<<" K="<<K_<<endl;
+};
+
+template<class T>
 ClData<T>::~ClData()
 {};
 
@@ -199,3 +208,5 @@ void ClData<T>::labelMap(const vector<int32_t>& map)
     for(uint32_t i=0; i<this->N_; ++i)
       (*this->z_)(i) = map[ (*this->z_)(i)];
 };
+
+}

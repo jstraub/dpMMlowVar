@@ -1,6 +1,6 @@
 #ifndef __RANDOM_HPP
-#include<random>
-#include "timer.hpp"
+#include <random>
+#include <dpMMlowVar/timer.hpp>
 
 //singleton design pattern for random stuff
 //singletons ensure that all randomness in dynamic means

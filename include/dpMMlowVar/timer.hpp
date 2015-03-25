@@ -11,6 +11,8 @@ using std::endl;
 using std::ostream;
 using std::string;
 
+namespace dplv {
+
 class Timer
 {
 public:
@@ -86,5 +88,7 @@ inline ostream& operator<<(ostream &out, const Timer& t)
   out << t.lastDt() << "ms";
   return out;
 };
+
+}
 
 #endif /* TIMER_HPP_ */

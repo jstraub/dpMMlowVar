@@ -8,10 +8,11 @@
 
 #include <stdint.h>
 
-#include "clDataGpu.hpp"
-#include "kmeansCUDA.hpp"
+#include <dpMMlowVar/clDataGpu.hpp>
+#include <dpMMlowVar/kmeansCUDA.hpp>
 
 using namespace Eigen;
+using namespace dplv;
 using std::cout;
 using std::endl;
 

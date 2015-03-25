@@ -6,11 +6,13 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "dpmeans.hpp"
+#include <dpMMlowVar/dpmeans.hpp>
 
 using namespace Eigen;
 using std::cout;
 using std::endl;
+
+namespace dplv {
 
 template<class T, class DS>
 class DDPMeans : public DPMeans<T,DS>
@@ -31,7 +33,7 @@ public:
   virtual void updateState(); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
-  virtual void createReviveFrom(const VectorXu& ids);
+  virtual void createReviveFrom(uint32_t i);
 
   virtual bool converged(T eps=1e-6) 
   {
@@ -70,7 +72,7 @@ protected:
   typename DS::DependentCluster cl0_;
   //vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
 
-  virtual VectorXu optimisticLabelsAssign(uint32_t i0);
+  virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual VectorXu initLabels();
 };
 
@@ -121,9 +123,9 @@ uint32_t DDPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 }
 
 template<class T,class DS>
-VectorXu DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
+uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
 {
-  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  uint32_t idAction = UNASSIGNED;
 #pragma omp parallel for 
   for(uint32_t i=i0; i<this->N_; ++i)
   {
@@ -133,7 +135,7 @@ VectorXu DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
     { // note this as starting position
 #pragma omp critical
       {
-        if(idAction(z_i) > i) idAction(z_i) = i;
+        if(idAction > i) idAction = i;
       }
     }
     this->cld_->z(i) = z_i;
@@ -149,37 +151,27 @@ VectorXu DDPMeans<T,DS>::initLabels()
 
 
 template<class T, class DS>
-void DDPMeans<T,DS>::createReviveFrom(const VectorXu& ids)
+void DDPMeans<T,DS>::createReviveFrom(uint32_t i)
 {
 //  cout<<"i "<<i
 //    <<" x @ i "<<this->cld_->x()->col(i).transpose()
 //    <<" "<<this->cld_->x()->col(i).norm()
 //    <<" with K= "<<this->K_<<endl;
 
-  for (uint32_t k=0; k<ids.size(); ++k)
-  {
-    uint32_t i = ids(k);
-    if (i == UNASSIGNED) 
-    {
-//      cout<<"skipping cluster "<<k<<endl;
-      continue;
-    }
-
-    T sim = 0.;
-    uint32_t z_i = this->indOfClosestCluster(i,sim);
-    if(z_i == this->K_) 
-    { // start a new cluster
-      this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
-            typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
-      this->cls_[z_i]->globalId = this->globalMaxInd_++;
-      this->K_ ++;
-//          cout<<"new cluster "<<(this->K_-1)<<endl;
-    } 
-    else if(!this->cls_[z_i]->isInstantiated())
-    { // instantiated an old cluster
-      this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
-//          cout<<"revieve cluster "<<z_i<<endl;
-    }
+  T sim = 0.;
+  uint32_t z_i = this->indOfClosestCluster(i,sim);
+  if(z_i == this->K_) 
+  { // start a new cluster
+    this->cls_.push_back(shared_ptr<typename DS::DependentCluster>(new
+          typename DS::DependentCluster(this->cld_->x()->col(i),cl0_)));
+    this->cls_[z_i]->globalId = this->globalMaxInd_++;
+    this->K_ ++;
+//    cout<<"new cluster "<<(this->K_-1)<<endl;
+  } 
+  else if(!this->cls_[z_i]->isInstantiated())
+  { // instantiated an old cluster
+    this->cls_[z_i]->reInstantiate(this->cld_->x()->col(i));
+//    cout<<"revieve cluster "<<z_i<<endl;
   }
 
 //  cout<<" z_i = "<<z_i<<": sim= "<<sim<<" "<<acos(sim)*180./M_PI
@@ -190,18 +182,17 @@ template<class T, class DS>
 void DDPMeans<T,DS>::updateLabels()
 {
   uint32_t i0 = 0;
-  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
+  uint32_t idAction = UNASSIGNED;
 
   do{
     idAction = optimisticLabelsAssign(i0);
-//    cout<<idAction.transpose()<<endl;
-    if(!(idAction.array() == UNASSIGNED).all())
+    if(idAction != UNASSIGNED)
     {
       createReviveFrom(idAction);
-      i0 = idAction.minCoeff();
+      i0 = idAction;
     }
     cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
-  }while(!(idAction.array() == UNASSIGNED).all());
+  }while(idAction != UNASSIGNED);
   // if a cluster runs out of labels reset it to the previous mean!
   for(uint32_t k=0; k<this->K_; ++k)
     if(!this->cls_[k]->isInstantiated())
@@ -289,9 +280,7 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   }
 
   // revive or add cluster from the first data-point
-  VectorXu idAction = VectorXu::Ones(this->K_+1) * UNASSIGNED;
-  idAction(0) = 0; // revive from first datapoint - decides internally which cluster
-  createReviveFrom(idAction);
+  createReviveFrom(0);
 };
 
 template<class T, class DS>
@@ -351,3 +340,5 @@ void DDPMeans<T,DS>::rotateUninstantiated(const Matrix<T,Dynamic,Dynamic>& dR)
 //      this->clsPrev_[k]->centroid() = dR*this->clsPrev_[k]->centroid();
     }
 };
+
+}

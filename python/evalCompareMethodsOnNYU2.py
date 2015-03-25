@@ -118,14 +118,15 @@ print 'mean',np.mean(Ks,axis=0)
 print 'std',np.std(Ks,axis=0)
 print ' --------------------------------'
 
+print cfg['base'] 
 paramBase['DPvMFmeans'] = np.arccos(paramBase['DPvMFmeans'] + 1.)*180./np.pi
 # mean number of clusters
 values = {'DPvMFmeans': Ks[:,0:paramBase['DPvMFmeans'].size].T, 'spkm': Ks[:,paramBase['DPvMFmeans'].size::].T}
-fig = plotOverParams(values,'K',paramBase,paramName,baseMap,showLeg=True,Ns=None)
+fig = plotOverParams(values,'K',paramBase,paramName,baseMap,cfg['base'] ,showLeg=True,Ns=None)
 plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"K")),figure=fig)
 # silhouette plot
 values = {'DPvMFmeans': Sils[:,0:paramBase['DPvMFmeans'].size].T, 'spkm': Sils[:,paramBase['DPvMFmeans'].size::].T}
-fig = plotOverParams(values,'silhouette',paramBase,paramName,baseMap,showLeg=True,Ns=None)
+fig = plotOverParams(values,'silhouette',paramBase,paramName,baseMap,cfg['base'] ,showLeg=True,Ns=None)
 plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
 
 colA = colorScheme('labelMap')['orange']

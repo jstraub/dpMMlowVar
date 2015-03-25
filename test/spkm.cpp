@@ -8,15 +8,16 @@
 
 #include <stdint.h>
 
-#include "kmeans.hpp"
-#include "spkm.hpp"
-#include "normalSphere.hpp"
-#include "dpvMFmeans.hpp"
-#include "ddpvMFmeans.hpp"
-#include "ddpmeans.hpp"
-#include "karcherMean.hpp"
+#include <dpMMlowVar/kmeans.hpp>
+#include <dpMMlowVar/spkm.hpp>
+#include <dpMMlowVar/normalSphere.hpp>
+#include <dpMMlowVar/dpvMFmeans.hpp>
+#include <dpMMlowVar/ddpvMFmeans.hpp>
+#include <dpMMlowVar/ddpmeans.hpp>
+#include <dpMMlowVar/karcherMean.hpp>
 
 using namespace Eigen;
+using namespace dplv;
 using std::cout;
 using std::endl;
 

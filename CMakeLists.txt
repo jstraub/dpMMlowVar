@@ -64,18 +64,13 @@ message(${EIGEN3_INCLUDE_DIR})
 #ELSE(BOOST_OLD)
   include_directories(
     ./include
-    ./cuda
     ${EIGEN3_INCLUDE_DIR}
-    /usr/include
-    #/usr/include/eigen3
-#    $ENV{WORKSPACE_HOME}/3rdparty/include
     ${Boost_INCLUDE_DIRS}
     ${CUDA_TOOLKIT_INCLUDE}
     )
   link_directories(
     ${Boost_LIBRARY_DIRS}
     ${CUDA_LIBRARIES}
-#    $ENV{WORKSPACE_HOME}/3rdparty/lib
     )
   cuda_add_library(dpMMlowVar SHARED
     ./cuda/vectorSum_kernel.cu
@@ -154,18 +149,16 @@ target_link_libraries(ddpSphereCluster
   opencv_highgui
   )
 
-INSTALL(TARGETS dpMMlowVar ddpImageCluster #dpStickGMM dpDirMM
+INSTALL(TARGETS dpMMlowVar ddpImageCluster dpMMlowVarCluster
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   # ARCHIVE DESTINATION lib
   COMPONENT compLib
   )
 
-install(DIRECTORY src/ DESTINATION src/                                 
-  FILES_MATCHING PATTERN "*.cpp")                                         
-install(DIRECTORY include/ DESTINATION include/                                 
+install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
   FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY cuda/ DESTINATION include/                                 
-  FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY include/ DESTINATION include/                                 
+#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/                                 
+#  FILES_MATCHING PATTERN "*.h")                                         
+install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/                                 
   FILES_MATCHING PATTERN "*.hpp") 

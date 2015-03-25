@@ -9,8 +9,8 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/math/special_functions/gamma.hpp>                               
 
-#include "global.hpp"
-#include "normal.hpp"
+#include <dpMMlowVar/global.hpp>
+//#include <normal.hpp>
 
 using  namespace Eigen;
 using std::min;
@@ -91,7 +91,7 @@ public:
   Matrix<T,Dynamic,1> Exp_p_single(const Matrix<T,Dynamic,1>& p, 
     const Matrix<T,Dynamic,1>& x) const;
 
-  Matrix<T,Dynamic,1> sampleUnif(mt19937* pRndGen);
+//  Matrix<T,Dynamic,1> sampleUnif(mt19937* pRndGen);
  
   // http://en.wikipedia.org/wiki/N-sphere
   T logSurfaceArea() const {

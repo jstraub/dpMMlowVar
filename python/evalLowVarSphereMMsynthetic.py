@@ -29,6 +29,7 @@ def mutualInfo(z,zGt):
   Ndata = np.bincount(z,minlength=K).astype(np.float)
   NGts = np.bincount(zGt,minlength=Kgt).astype(np.float)
   Nsqs = np.bincount(z*Kgt+zGt,minlength=Kgt*K).astype(np.float)
+
   for j in range(K):
     for k in range(Kgt):
 #      indzj = z==j
@@ -40,7 +41,7 @@ def mutualInfo(z,zGt):
       Nj = Ndata[j]
       Nk = NGts[k]
       if Njk > 0:
-#        print '{} {} {} {} {} -> += {}'.format(N, Njk,Nj,Nk, N*Njk/(Nj*Nk), Njk/N * np.log(N*Njk/(Nj*Nk)))
+        print '{} {} {} {} {} -> += {}'.format(N, Njk,Nj,Nk, N*Njk/(Nj*Nk), Njk/N * np.log(N*Njk/(Nj*Nk)))
         mi += Njk/N * np.log(N*Njk/(Nj*Nk))
   return mi
 def entropy(z):
@@ -90,6 +91,8 @@ def run(cfg,reRun):
     if err:
       print 'error when executing'
       raw_input()
+  print "loading z from {}".format(cfg['outName']+'.lbl')
+  print "loading sil from {}".format(cfg['outName']+'.lbl_measures.csv')
   z = np.loadtxt(cfg['outName']+'.lbl',dtype=int,delimiter=' ')
   sil = np.loadtxt(cfg['outName']+'.lbl_measures.csv',delimiter=" ")
   return z,sil
@@ -247,51 +250,29 @@ for i,base in enumerate(bases):
     np.savetxt(cfg['outName']+'_Ns.csv',Ns[base]);
 
   mis[base] = MI
-#  for t in range(cfg['T']):
-#    for j in range(paramBase[base]):
   nmis[base] = MI / np.sqrt(Hz*Hgt)
   vMeasures[base] = 2.* MI / (Hz+Hgt)
-  print mis[base].shape, nmis[base].shape, vMeasures[base].shape
-#  print nmis[i,t], 2.*MI[t], Hz[t], Hgt[t]
-  print mis[base]
-  print nmis[base]
-  print Ns[base]
-  print Sils[base]
+#  print mis[base].shape, nmis[base].shape, vMeasures[base].shape
+#  print mis[base]
+#  print nmis[base]
+#  print Ns[base]
+#  print Sils[base]
 
 print "done with the runs"
 
-#cl = cm.gnuplot2(np.arange(len(bases)))
-cl = cm.hsv(np.arange(255))
-cl = cm.brg(np.arange(255))
-cl = cm.gist_rainbow(np.arange(255))
-cl = cm.gnuplot2(np.arange(255))
-cl = cm.gnuplot(np.arange(255))
 cl = cm.spectral(np.arange(255))
-#print cltlib 
 I = len(bases) +1
 
-#fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
-#for i,base in enumerate(bases):
-#  plt.subplot(1,3,i+1)
-#  plt.plot(paramBase[base],nmis[base][:,-1],label=baseMap[base],c=cl[(i+1)*255/I])
-#  plt.title(base)
-#  plt.xlabel(paramName[base])
-#  plt.ylabel('NMI')
-#  plt.ylim([0,1])
-#  plt.legend(loc='lower right')
-#plt.tight_layout()
+if 'spkm' in bases and 'DpvMFmeans' in bases:
+  indSpkm = np.ones(len(paramBase['spkm']),dtype=bool)
+  indSpkm[Ns['spkm'].mean(axis=1) < Ns['DPvMFmeans'].min()] = False
+  indSpkm[Ns['spkm'].mean(axis=1) > Ns['DPvMFmeans'].max()] = False
 
-#ipdb.set_trace()
-
-indSpkm = np.ones(len(paramBase['spkm']),dtype=bool)
-indSpkm[Ns['spkm'].mean(axis=1) < Ns['DPvMFmeans'].min()] = False
-indSpkm[Ns['spkm'].mean(axis=1) > Ns['DPvMFmeans'].max()] = False
-
-paramBase['spkm'] = paramBase['spkm'][indSpkm]
-nmis['spkm'] = nmis['spkm'][indSpkm,:]
-mis['spkm'] = mis['spkm'][indSpkm,:]
-Ns['spkm'] = Ns['spkm'][indSpkm,:]
-Sils['spkm'] = Sils['spkm'][indSpkm,:]
+  paramBase['spkm'] = paramBase['spkm'][indSpkm]
+  nmis['spkm'] = nmis['spkm'][indSpkm,:]
+  mis['spkm'] = mis['spkm'][indSpkm,:]
+  Ns['spkm'] = Ns['spkm'][indSpkm,:]
+  Sils['spkm'] = Sils['spkm'][indSpkm,:]
 
 if 'DirvMF' in bases:
   print "DirvMF NMI:        {} +- {}".format(nmis['DirvMF'].mean(), nmis['DirvMF'].std())
@@ -300,105 +281,48 @@ if 'DirvMF' in bases:
 
 print paramBase
 
-fig = plotOverParams(mis,'MI',paramBase,paramName,baseMap, Ns=Ns,showLeg=False)
-plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"MI")),figure=fig)
+fig = plotOverParams(mis,'MI',paramBase,paramName, baseMap, bases, Ns=Ns,showLeg=False)
+plt.savefig(cfg['outName']+'_{}.pdf'.format("MI"),figure=fig)
 
-fig = plotOverParams(nmis,'NMI',paramBase,paramName,baseMap,Ns=Ns,showLeg=False)
-plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"NMI")),figure=fig)
+fig = plotOverParams(nmis,'NMI',paramBase,paramName,baseMap, bases, Ns=Ns,showLeg=False)
+plt.savefig(cfg['outName']+'_{}.pdf'.format("NMI"),figure=fig)
 
-fig = plotOverParams(Ns,'$K$',paramBase,paramName,baseMap,Ns=Ns,showLeg=True)
-plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"K")),figure=fig)
+fig = plotOverParams(Ns,'$K$',paramBase,paramName,baseMap,bases,Ns=Ns,showLeg=True)
+plt.savefig(cfg['outName']+'_{}.pdf'.format("K"),figure=fig)
 
-fig = plotOverParams(Sils,'silhouette',paramBase,paramName,baseMap,Ns=Ns,showLeg=False)
-plt.savefig(cfg['outName']+'_{}.pdf'.format(re.sub('\$','',"silhouette")),figure=fig)
+fig = plotOverParams(Sils,'silhouette',paramBase,paramName,baseMap,bases,Ns=Ns,showLeg=False)
+plt.savefig(cfg['outName']+'_{}.pdf'.format("silhouette"),figure=fig)
+
+print "saved figures to {}_*.pdf".format(cfg['outName'])
 
 plt.show()
 
 #fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
-#ax1 = plt.subplot(111)
-#base = 'spkm'
-#ax1.plot(Sils[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
-#iKtrue = np.argmin(np.abs(Ns[base].mean()-30))
-#ax1.plot(Sils[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Ns[base][iKtrue]),c=(1,0,0))
-#ax1.set_ylabel(paramName[base])  
-#ax1.invert_yaxis()
-#ax1.set_xlabel("Sil")  
-#ax1.legend(loc='best')
-#ax2 = ax1.twinx()
-#base = 'DPvMFmeans'
-#ax2.plot(Sils[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(1+1)*255/I])
-#iKtrue = np.argmin(np.abs(Ns[base].mean()-30))
-#ax2.plot(Sils[base].mean(axis=1)[iKtrue],paramBase[base][iKtrue],'x',label=baseMap[base]+' $K={}$'.format(Ns[base][iKtrue]),c=(1,0,0))
-#ax2.set_ylabel(paramName[base])  
-#ax2.legend(loc='right')
-#plt.tight_layout()
-#plt.savefig(cfg['outName']+'_Sil.png',figure=fig)
-
-#fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
-#ax1 = plt.subplot(111)
-#base = 'spkm'
-#ax1.plot(Ns[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
-#ax1.plot([30]*len(paramBase[base]), paramBase[base], label="true number of clusters $K=30$", c=(1,0,0))
-#ax1.set_ylabel(paramName[base])  
-#ax1.invert_yaxis()
-#ax1.set_xlabel("number of clusters")  
-#ax1.legend(loc='best')
-#ax2 = ax1.twinx()
-#base = 'DPvMFmeans'
-#ax2.plot(Ns[base].mean(axis=1),paramBase[base],label=baseMap[base],c=cl[(1+1)*255/I])
-#ax2.set_ylabel(paramName[base])  
-#ax2.legend(loc='right')
-#plt.tight_layout()
-#plt.savefig(cfg['outName']+'_nClusters.png',figure=fig)
-
-
-fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
-for i,base in enumerate(bases):
-  plt.subplot(1,2,i+1)
-  plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
-  plt.title(base)
-  plt.xlabel(paramName[base])
-  plt.ylabel('vMeasure')
-  plt.ylim([0,1])
-  plt.legend(loc='lower right')
-plt.tight_layout()
-plt.savefig(cfg['outName']+'_VMeasure.png',figure=fig)
-
-#fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
 #for i,base in enumerate(bases):
 #  plt.subplot(1,2,i+1)
-#  plt.plot(paramBase[base],mis[base][:,-1],label=baseMap[base],c=cl[(i+1)*255/I])
+#  plt.plot(paramBase[base],vMeasures[base][:],label=baseMap[base],c=cl[(i+1)*255/I])
 #  plt.title(base)
 #  plt.xlabel(paramName[base])
-#  plt.ylabel('MI')
+#  plt.ylabel('vMeasure')
+#  plt.ylim([0,1])
 #  plt.legend(loc='lower right')
 #plt.tight_layout()
-
-fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
-ax1 = plt.subplot(111)
-base = 'spkm'
-ax1.plot(mis[base][:],paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
-ax1.set_ylabel(paramName[base])  
-ax1.invert_yaxis()
-ax1.set_xlabel("MI")  
-ax1.legend(loc='best')
-ax2 = ax1.twinx()
-base = 'DPvMFmeans'
-ax2.plot(mis[base][:],paramBase[base],label=baseMap[base],c=cl[(1+1)*255/I])
-ax2.set_ylabel(paramName[base])  
-ax2.legend(loc='right')
-plt.tight_layout()
-plt.savefig(cfg['outName']+'_MI.png',figure=fig)
-
+#plt.savefig(cfg['outName']+'_VMeasure.png',figure=fig)
+#
 #fig = plt.figure(figsize=figSize, dpi=80, facecolor='w', edgecolor='k')
-#for i,base in enumerate(bases):
-#  plt.subplot(1,2,i+1)
-#  plt.plot(paramBase[base],Ns[base][:,-1],label=baseMap[base],c=cl[(i+1)*255/I])
-#  plt.title(base)
-#  plt.xlabel(paramName[base])
-#  plt.ylabel('number of clusters')
-#  plt.legend(loc='best')
+#ax1 = plt.subplot(111)
+#base = 'spkm'
+#ax1.plot(mis[base][:],paramBase[base],label=baseMap[base],c=cl[(0+1)*255/I])
+#ax1.set_ylabel(paramName[base])  
+#ax1.invert_yaxis()
+#ax1.set_xlabel("MI")  
+#ax1.legend(loc='best')
+#ax2 = ax1.twinx()
+#base = 'DPvMFmeans'
+#ax2.plot(mis[base][:],paramBase[base],label=baseMap[base],c=cl[(1+1)*255/I])
+#ax2.set_ylabel(paramName[base])  
+#ax2.legend(loc='right')
 #plt.tight_layout()
-
+#plt.savefig(cfg['outName']+'_MI.png',figure=fig)
 
 plt.show()

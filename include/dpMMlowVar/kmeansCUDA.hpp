@@ -3,14 +3,14 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
+#include <dpMMlowVar/global.hpp>
 
-#include "ddpmeans.hpp"
-#include "clDataGpu.hpp"
-#include "gpuMatrix.hpp"
+#include <dpMMlowVar/kmeans.hpp>
+#include <dpMMlowVar/clDataGpu.hpp>
+#include <dpMMlowVar/gpuMatrix.hpp>
 
-#include <euclideanData.hpp>
-#include <sphericalData.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
 
 using namespace Eigen;
 using std::cout;
@@ -25,6 +25,8 @@ void kmeansLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, uint32_t K,
     uint32_t N);
 void kmeansLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, uint32_t K,
     uint32_t N);
+
+namespace dplv {
 
 template<class T, class DS>
 class KMeansCUDA : public KMeans<T,DS>
@@ -147,4 +149,6 @@ void KMeansCUDA<float,Euclidean<float> >::updateLabels()
   this->setupComputeLabelsGPU();
   kmeansLabels_gpu(this->cld_->d_x(),d_p_.data(),this->cld_->d_z(),
       this->K_, this->cld_->N());
+}
+
 }

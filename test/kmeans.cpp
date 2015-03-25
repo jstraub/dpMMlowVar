@@ -8,10 +8,10 @@
 
 #include <stdint.h>
 
-#include "kmeans.hpp"
-#include "sphericalData.hpp"
-#include "euclideanData.hpp"
-#include "dpmeans.hpp"
+#include <dpMMlowVar/kmeans.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
+#include <dpMMlowVar/dpmeans.hpp>
 
 #ifdef BOOST_OLD
 //using boost::mt19937;
@@ -21,6 +21,7 @@ using boost::mt19937;
 #endif
 
 using namespace Eigen;
+using namespace dplv;
 using std::cout;
 using std::endl;
 

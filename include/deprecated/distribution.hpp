@@ -7,7 +7,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 
-#include "global.hpp"
+#include <dpMMlowVar/global.hpp>
 
 #ifndef PI
 #  define PI 3.141592653589793
@@ -17,6 +17,8 @@
 #define LOG_2PI 1.8378770664093453
 
 using namespace Eigen;
+
+namespace dplv {
 
 template<typename T>
 class Distribution
@@ -103,3 +105,4 @@ inline T logSumExp(const Matrix<T,Dynamic,1>& pdf)
 //  return log((pdf.array()-max).exp().matrix().sum()) + max;
 //}
 
+}

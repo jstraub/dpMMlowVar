@@ -1,11 +1,16 @@
+/* Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu>
+ * Licensed under the MIT license. See the license file LICENSE.
+ */
+ 
+
 #pragma once
 
 #include <vector>
 #include <Eigen/Dense>
 
-#include "gpuMatrix.hpp"
-#include "clData.hpp"
-#include "timer.hpp"
+#include <dpMMlowVar/gpuMatrix.hpp>
+#include <dpMMlowVar/clData.hpp>
+#include <dpMMlowVar/timer.hpp>
 
 using namespace Eigen;
 using std::vector;
@@ -16,6 +21,8 @@ extern void vectorSum_gpu(float *d_x, uint32_t *d_z,
     uint32_t N, uint32_t k0, uint32_t K, float *d_SSs);
 
 extern void labelMapGpu(uint32_t *d_z, int32_t* d_Map, uint32_t N);
+
+namespace dplv {
 
 template<typename T>
 class ClDataGpu : public ClData<T>
@@ -29,6 +36,7 @@ public:
   ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, 
       const spVectorXu& z, uint32_t K);
   ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x, uint32_t K);
+  ClDataGpu(uint32_t D, uint32_t K);
   virtual ~ClDataGpu(){;};
 
   virtual void labelMap(const vector<int32_t>& map);
@@ -40,6 +48,10 @@ public:
   virtual void updateData(T* d_x, uint32_t N, uint32_t step, uint32_t offset);
 
   virtual VectorXu& z() { this->d_z_.get(this->z_); return ClData<T>::z();};
+//  virtual const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x()
+//  {
+//    this->d_x_.get(this->x_); return this->x_;
+//  };
   virtual T* d_x(){ return d_x_.data();};
   virtual uint32_t* d_z(){ return d_z_.data();};
 
@@ -64,6 +76,10 @@ ClDataGpu<T>::ClDataGpu(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& x,
   : ClData<T>(x,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
 {cout<<"ClDataGpu constructed"<<endl;};
 
+template<typename T>
+ClDataGpu<T>::ClDataGpu(uint32_t D, uint32_t K)
+  : ClData<T>(D,K), d_z_(this->z_), d_x_(this->x_), d_Ss_((this->D_-1)+1,this->K_)
+{cout<<"ClDataGpu constructed"<<endl;};
 
 template<typename T>
 void ClDataGpu<T>::updateLabels(uint32_t K)
@@ -140,3 +156,4 @@ void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
   labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
 };
 
+}

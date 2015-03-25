@@ -5,10 +5,8 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include <cuda_runtime.h>
-#include <nvidia/helper_cuda.h> 
-
-#include "global.hpp"
+#include <dpMMlowVar/helper_cuda.h> 
+#include <dpMMlowVar/global.hpp>
 
 using namespace Eigen;
 //#ifdef BOOST_OLD
@@ -19,12 +17,15 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
-extern void copy_gpu( double *d_from, double *d_to , uint32_t N, 
+void copy_gpu( double *d_from, double *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
-extern void copy_gpu( float *d_from, float *d_to , uint32_t N, 
+void copy_gpu( float *d_from, float *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
-extern void copy_gpu( uint32_t *d_from, uint32_t *d_to , uint32_t N, 
+void copy_gpu( uint32_t *d_from, uint32_t *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
+
+namespace dplv {
+
 
 template <class T>
 struct GpuMatrix
@@ -348,4 +349,4 @@ void GpuMatrix<T>::getAsync(T* A, uint32_t rows, uint32_t cols, cudaStream_t& st
                 cudaMemcpyDeviceToHost,stream));
 };
 
-
+}

@@ -8,6 +8,8 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+namespace dplv {
+
 template<typename T>
 class SO3
 {
@@ -135,3 +137,4 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::meanRotation(const vector<Matrix<T,Dyna
   return muR;
 }
 
+}

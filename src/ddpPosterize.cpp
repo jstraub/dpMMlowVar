@@ -43,7 +43,6 @@ void printProgress(string pre, double pct);
 shared_ptr<MXf> extractVectorData(Mat& frame);
 //Mat createOutputFrame(Mat& frame, dmeans::Results<VSModel>& res);
 cv::Mat posterize(int rw, int cl, VXu z, MXf p);
-cv::Mat boundaries(cv::Mat frame, VXu z);
 
 int main(int argc, char** argv){
 	// Set up the program options.
@@ -132,6 +131,8 @@ int main(int argc, char** argv){
   DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
     DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
 
+
+
 	//loop over extracting a frame, possibly resizing it, and clustering
 	int fr = 0;
 	for(;;){
@@ -142,8 +143,8 @@ int main(int argc, char** argv){
 		if(empty) break;
     if(fr < 600) {++ fr; continue;}
     shared_ptr<MXf> data;
-	  Mat frameresized = frame;
 		if (nfr_w != fr_w || nfr_h != fr_h){
+			Mat frameresized;
 			resize(frame, frameresized, Size(nfr_w, nfr_h), 0, 0, INTER_CUBIC);
 			data = extractVectorData(frameresized);
 		} else {
@@ -157,7 +158,7 @@ int main(int argc, char** argv){
 		do{
 			clusterer->updateLabels();
     			clusterer->updateCenters();
-		}while (!clusterer->convergedCounts(nfr_h*nfr_w/100));
+		}while (!clusterer->convergedCounts(100));
 //		}while (!clusterer->converged());
 		clusterer->updateState();
     const VXu& z = clusterer->z();
@@ -165,11 +166,10 @@ int main(int argc, char** argv){
 
 		//JULIAN: here is where you take the results from your cuda algorithm and draw the superpixel boundaries in red/whatever color
 //		Mat postFrame = createOutputFrame(frame, res);
-//    cv::Mat postFrame = posterize(nfr_h,nfr_w, z, p);
-    cv::Mat postFrame = boundaries(frameresized, z);
+    cv::Mat postFrame = posterize(nfr_h,nfr_w, z, p);
 
     cv::imshow("rgb",postFrame);
-    cv::waitKey(30);
+    cv::waitKey(1);
 
 		//JULIAN: This is where you write out the frame + superpixel boundaries
 		ostringstream oss;
@@ -252,8 +252,8 @@ shared_ptr<MXf> extractVectorData(Mat& frame){
 		for (int x = 0; x <frame.cols; x++){
     			const Vec3f& veclab = frameLab.at<Vec3f>(y, x);
 			(*data)(0, idx) = veclab.val[0];
-			(*data)(1, idx) = 100.*float(x)/float(frame.cols); //veclab.val[1];
-			(*data)(2, idx) = 100.*float(y)/float(frame.rows); //veclab.val[2];
+			(*data)(1, idx) = veclab.val[1];
+			(*data)(2, idx) = veclab.val[2];
 			idx++;
 		}
 	}
@@ -294,51 +294,24 @@ shared_ptr<MXf> extractVectorData(Mat& frame){
 //}
 
 cv::Mat posterize(int rw, int cl, VXu z, MXf p){
+  vector<int> compression_params;
+  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+  compression_params.push_back(9); //9 means maximum compression/slowest
   Mat frameLabOut(rw, cl, CV_32FC3);
   Mat frameOutF(rw, cl, CV_32FC3);
   Mat frameOut(rw, cl, CV_8UC3);
   int idx = 0;
-  uint32_t max = z.maxCoeff();
   for(int y = 0; y < rw; y++){
     for (int x = 0; x < cl; x++){
       Vec3f& clr = frameLabOut.at<Vec3f>(y, x);
       clr.val[0] = p(0, z(idx));
-      clr.val[1] = (float(z(idx))*(255./float(max)))-127.;//;p(1, z(idx));
-      clr.val[2] = (float(z(idx))*(255./float(max)))-127.;//;p(1, z(idx));
-//      clr.val[2] = (float(z(idx))-(float(max)*0.5))*(255./float(max));//;p(1, z(idx));
-//      clr.val[2] = float(z(idx));//;p(2, z(idx));
+      clr.val[1] = p(1, z(idx));
+      clr.val[2] = p(2, z(idx));
       idx ++;
     }
   }
   cvtColor(frameLabOut, frameOutF, CV_Lab2RGB);
   frameOutF.convertTo(frameOut, CV_8U, 255.0);
-  return frameOut;
-//  //Mat medianFrame;
-//  //medianBlur(frameOut, medianFrame, 3);
-//  ostringstream oss;
-//  oss << fldrnm << "/post-" << setw(7) << setfill('0') << fr << ".png";
-//  imwrite(oss.str(), frameOut, compression_params);
-}
-
-cv::Mat boundaries(cv::Mat frame, VXu z)
-{
-  int cl = frame.cols;
-  int rw = frame.rows;
-  cout<<"rw="<<rw<< " x "<<cl<< " "<<z.size()<<endl;
-  Mat frameOut;
-  frame.copyTo(frameOut);
-  for(int y = 1; y < rw; y++)
-    for (int x = 1; x < cl; x++)
-    {
-//      cout<<y<<" "<<x<<" "<<frameOut.rows<<" "<<frameOut.cols<<" "<<(x+y*cl)<<" "<<(x-1+y*cl)<<" "<<(x+(y-1)*cl)<<endl;
-      if((z(x+y*cl) != z(x-1+y*cl)) || (z(x+y*cl) != z(x+(y-1)*cl)))
-      {
-        Vec3b& clr = frameOut.at<Vec3b>(y, x);
-        clr.val[0] = 255;
-        clr.val[1] = 0;
-        clr.val[2] = 0;
-      }  }
-  cout<<"done"<<endl;
   return frameOut;
 //  //Mat medianFrame;
 //  //medianBlur(frameOut, medianFrame, 3);

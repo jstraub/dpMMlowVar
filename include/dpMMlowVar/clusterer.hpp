@@ -2,15 +2,15 @@
 
 #include <vector>
 #include <fstream>
-#include <global.hpp>
-#include <clData.hpp>
-
 #include <Eigen/Dense>
-#include <boost/shared_ptr.hpp>
 
+#include <dpMMlowVar/global.hpp>
+#include <dpMMlowVar/clData.hpp>
 
 using namespace Eigen;
 using std::vector;
+
+namespace dplv {
 
 template<class T, class DS>
 class Clusterer
@@ -171,3 +171,4 @@ void Clusterer<T,DS>::dumpStats(std::ofstream& fout)
     fout<<(this->cls_[k]->globalId)<<" ";
   fout<<(this->cls_[this->K_-1]->globalId)<<endl;
 };
+}

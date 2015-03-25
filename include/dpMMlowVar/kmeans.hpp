@@ -3,15 +3,17 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
+#include <dpMMlowVar/global.hpp>
 
-#include "clusterer.hpp"
-#include "sphericalData.hpp"
-#include "euclideanData.hpp"
+#include <dpMMlowVar/clusterer.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
 
 using namespace Eigen;
 using std::cout;
 using std::endl;
+
+namespace dplv {
 
 template<class T, class DS>
 class KMeans : public Clusterer<T,DS>
@@ -36,6 +38,7 @@ public:
 
   virtual bool convergedCounts(uint32_t dCounts) 
   {
+//    cout<<this->counts()<<endl<<prevNs_<<endl;
     if(this->counts().size() > 0 && this->counts().size() == prevNs_.size())
     {
       int dC = 0;
@@ -181,4 +184,4 @@ T KMeans<T,DS>::avgIntraClusterDeviation()
   }
   return deviates.sum()/ this->N_;
 }
-
+}

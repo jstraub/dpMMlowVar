@@ -3,11 +3,11 @@ import subprocess as subp
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import mayavi.mlab as mlab
+#import mayavi.mlab as mlab
 
 from matplotlib.patches import Ellipse
 
-import ipdb, re
+import re
 import os.path
 import time, copy
 
@@ -146,10 +146,10 @@ cfg['nParms'] = 50;
 paramBase = {
     'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
     'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])]),
-    'CrpvMF':np.array([5.0]),
+    'CrpvMF':np.array([30]),
     'DirvMF':np.array([100])}
-cfg['T'] = 1000 # 100
-cfg['nRun'] = 50
+cfg['T'] = 3000 # 1100
+cfg['nRun'] = 1 #50
 
 cfg['dataPath'] = dataPath
 
@@ -163,10 +163,12 @@ else:
 bases = ['DPvMFmeans']
 # params for the different al5os
 bases = ['spkm','DPvMFmeans']
-bases = ['CrpvMF']
 bases = ['DPvMFmeans','spkm','DirvMF']
 bases = ['spkm','DirvMF']
+bases = ['DPvMFmeans']
 bases = ['DirvMF']
+bases = ['spkm']
+bases = ['CrpvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \
@@ -179,8 +181,8 @@ x=np.loadtxt(rootPath+dataPath,delimiter=' ')
 N = x.shape[1]
 D = x.shape[0]
 
-reRun = True
 reRun = False
+reRun = True
 
 if reRun:
   print bases

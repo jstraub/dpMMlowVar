@@ -28,9 +28,10 @@ public:
   virtual void updateLabels();
   virtual void updateCenters();
   
+  virtual void initRevive();
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
 //  virtual void nextTimeStep(const shared_ptr<jsc::ClData<T> >& cld);
-  virtual void updateState(bool verbose); // after converging for a single time instant
+  virtual void updateState(bool verbose=false); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   virtual void createReviveFrom(uint32_t i);
@@ -146,6 +147,7 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
 template<class T,class DS>
 VectorXu DDPMeans<T,DS>::initLabels()
 {
+  cout<<"init labels CPU"<<endl;
   return VectorXu::Ones(this->K_)*UNASSIGNED;
 }
 
@@ -268,21 +270,40 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   this->cld_->updateData(spx);
   this->N_ = this->cld_->N();
 
-  if(false && this->K_ > 0)
+  if(this->K_ > 0)
   { // seemed to slow down the algorithms convergence
     VectorXu idActions = initLabels();
+    cout<<"idActions count: "<<idActions.size()<<endl;
+    cout<<"idActions: "<<idActions.transpose()<<endl;
     for(uint32_t k=0; k<this->K_; ++k)
+    {
       if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
       { // instantiated an old cluster
-        cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
-        cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
-        this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
+        T sim = 0.;
+        uint32_t z_i = this->indOfClosestCluster(idActions(k),sim);
+        if(z_i == k)
+        {
+          cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
+          cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
+          this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
+        }else{
+          cout<<"NOT revieving cluster "<<k<<" from point "<<idActions(k)<<endl;
+        }
       }
+    }
   }
 
+  cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
+  
+//  initRevive();
+};
+
+template<class T, class DS>
+void DDPMeans<T,DS>::initRevive()
+{
   // revive or add cluster from the first data-point
   createReviveFrom(0);
-};
+}
 
 template<class T, class DS>
 void DDPMeans<T,DS>::updateState(bool verbose)

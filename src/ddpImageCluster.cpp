@@ -154,11 +154,13 @@ int main(int argc, char** argv){
 		//JULIAN: This is where you cluster vector space data
 //		dmeans::Results<VSModel> res = dynm.cluster(data);
     jsc::Timer t0;
+    jsc::Timer t1;
 		clusterer->nextTimeStep(data);
+    t1.toctic("init");
+//		clusterer->nextTimeStep(data);
 //    cout<<"serial assign"<<endl;
 //		clusterer->updateLabelsSerial();
 //    			clusterer->updateCenters();
-    jsc::Timer t1;
     uint32_t t = 0;
 		do{
 			clusterer->updateLabels();

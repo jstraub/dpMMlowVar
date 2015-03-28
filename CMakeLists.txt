@@ -75,6 +75,7 @@ message(${EIGEN3_INCLUDE_DIR})
   cuda_add_library(dpMMlowVar SHARED
     ./cuda/vectorSum_kernel.cu
     ./cuda/ddpvMFlabels_kernel.cu
+    ./cuda/ddpvMFlabelsSpecial_kernel.cu
     ./cuda/ddpLabels_kernel.cu
     ./cuda/copy_kernel.cu
 #    ./cuda/choiceMult_kernel.cu

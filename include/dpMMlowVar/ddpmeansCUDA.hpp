@@ -3,13 +3,11 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <dpMMlowVar/global.hpp>
-
+#include <jsCore/global.hpp>
+#include <jsCore/clDataGpu.hpp>
+#include <jsCore/gpuMatrix.hpp>
 
 #include <dpMMlowVar/ddpmeans.hpp>
-#include <dpMMlowVar/clDataGpu.hpp>
-#include <dpMMlowVar/gpuMatrix.hpp>
-
 #include <dpMMlowVar/euclideanData.hpp>
 #include <dpMMlowVar/sphericalData.hpp>
 
@@ -50,7 +48,7 @@ template<class T, class DS>
 class DDPMeansCUDA : public DDPMeans<T,DS>
 {
 public:
-  DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
+  DDPMeansCUDA(const shared_ptr<jsc::ClDataGpu<T> >& cld,
       T lambda, T Q, T tau);
   virtual ~DDPMeansCUDA();
   
@@ -62,11 +60,11 @@ public:
 protected:
 
 //  static const uint32_t MAX_UINT32 = 4294967295;
-  GpuMatrix<uint32_t> d_iAction_;
-  GpuMatrix<T> d_ages_;
-  GpuMatrix<T> d_ws_;
-  GpuMatrix<uint32_t> d_Ns_;
-  GpuMatrix<T> d_p_;
+  jsc::GpuMatrix<uint32_t> d_iAction_;
+  jsc::GpuMatrix<T> d_ages_;
+  jsc::GpuMatrix<T> d_ws_;
+  jsc::GpuMatrix<uint32_t> d_Ns_;
+  jsc::GpuMatrix<T> d_p_;
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
 
@@ -78,7 +76,7 @@ protected:
 // --------------------------- impl -------------------------------------------
 
 template<class T, class DS>
-DDPMeansCUDA<T,DS>::DDPMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld,
+DDPMeansCUDA<T,DS>::DDPMeansCUDA(const shared_ptr<jsc::ClDataGpu<T> >& cld,
       T lambda, T Q, T tau)
   : DDPMeans<T,DS>(cld,lambda,Q,tau), //d_x_(cld), d_z_(this->N_),
   d_iAction_(1), d_ages_(1), d_ws_(1), d_Ns_(1), d_p_(this->D_,1)
@@ -218,7 +216,7 @@ VectorXu DDPMeansCUDA<T,DS>::initLabels()
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
   return asgnIdces;
   // TODO: seems to slow down the init!
-//  GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
+//  jsc::GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
 //
 //  d_ages_.set(this->ages());
 //  d_ws_.set(this->weights());

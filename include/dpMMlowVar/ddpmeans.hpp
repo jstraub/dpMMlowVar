@@ -20,7 +20,7 @@ class DDPMeans : public DPMeans<T,DS>
 public:
   DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
       T lambda, T Q, T tau);
-  DDPMeans(const shared_ptr<ClData<T> >& cld,
+  DDPMeans(const shared_ptr<jsc::ClData<T> >& cld,
       T lambda, T Q, T tau);
   virtual ~DDPMeans();
 
@@ -29,7 +29,7 @@ public:
   virtual void updateCenters();
   
   virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
-//  virtual void nextTimeStep(const shared_ptr<ClData<T> >& cld);
+//  virtual void nextTimeStep(const shared_ptr<jsc::ClData<T> >& cld);
   virtual void updateState(bool verbose); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
@@ -86,7 +86,7 @@ DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
 };
 
 template<class T, class DS>
-DDPMeans<T,DS>::DDPMeans(const shared_ptr<ClData<T> >& cld, 
+DDPMeans<T,DS>::DDPMeans(const shared_ptr<jsc::ClData<T> >& cld, 
     T lambda, T Q, T tau)
   : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q), globalMaxInd_(0)
 {

@@ -5,8 +5,9 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include <dpMMlowVar/helper_cuda.h> 
-#include <dpMMlowVar/global.hpp>
+#include <cuda_runtime.h>
+#include <nvidia/helper_cuda.h> 
+#include <jsCore/global.hpp>
 
 using namespace Eigen;
 //#ifdef BOOST_OLD
@@ -24,8 +25,7 @@ void copy_gpu( float *d_from, float *d_to , uint32_t N,
 void copy_gpu( uint32_t *d_from, uint32_t *d_to , uint32_t N, 
     uint32_t step, uint32_t offset, uint32_t D);
 
-namespace dplv {
-
+namespace jsc {
 
 template <class T>
 struct GpuMatrix

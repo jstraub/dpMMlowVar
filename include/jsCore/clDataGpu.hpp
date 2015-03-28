@@ -8,9 +8,9 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include <dpMMlowVar/gpuMatrix.hpp>
-#include <dpMMlowVar/clData.hpp>
-#include <dpMMlowVar/timer.hpp>
+#include <jsCore/gpuMatrix.hpp>
+#include <jsCore/clData.hpp>
+#include <jsCore/timer.hpp>
 
 using namespace Eigen;
 using std::vector;
@@ -22,7 +22,7 @@ extern void vectorSum_gpu(float *d_x, uint32_t *d_z,
 
 extern void labelMapGpu(uint32_t *d_z, int32_t* d_Map, uint32_t N);
 
-namespace dplv {
+namespace jsc {
 
 template<typename T>
 class ClDataGpu : public ClData<T>
@@ -155,5 +155,4 @@ void ClDataGpu<T>::labelMap(const vector<int32_t>& map)
   GpuMatrix<int32_t> d_map(map);
   labelMapGpu(d_z_.data(),d_map.data(),this->N_);  
 };
-
 }

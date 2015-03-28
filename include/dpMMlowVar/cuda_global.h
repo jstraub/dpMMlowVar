@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <assert.h>
-#include <dpMMlowVar/helper_cuda.h>
+#include <nvidia/helper_cuda.h>
 
 #define PI 3.141592653589793
 #define DIM 3

@@ -77,7 +77,7 @@ message(${EIGEN3_INCLUDE_DIR})
     ./cuda/ddpvMFlabels_kernel.cu
     ./cuda/ddpLabels_kernel.cu
     ./cuda/copy_kernel.cu
-    ./cuda/choiceMult_kernel.cu
+#    ./cuda/choiceMult_kernel.cu
     ./cuda/labelMap_kernel.cu
     ./cuda/ddpLabelsSpecial_kernel.cu
     ./cuda/spkmLabels_kernel.cu
@@ -157,8 +157,12 @@ INSTALL(TARGETS dpMMlowVar ddpImageCluster dpMMlowVarCluster
   )
 
 install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
-  FILES_MATCHING PATTERN "*.h")                                         
-#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/                                 
-#  FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/                                 
-  FILES_MATCHING PATTERN "*.hpp") 
+  FILES_MATCHING PATTERN "*.h")
+#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/
+#  FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
+  FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY include/jsCore/ DESTINATION include/jsCore/
+  FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY include/nvidia/ DESTINATION include/nvidia/
+  FILES_MATCHING PATTERN "*.h")

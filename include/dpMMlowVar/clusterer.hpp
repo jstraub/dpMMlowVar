@@ -4,8 +4,8 @@
 #include <fstream>
 #include <Eigen/Dense>
 
-#include <dpMMlowVar/global.hpp>
-#include <dpMMlowVar/clData.hpp>
+#include <jsCore/global.hpp>
+#include <jsCore/clData.hpp>
 
 using namespace Eigen;
 using std::vector;
@@ -17,7 +17,7 @@ class Clusterer
 {
 public:
   Clusterer(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K);
-  Clusterer(const shared_ptr<ClData<T> >& cld);
+  Clusterer(const shared_ptr<jsc::ClData<T> >& cld);
   virtual ~Clusterer();
 
 //  void initialize(const Matrix<T,Dynamic,Dynamic>& x);
@@ -69,7 +69,7 @@ protected:
   const uint32_t D_;
   uint32_t N_;
   T cost_, prevCost_;
-  shared_ptr<ClData<T> > cld_;
+  shared_ptr<jsc::ClData<T> > cld_;
 //  shared_ptr<Matrix<T,Dynamic,Dynamic> > spx_; // pointer to data
   vector< shared_ptr<typename DS::DependentCluster> > cls_; // clusters
 //  VectorXu z_; // labels
@@ -80,7 +80,7 @@ template<class T, class DS>
 Clusterer<T,DS>::Clusterer( const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
     uint32_t K)
   : K_(K), D_(spx->rows()), N_(spx->cols()), cost_(INFINITY), prevCost_(INFINITY),
-  cld_(new ClData<T>(spx,K))
+  cld_(new jsc::ClData<T>(spx,K))
 {
   for (uint32_t k=0; k<K_; ++k)
   {
@@ -91,7 +91,7 @@ Clusterer<T,DS>::Clusterer( const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
 };
 
 template<class T, class DS>
-Clusterer<T,DS>::Clusterer(const shared_ptr<ClData<T> >& cld)
+Clusterer<T,DS>::Clusterer(const shared_ptr<jsc::ClData<T> >& cld)
   : K_(cld->K()), D_(cld->D()), N_(cld->N()), cost_(INFINITY), prevCost_(INFINITY),
   cld_(cld)
 {
@@ -129,7 +129,7 @@ template<class T, class DS>
 T Clusterer<T,DS>::silhouette()
 { 
   this->cld_->computeSS();
-  return silhouetteClD<T,DS>(*this->cld_);
+  return jsc::silhouetteClD<T,DS>(*this->cld_);
 //  if(K_<2) return -1.0;
 ////  assert(Ns_.sum() == N_);
 //  Matrix<T,Dynamic,1> sil(N_);

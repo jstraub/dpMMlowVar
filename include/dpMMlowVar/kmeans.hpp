@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <dpMMlowVar/global.hpp>
+#include <jsCore/global.hpp>
 
 #include <dpMMlowVar/clusterer.hpp>
 #include <dpMMlowVar/sphericalData.hpp>
@@ -20,7 +20,7 @@ class KMeans : public Clusterer<T,DS>
 {
 public:
   KMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, uint32_t K);
-  KMeans(const shared_ptr<ClData<T> >& cld);
+  KMeans(const shared_ptr<jsc::ClData<T> >& cld);
   virtual ~KMeans();
 
   virtual void updateLabels();
@@ -69,7 +69,7 @@ KMeans<T,DS>::KMeans(
 {}
 
 template<class T, class DS>
-KMeans<T,DS>::KMeans( const shared_ptr<ClData<T> >& cld)
+KMeans<T,DS>::KMeans( const shared_ptr<jsc::ClData<T> >& cld)
   : Clusterer<T,DS>(cld)
 {}
 

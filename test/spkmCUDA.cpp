@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include <dpMMlowVar/clDataGpu.hpp>
+#include <jsCore/clDataGpu.hpp>
 #include <dpMMlowVar/kmeansCUDA.hpp>
 
 using namespace Eigen;
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(spkm_test)
     }
   cout<<(*spx)<<endl;
 //  sampleClustersOnSphere<double>(*spx, K);
-  boost::shared_ptr<ClDataGpud> cld( new ClDataGpud(spx,K));
+  boost::shared_ptr<jsc::ClDataGpud> cld( new jsc::ClDataGpud(spx,K));
 
   uint32_t T=10;
   cout<<" -------------------- spkm ----------------------"<<endl;

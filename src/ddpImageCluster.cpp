@@ -17,7 +17,7 @@
 //#include <dmeans/model>
 //#include <dmeans/utils>
 
-#include <dpMMlowVar/clDataGpu.hpp>
+#include <jsCore/clDataGpu.hpp>
 #include <dpMMlowVar/ddpmeansCUDA.hpp>
 #include <dpMMlowVar/euclideanData.hpp>
 //#include <dpMMlowVar/spline.h>
@@ -128,7 +128,7 @@ int main(int argc, char** argv){
 
   //set up the DDP Means object
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+  shared_ptr<jsc::ClDataGpuf> cld(new jsc::ClDataGpuf(tmp,0));
   DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
     DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
 
@@ -153,12 +153,12 @@ int main(int argc, char** argv){
 
 		//JULIAN: This is where you cluster vector space data
 //		dmeans::Results<VSModel> res = dynm.cluster(data);
-    Timer t0;
+    jsc::Timer t0;
 		clusterer->nextTimeStep(data);
 //    cout<<"serial assign"<<endl;
 //		clusterer->updateLabelsSerial();
 //    			clusterer->updateCenters();
-    Timer t1;
+    jsc::Timer t1;
     uint32_t t = 0;
 		do{
 			clusterer->updateLabels();

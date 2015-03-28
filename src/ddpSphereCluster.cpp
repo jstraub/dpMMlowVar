@@ -64,13 +64,13 @@ int main(int argc, char** argv){
 	
 	//set up the DDP Means object
 //	shared_ptr<MXf> tmp(new MXf(3, 1));
-//  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+//  shared_ptr<jsc::ClDataGpuf> cld(new jsc::ClDataGpuf(tmp,0));
 ////  DDPMeansCUDA<float,Spherical<float> > *clusterer = new
 //  Clusterer<float,Spherical<float> > *clusterer = new
 //    DDPMeansCUDA<float,Spherical<float> >(cld, lambda, Q, beta);
    
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,6));
+  shared_ptr<jsc::ClDataGpuf> cld(new jsc::ClDataGpuf(tmp,6));
   Clusterer<float,Spherical<float> > *clusterer = new
     KMeans<float,Spherical<float> >(cld);
 

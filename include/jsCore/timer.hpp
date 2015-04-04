@@ -14,7 +14,7 @@ using std::endl;
 using std::ostream;
 using std::string;
 
-namespace dplv {
+namespace jsc { 
 
 class Timer
 {

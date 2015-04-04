@@ -7,10 +7,11 @@
 #include <string>
 #include <boost/program_options.hpp>
 
+#include <jsCore/timer.hpp>
+
 #include <dpMMlowVar/kmeans.hpp>
 #include <dpMMlowVar/dpmeans.hpp>
 #include <dpMMlowVar/ddpmeans.hpp>
-#include <dpMMlowVar/timer.hpp>
 
 using namespace Eigen;
 using namespace std;
@@ -163,7 +164,7 @@ int main(int argc, char **argv)
   MatrixXu inds;
   ofstream fout(pathOut.data(),ofstream::out);
   ofstream foutJointLike((pathOut+"_jointLikelihood.csv").data(),ofstream::out);
-  Timer watch;
+  jsc::Timer watch;
   if(clustSp != NULL)
   {
     for (uint32_t t=0; t<T; ++t)

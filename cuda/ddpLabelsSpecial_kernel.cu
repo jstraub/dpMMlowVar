@@ -8,6 +8,7 @@
 
 #define DIM 3
 // executions per thread
+#define K_MAX 50
 #define N_PER_T 16
 #define BLOCK_SIZE 256
 
@@ -17,14 +18,14 @@ __device__ inline T distToUninstantiated( T distsq, T age, T w, T Q, T tau, T th
   return Q*age+1.0/(1.0+1.0/w+age*tau)*distsq;
 }
 
-
-template<typename T, uint32_t K, uint32_t BLK_SIZE>
-__global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_asgnIdces, uint32_t N)
+template<typename T, uint32_t BLK_SIZE>
+__global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T
+    *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_asgnIdces,
+    uint32_t N, uint32_t K)
 {
   //__shared__ T oldp[DIM*K];
-  __shared__ uint32_t asgnIdces[K*BLK_SIZE]; //for each thread, index selected for each old K
-  __shared__ T asgnCosts[K*BLK_SIZE]; //for each thread, cost for each index for each old K
-  __shared__ T oldp[K*DIM];
+  __shared__ uint32_t asgnIdces[K_MAX*BLK_SIZE]; //for each thread, index selected for each old K
+  __shared__ T oldp[K_MAX*DIM];
 
   const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
@@ -32,16 +33,14 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
   // caching and init
   for(int k = 0; k < K; k++){
     asgnIdces[K*tid+k] = UNASSIGNED;
-    asgnCosts[K*tid+k] = FLT_MAX;
     if(tid < DIM) oldp[k*DIM+tid] = d_oldp[k*DIM+tid];
   }
   __syncthreads(); // make sure that ys have been cached
 
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
   {
-    T max_sim_k = 0;
-    T max_r = 0.;
-    uint32_t max_r_k = UNASSIGNED;
+    T max_sim_k = FLT_MAX;
+    uint32_t max_k = UNASSIGNED;
     T sim_k = 0.;
     T* p_k = oldp;
     T q_i[DIM];
@@ -55,31 +54,26 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
         		 +(q_i[1] - p_k[1])*(q_i[1] - p_k[1])
         		 +(q_i[2] - p_k[2])*(q_i[2] - p_k[2]);
         sim_k = distToUninstantiated<T>(distsq,d_ages[k],d_ws[k],Q,tau,1e-6);
-        if(sim_k < lambda && asgnCosts[K*tid+k]-sim_k > max_r)
+        if(sim_k < lambda && max_sim_k > sim_k)
         {
           max_sim_k = sim_k;
-          max_r = asgnCosts[K*tid+k]-sim_k;
-          max_r_k = k;
+          max_k = k;
         }
         p_k += DIM;
       }
-      if(max_r_k < K){
-      	asgnCosts[K*tid+max_r_k] = max_sim_k;
-        asgnIdces[K*tid+max_r_k] = id;
+      if(max_k < K && id < asgnIdces[K*tid+max_k]){
+        asgnIdces[K*tid+max_k] = id;
       }
     }
   }
-
   // min() reduction
   __syncthreads(); //sync the threads
-
 #pragma unroll
   for(int s=(BLK_SIZE)/2; s>1; s>>=1) {
     if(tid < s)
     {
       for(uint32_t k = 0; k < K; ++k){
-        if(asgnCosts[K*tid+k] < asgnCosts[K*(s+tid)+k]){
-          asgnCosts[K*tid+k] = asgnCosts[K*(s+tid)+k];
+        if(asgnIdces[K*tid+k] > asgnIdces[K*(s+tid)+k]){
           asgnIdces[K*tid+k] = asgnIdces[K*(s+tid)+k];
         } 
       }
@@ -89,12 +83,89 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_
 
   //reduce the 2 remaining into the output d_asgnCosts/d_asgnIndices
   if(tid < K) {
-    if(asgnCosts[tid] < asgnCosts[K+tid]){
+    if(asgnIdces[tid] < asgnIdces[K+tid]){
+      // leads to the smallest index of minimal cost value (but only minimal wrt to its block)
+      // this is not the argmin over all values - that is probably not possible atomically
       atomicMin(&d_asgnIdces[tid], asgnIdces[tid]);
     } else {
       atomicMin(&d_asgnIdces[tid], asgnIdces[K+tid]);
     }
   }
+
+};
+
+template<typename T, uint32_t K, uint32_t BLK_SIZE>
+__global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_asgnIdces, uint32_t N)
+{
+  //__shared__ T oldp[DIM*K];
+  __shared__ uint32_t asgnIdces[K*BLK_SIZE]; //for each thread, index selected for each old K
+  __shared__ T oldp[K*DIM];
+
+  const int tid = threadIdx.x;
+  const int idx = threadIdx.x + blockDim.x * blockIdx.x;
+
+  // caching and init
+  for(int k = 0; k < K; k++){
+    asgnIdces[K*tid+k] = UNASSIGNED;
+    if(tid < DIM) oldp[k*DIM+tid] = d_oldp[k*DIM+tid];
+  }
+  __syncthreads(); // make sure that ys have been cached
+
+  for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
+  {
+    T max_sim_k = FLT_MAX;
+    uint32_t max_k = UNASSIGNED;
+    T sim_k = 0.;
+    T* p_k = oldp;
+    T q_i[DIM];
+    q_i[0] = d_q[id*DIM];
+    q_i[1] = d_q[id*DIM+1];
+    q_i[2] = d_q[id*DIM+2];
+    if (q_i[0] ==q_i[0] && q_i[1] ==q_i[1] && q_i[2]==q_i[2])// only do this for q not nan
+    {
+      for (uint32_t k=0; k<K; ++k) {
+        T distsq = (q_i[0] - p_k[0])*(q_i[0] - p_k[0])
+        		 +(q_i[1] - p_k[1])*(q_i[1] - p_k[1])
+        		 +(q_i[2] - p_k[2])*(q_i[2] - p_k[2]);
+        sim_k = distToUninstantiated<T>(distsq,d_ages[k],d_ws[k],Q,tau,1e-6);
+        if(sim_k < lambda && max_sim_k > sim_k)
+        {
+          max_sim_k = sim_k;
+          max_k = k;
+        }
+        p_k += DIM;
+      }
+      if(max_k < K && id < asgnIdces[K*tid+max_k]){
+        asgnIdces[K*tid+max_k] = id;
+      }
+    }
+  }
+  // min() reduction
+  __syncthreads(); //sync the threads
+#pragma unroll
+  for(int s=(BLK_SIZE)/2; s>1; s>>=1) {
+    if(tid < s)
+    {
+      for(uint32_t k = 0; k < K; ++k){
+        if(asgnIdces[K*tid+k] > asgnIdces[K*(s+tid)+k]){
+          asgnIdces[K*tid+k] = asgnIdces[K*(s+tid)+k];
+        } 
+      }
+    }
+    __syncthreads();
+  }
+
+  //reduce the 2 remaining into the output d_asgnCosts/d_asgnIndices
+  if(tid < K) {
+    if(asgnIdces[tid] < asgnIdces[K+tid]){
+      // leads to the smallest index of minimal cost value (but only minimal wrt to its block)
+      // this is not the argmin over all values - that is probably not possible atomically
+      atomicMin(&d_asgnIdces[tid], asgnIdces[tid]);
+    } else {
+      atomicMin(&d_asgnIdces[tid], asgnIdces[K+tid]);
+    }
+  }
+
 };
 
 extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages, double *d_ws, double lambda, double Q, 
@@ -155,7 +226,8 @@ extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages, 
     ddpLabelAssignSpecial_kernel<double,16, BLK_SIZE><<<blocks, threads>>>(
         d_q, d_oldp, d_ages, d_ws, lambda, Q, tau, d_asgnIdces, N);
   }else{
-    assert(false);
+    ddpLabelAssignSpecial_kernel<double,BLK_SIZE><<<blocks, threads>>>(
+        d_q, d_oldp, d_ages, d_ws, lambda, Q, tau, d_asgnIdces, N, K);
   }
   checkCudaErrors(cudaDeviceSynchronize());
 
@@ -221,7 +293,8 @@ extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
     ddpLabelAssignSpecial_kernel<float,16, BLK_SIZE><<<blocks, threads>>>(
         d_q, d_oldp, d_ages, d_ws, lambda, Q, tau, d_asgnIdces, N);
   }else{
-    assert(false);
+    ddpLabelAssignSpecial_kernel<float,BLK_SIZE><<<blocks, threads>>>(
+        d_q, d_oldp, d_ages, d_ws, lambda, Q, tau, d_asgnIdces, N, K);
   }
   checkCudaErrors(cudaDeviceSynchronize());
 

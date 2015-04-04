@@ -20,7 +20,7 @@
 //#include <dmeans/model>
 //#include <dmeans/utils>
 
-#include <dpMMlowVar/clDataGpu.hpp>
+#include <jsCore/clDataGpu.hpp>
 #include <dpMMlowVar/ddpmeansCUDA.hpp>
 #include <dpMMlowVar/euclideanData.hpp>
 //#include <dpMMlowVar/spline.h>
@@ -131,7 +131,7 @@ int main(int argc, char** argv){
 
   //set up the DDP Means object
 	shared_ptr<MXf> tmp(new MXf(3, 1));
-  shared_ptr<ClDataGpuf> cld(new ClDataGpuf(tmp,0));
+  shared_ptr<jsc::ClDataGpuf> cld(new jsc::ClDataGpuf(tmp,0));
   DDPMeansCUDA<float,Euclidean<float> > *clusterer = new
     DDPMeansCUDA<float,Euclidean<float> >(cld, lambda, Q, tau);
 
@@ -143,7 +143,7 @@ int main(int argc, char** argv){
 		cap.grab();
 		bool empty = !cap.retrieve(frame);
 		if(empty) break;
-    if(fr < 600) {++ fr; continue;}
+//    if(fr < 100) {++ fr; continue;}
     shared_ptr<MXf> data;
 	  Mat frameresized = frame;
 		if (nfr_w != fr_w || nfr_h != fr_h){
@@ -156,13 +156,26 @@ int main(int argc, char** argv){
 
 		//JULIAN: This is where you cluster vector space data
 //		dmeans::Results<VSModel> res = dynm.cluster(data);
+    jsc::Timer t0;
+    jsc::Timer t1;
 		clusterer->nextTimeStep(data);
+    t1.toctic("init");
+//		clusterer->nextTimeStep(data);
+//    cout<<"serial assign"<<endl;
+//		clusterer->updateLabelsSerial();
+//    			clusterer->updateCenters();
+    uint32_t t = 0;
 		do{
 			clusterer->updateLabels();
-    			clusterer->updateCenters();
-		}while (!clusterer->convergedCounts(nfr_h*nfr_w/100));
+      clusterer->updateCenters();
+      t1.toctic("iteration");
+      ++ t;
+		}while (!clusterer->convergedCounts(nfr_h*nfr_w/100)
+        && t < 10);
 //		}while (!clusterer->converged());
-		clusterer->updateState();
+		clusterer->updateState(false);
+    t0.toctic("whole iteration");
+
     const VXu& z = clusterer->z();
 //    const MXf& p = clusterer->centroids();
 
@@ -172,7 +185,7 @@ int main(int argc, char** argv){
     cv::Mat postFrame = boundaries(frameresized, z);
 
     cv::imshow("rgb",postFrame);
-    cv::waitKey(30);
+    cv::waitKey(40);
 
 		//JULIAN: This is where you write out the frame + superpixel boundaries
 		ostringstream oss;
@@ -327,7 +340,6 @@ cv::Mat boundaries(cv::Mat frame, VXu z)
 {
   int cl = frame.cols;
   int rw = frame.rows;
-  cout<<"rw="<<rw<< " x "<<cl<< " "<<z.size()<<endl;
   Mat frameOut;
   frame.copyTo(frameOut);
   for(int y = 1; y < rw; y++)
@@ -341,7 +353,6 @@ cv::Mat boundaries(cv::Mat frame, VXu z)
         clr.val[1] = 0;
         clr.val[2] = 0;
       }  }
-  cout<<"done"<<endl;
   return frameOut;
 //  //Mat medianFrame;
 //  //medianBlur(frameOut, medianFrame, 3);

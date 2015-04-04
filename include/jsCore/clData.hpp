@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <Eigen/Dense>
 
-#include <dpMMlowVar/global.hpp>
+#include <jsCore/global.hpp>
 
 using namespace Eigen;
 using std::vector;
@@ -16,7 +16,7 @@ using std::endl;
 
 #define UNASSIGNED 4294967294
 
-namespace dplv {
+namespace jsc {
 
 /* clustered data */
 template <class T>

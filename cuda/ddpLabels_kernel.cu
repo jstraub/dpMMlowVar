@@ -18,9 +18,9 @@ __device__ inline T distToUninstantiated( T distsq, T age, T w, T Q, T tau, T th
 }
 
 template<typename T, uint32_t BLK_SIZE>
-__global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, 
-    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_iAction, 
-    uint32_t i0, uint32_t N, uint32_t K)
+__global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
+    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau,
+    uint32_t *d_iAction, uint32_t i0, uint32_t N, uint32_t K)
 {
 //  __shared__ T p[DIM*(K+1)];
 ////  __shared__ T ages[K+1];
@@ -65,12 +65,12 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         		 +(q_i[1] - p_k[1])*(q_i[1] - p_k[1])
         		 +(q_i[2] - p_k[2])*(q_i[2] - p_k[2]);
         if(d_Ns[k] == 0)
-        {// cluster not instantiated yet in this timestep                           
+        {// cluster not instantiated yet in this timestep
           T age = d_ages[k]; // TODO d_ages size is not always = K
           //TODO: using small angle approximation here!
           sim_k = distToUninstantiated<T>(distsq,age,d_ws[k],Q,tau,1e-6);
 //          sim_k = distToUninstantiated<T,10>(zeta,age,beta,d_ws[k],Q,1e-6);
-        }else{ // cluster instantiated                                              
+        }else{ // cluster instantiated
           sim_k = distsq;
         }
         if(sim_k < sim_closest)
@@ -80,12 +80,16 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         }
         p_k += DIM;
       }
-      if (z_i == K || d_Ns[z_i] == 0)
+      if (z_i == K || d_Ns[z_i] == 0) // TODO this means we assign datapoints to uninstantiated and do not break!! || d_Ns[z_i] == 0)
       {
         iAction[tid] = id;
         break; // save id at which an action occured and break out because after
         // that id anything more would be invalid.
       }
+//      if(d_Ns[z_i] == 0)
+//      {
+//        atomicAdd(d_Ns,1);
+//      }
       z[id] = z_i;
     }
   }
@@ -108,8 +112,8 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 };
 
 template<typename T, uint32_t K, uint32_t BLK_SIZE>
-__global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, 
-    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_iAction, 
+__global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
+    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_iAction,
     uint32_t i0, uint32_t N)
 {
   __shared__ T p[DIM*(K+1)];
@@ -152,12 +156,12 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         		 +(q_i[1] - p_k[1])*(q_i[1] - p_k[1])
         		 +(q_i[2] - p_k[2])*(q_i[2] - p_k[2]);
         if(Ns[k] == 0)
-        {// cluster not instantiated yet in this timestep                           
+        {// cluster not instantiated yet in this timestep
           T age = d_ages[k]; // TODO d_ages size is not always = K
           //TODO: using small angle approximation here!
           sim_k = distToUninstantiated<T>(distsq,age,d_ws[k],Q,tau,1e-6);
 //          sim_k = distToUninstantiated<T,10>(zeta,age,beta,d_ws[k],Q,1e-6);
-        }else{ // cluster instantiated                                              
+        }else{ // cluster instantiated
           sim_k = distsq;
         }
         if(sim_k < sim_closest)
@@ -195,8 +199,8 @@ __global__ void ddpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 };
 
 
-extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z, 
-    uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double Q, 
+extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
+    uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double Q,
     double tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
 {
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
@@ -264,8 +268,8 @@ extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 };
 
 
-extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z, 
-    uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q, 
+extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
+    uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q,
     float tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
 {
   const uint32_t BLK_SIZE = BLOCK_SIZE;

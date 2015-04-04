@@ -6,14 +6,14 @@
 #include <Eigen/Dense>
 #include <iostream>
 
-#include <dpMMlowVar/global.hpp>
-
-#include <dpMMlowVar/kmeans.hpp>
-#include <dpMMlowVar/clDataGpu.hpp>
-#include <dpMMlowVar/gpuMatrix.hpp>
+#include <jsCore/global.hpp>
+#include <jsCore/clDataGpu.hpp>
+#include <jsCore/gpuMatrix.hpp>
 
 #include <dpMMlowVar/euclideanData.hpp>
 #include <dpMMlowVar/sphericalData.hpp>
+#include <dpMMlowVar/kmeans.hpp>
+
 
 using namespace Eigen;
 using std::cout;
@@ -35,7 +35,7 @@ template<class T, class DS>
 class KMeansCUDA : public KMeans<T,DS>
 {
 public:
-  KMeansCUDA(const shared_ptr<ClDataGpu<T> >& cld);
+  KMeansCUDA(const shared_ptr<jsc::ClDataGpu<T> >& cld);
   virtual ~KMeansCUDA();
 
   virtual void updateLabels();
@@ -48,7 +48,7 @@ public:
 
 protected:
 
-  GpuMatrix<T> d_p_;
+  jsc::GpuMatrix<T> d_p_;
   virtual void setupComputeLabelsGPU();
 };
 typedef KMeansCUDA<double, Euclidean<double> > kmeansCUDAd;
@@ -58,7 +58,7 @@ typedef KMeansCUDA<float, Spherical<float> > spkmCUDAf;
 
 // ------------------------- impl --------------------------------------
 template<class T, class DS>
-KMeansCUDA<T,DS>::KMeansCUDA( const shared_ptr<ClDataGpu<T> >& cld)
+KMeansCUDA<T,DS>::KMeansCUDA( const shared_ptr<jsc::ClDataGpu<T> >& cld)
   : KMeans<T,DS>(cld), d_p_(this->D_,cld->K())
 {}
 

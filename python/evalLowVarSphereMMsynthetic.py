@@ -60,11 +60,11 @@ def entropy(z):
 def run(cfg,reRun):
   K = cfg['K']
   if cfg['base'] in ['CrpvMF']:
-    args = ['../../dpMMshared/build/dpmmSampler', '--alpha 1.0']
+    args = ['../../dpMMshared/build/dpmmSampler', '--alpha 10.']
     params = np.r_[ cfg['m0'], np.array([cfg['t0'],cfg['a0'],cfg['b0']])]
   elif cfg['base'] in ['DirvMF']:
     args = ['../../dpMMshared/build/dpmmSampler', 
-        '--alpha ' + " ".join([str(1.0/float(cfg['K'])) for k in range(cfg['K'])]) ]
+        '--alpha ' + " ".join([str(10.0/float(cfg['K'])) for k in range(cfg['K'])]) ]
     params = np.r_[cfg['m0'], np.array([cfg['t0'],cfg['a0'],cfg['b0']])]
     K = 1
   else:
@@ -144,14 +144,17 @@ paramBase = {'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60
 cfg['T'] = 100
 cfg['nRun'] = 50
 
+dataPath = './rndSphereminAngle_25.0-K_3-N_100-delta_20.0-nu_10.0-D_3.csv' # very isotropic
+dataPath = './rndSphereminAngle_25.0-K_2-N_100-delta_20.0-nu_10.0-D_3.csv' # very isotropic
+dataPath = './rndSphereminAngle_90.0-K_2-N_100-delta_10.0-nu_100.0-D_3.csv' # very isotropic
 dataPath = './rndSphereDataNu10D3N30000NonOverLap.csv' # very isotropic
 cfg['nParms'] = 50;
 paramBase = {
     'spkm':np.floor(np.linspace(70,10,cfg['nParms'])).astype(int), # 60,2
     'DPvMFmeans':np.array([ang for ang in np.linspace(5.,45.,cfg['nParms'])]),
-    'CrpvMF':np.array([30]),
+    'CrpvMF':np.array([15]),
     'DirvMF':np.array([100])}
-cfg['T'] = 3000 # 1100
+cfg['T'] = 3000 # 1100 # 100
 cfg['nRun'] = 1 #50
 
 cfg['dataPath'] = dataPath
@@ -171,7 +174,9 @@ bases = ['spkm','DirvMF']
 bases = ['DPvMFmeans']
 bases = ['DirvMF']
 bases = ['spkm']
+bases = ['spkm','DPvMFmeans']
 bases = ['CrpvMF']
+bases = ['DirvMF']
 
 paramName =  {'spkm':"$K$",'DPvMFmeans':"$\phi_\lambda$ [deg]"}
 baseMap={'spkm':'spkm','kmeans':'k-means','NiwSphere':'DirSNIW', \

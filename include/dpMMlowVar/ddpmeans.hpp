@@ -23,7 +23,7 @@ class DDPMeans : public DPMeans<T,DS>
 public:
   DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
       T lambda, T Q, T tau);
-  DDPMeans(const shared_ptr<ClData<T> >& cld,
+  DDPMeans(const shared_ptr<jsc::ClData<T> >& cld,
       T lambda, T Q, T tau);
   virtual ~DDPMeans();
 
@@ -31,9 +31,10 @@ public:
   virtual void updateLabels();
   virtual void updateCenters();
   
-  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx);
-//  virtual void nextTimeStep(const shared_ptr<ClData<T> >& cld);
-  virtual void updateState(); // after converging for a single time instant
+  virtual void initRevive();
+  virtual void nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, bool reviveOnInit=true);
+//  virtual void nextTimeStep(const shared_ptr<jsc::ClData<T> >& cld);
+  virtual void updateState(bool verbose=false); // after converging for a single time instant
 
   virtual uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
   virtual void createReviveFrom(uint32_t i);
@@ -90,7 +91,7 @@ DDPMeans<T,DS>::DDPMeans(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx,
 };
 
 template<class T, class DS>
-DDPMeans<T,DS>::DDPMeans(const shared_ptr<ClData<T> >& cld, 
+DDPMeans<T,DS>::DDPMeans(const shared_ptr<jsc::ClData<T> >& cld, 
     T lambda, T Q, T tau)
   : DPMeans<T,DS>(cld,lambda), cl0_(tau,lambda,Q), globalMaxInd_(0)
 {
@@ -150,6 +151,7 @@ uint32_t DDPMeans<T,DS>::optimisticLabelsAssign(uint32_t i0)
 template<class T,class DS>
 VectorXu DDPMeans<T,DS>::initLabels()
 {
+  cout<<"init labels CPU"<<endl;
   return VectorXu::Ones(this->K_)*UNASSIGNED;
 }
 
@@ -241,7 +243,7 @@ void DDPMeans<T,DS>::updateCenters()
   this->cld_->updateK(this->K_);
   this->cld_->computeSS();
 
-//#pragma omp parallel for 
+#pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
     this->cls_[k]->updateSS(this->cld_,k);
@@ -257,9 +259,10 @@ void DDPMeans<T,DS>::updateCenters()
 };
 
 template<class T, class DS>
-void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx)
+void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& spx, bool reviveOnInit)
 {
 //  this->clsPrev_.clear();
+//#pragma omp parallel for 
   for (uint32_t k =0; k< this->K_; ++k)
   {
 //    clsPrev_.push_back(shared_ptr<typename
@@ -270,33 +273,67 @@ void DDPMeans<T,DS>::nextTimeStep(const shared_ptr<Matrix<T,Dynamic,Dynamic> >& 
   this->Kprev_ = this->K_;
   this->cld_->updateData(spx);
   this->N_ = this->cld_->N();
-
-  if(false && this->K_ > 0)
-  { // seemed to slow down the algorithms convergence
-    VectorXu idActions = initLabels();
-    for(uint32_t k=0; k<this->K_; ++k)
-      if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
-      { // instantiated an old cluster
-        cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
-        cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
-        this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
-      }
-  }
-
-  // revive or add cluster from the first data-point
-  createReviveFrom(0);
+  
+  if(reviveOnInit) 
+    initRevive(); 
+  else if(this->K_ == 0)
+    // revive or add cluster from the first data-point
+    createReviveFrom(0);
+ 
 };
 
 template<class T, class DS>
-void DDPMeans<T,DS>::updateState()
+void DDPMeans<T,DS>::initRevive()
+{
+  if(this->K_ > 0)
+  { // seemed to slow down the algorithms convergence
+    VectorXu idActions = initLabels();
+    vector<uint32_t> sortedIds(this->K_,UNASSIGNED);
+    for(uint32_t k=0; k<this->K_; ++k)
+      sortedIds[k] = idActions(k);
+    std::sort(sortedIds.begin(),sortedIds.end());
+    cout<<"idActions count: "<<idActions.size()<<endl;
+    cout<<"idActions: "<<idActions.transpose()<<endl;
+    for(uint32_t j=0; j<this->K_; ++j)
+    {
+      uint32_t k =0;
+      for(k=0; k< this->K_; ++k)
+        if(sortedIds[j] == idActions(k)) break;
+      if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
+      { // instantiated an old cluster
+        T sim = 0.;
+        uint32_t z_i = this->indOfClosestCluster(idActions(k),sim);
+        if(z_i == k)
+        {
+          cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
+          cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
+          this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
+        }else{
+          cout<<"NOT revieving cluster "<<k<<" from point "
+            <<idActions(k)
+            <<" because on CPU z_i = "<<z_i<<endl;
+        }
+      }
+    }
+  }else if(this->K_ == 0)
+  {
+    // revive or add cluster from the first data-point
+    createReviveFrom(0);
+  }
+  cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
+}
+
+template<class T, class DS>
+void DDPMeans<T,DS>::updateState(bool verbose)
 {
   vector<bool> toRemove(this->K_,false);
+//#pragma omp parallel for 
   for(uint32_t k=0; k<this->K_; ++k)
   {
     if(this->cls_[k]->isInstantiated()) this->cls_[k]->updateWeight();
     this->cls_[k]->incAge();
     if(this->cls_[k]->isDead()) toRemove[k] = true;
-    this->cls_[k]->print();
+    if (verbose) this->cls_[k]->print();
   }
 
   vector<int32_t> labelMap(this->K_);

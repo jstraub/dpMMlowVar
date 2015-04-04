@@ -405,8 +405,8 @@ void Spherical<T>::solveProblem1Approx(T gamma, T age, const T beta, T& phi, T& 
 
 
 template<class T>
-void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta, 
-    T age, T w, const T beta, T& phi, T& theta, T& eta)
+void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum,
+    T zeta, T age, T w, const T beta, T& phi, T& theta, T& eta)
 {
   // solves
   // w sin(theta) = beta sin(phi) = ||xSum||_2 sin(eta) 
@@ -416,29 +416,6 @@ void Spherical<T>::solveProblem2Approx(const Matrix<T,Dynamic,1>& xSum, T zeta,
   theta = zeta/( 1.+ w*(1. + age/beta) );
   eta = zeta/(1. + 1./w + age/beta);
 
-//  phi = 0.0;
-//
-//  //  cout<<"w="<<w<<" age="<<age<<" zeta="<<zeta<<endl;
-//
-//  T L2xSum = xSum.norm();
-//  for (uint32_t i=0; i< 10; ++i)
-//  {
-//    T sinPhi = phi;
-//    T cosPhi = 1.;
-//    T f = - zeta + (beta/L2xSum *sinPhi) + age * phi + (beta/w *sinPhi);
-//    T df = age + (beta*cosPhi)/sqrt(L2xSum*L2xSum -
-//        beta*beta*sinPhi*sinPhi) + (beta*cosPhi)/sqrt(w*w -
-//        beta*beta*sinPhi*sinPhi); 
-//
-//    T dPhi = f/df;
-//
-//    phi = phi - dPhi; // Newton iteration
-////    cout<<"@i="<<i<<": "<<"f="<<f<<" df="<<df<<" phi="<<phi<<"\t"<<dPhi<<endl;
-//    if(fabs(dPhi) < 1e-6) break;
-//  }
-//
-//  theta = (beta/w *(phi));
-//  eta = (beta/L2xSum *(phi));
 };
 
 }

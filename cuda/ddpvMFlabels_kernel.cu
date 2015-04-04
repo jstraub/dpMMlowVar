@@ -57,8 +57,8 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         {// cluster not instantiated yet in this timestep
           T age = d_ages[k]; // TODO d_ages size is not always = K
           //TODO: using small angle approximation here!
-          sim_k = distToUninstantiatedSmallAngleApprox<T,10>(zeta,
-              age,beta,d_ws[k],Q,1e-6);
+          sim_k = distToUninstantiatedSmallAngleApprox<T>(zeta,
+              age,beta,d_ws[k],Q);
 //          sim_k = distToUninstantiated<T,10>(zeta,age,beta,d_ws[k],Q,1e-6);
         }else{ // cluster instantiated
           sim_k = dot;

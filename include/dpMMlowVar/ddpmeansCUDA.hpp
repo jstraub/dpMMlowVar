@@ -60,7 +60,7 @@ public:
   virtual ~DDPMeansCUDA();
   
   virtual void nextTimeStepGpu(T* d_x, uint32_t N, uint32_t step, 
-      uint32_t offset);
+      uint32_t offset, bool reviveOnInit = true);
 
   void getZfromGpu() {this->cld_->z();};
   uint32_t* d_z(){ return this->cdl_->d_z();};
@@ -95,7 +95,8 @@ DDPMeansCUDA<T,DS>::~DDPMeansCUDA()
 {};
 
 template<class T, class DS> void DDPMeansCUDA<T,DS>::nextTimeStepGpu(T*
-    d_x, uint32_t N, uint32_t step, uint32_t offset) {
+    d_x, uint32_t N, uint32_t step, uint32_t offset, bool reviveOnInit) 
+{
 //  this->clsPrev_.clear();
   for (uint32_t k =0; k< this->K_; ++k)
   {
@@ -108,19 +109,11 @@ template<class T, class DS> void DDPMeansCUDA<T,DS>::nextTimeStepGpu(T*
   this->cld_->updateData(d_x,N,step,offset);
   this->N_ = this->cld_->N();
 
-  if(this->K_ > 0)
-  { // seemed to slow down the algorithms convergence
-    VectorXu idActions = initLabels();
-    for(uint32_t k=0; k<this->K_; ++k)
-      if(idActions(k) != UNASSIGNED && !this->cls_[k]->isInstantiated())
-      { // instantiated an old cluster
-        cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
-        cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
-        this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
-      }
-  }
-
-//  this->initRevive();
+  if(reviveOnInit) 
+    this->initRevive(); 
+  else if(this->K_ == 0)
+    // revive or add cluster from the first data-point
+    this->createReviveFrom(0);
 };
 
 template<class T, class DS>
@@ -249,7 +242,7 @@ VectorXu DDPMeansCUDA<T,DS>::initLabels()
 template<>
 VectorXu DDPMeansCUDA<float,Spherical<float> >::initLabels()
 {
-  cout<<"cuda init labels K="<<this->K_<<endl;
+  cout<<"cuda init spherical labels K="<<this->K_<<endl;
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
 //  return asgnIdces;
   // TODO: seems to slow down the init!
@@ -280,7 +273,7 @@ VectorXu DDPMeansCUDA<float,Spherical<float> >::initLabels()
 template<>
 VectorXu DDPMeansCUDA<double,Spherical<double> >::initLabels()
 {
-  cout<<"cuda init labels K="<<this->K_<<endl;
+  cout<<"cuda init spherical labels K="<<this->K_<<endl;
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
 //  return asgnIdces;
   // TODO: seems to slow down the init!

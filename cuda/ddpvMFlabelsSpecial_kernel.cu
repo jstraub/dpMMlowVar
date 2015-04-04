@@ -29,7 +29,7 @@ __global__ void ddpvMFLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T 
 
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
   {
-    T max_sim_k = 0;
+    T max_sim_k = -2.0;
     uint32_t max_k = UNASSIGNED;
     T sim_k = 0.;
     T* p_k = oldp;
@@ -43,9 +43,9 @@ __global__ void ddpvMFLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T 
       {
         const T dot = min(1.0,max(-1.0,q_i[0]*p_k[0] + q_i[1]*p_k[1] 
               + q_i[2]*p_k[2]));
-        sim_k = distToUninstantiatedSmallAngleApprox<T,10>(
-            acosf(dot),d_ages[k],tau,d_ws[k],Q,1e-6);
-        if(sim_k < lambda && max_sim_k < sim_k)
+        sim_k = distToUninstantiatedSmallAngleApprox<T>(
+            acos(dot),d_ages[k],tau,d_ws[k],Q);
+        if(sim_k < (lambda+1.) && max_sim_k < sim_k)
         {
           max_sim_k = sim_k;
           max_k = k;
@@ -67,9 +67,10 @@ __global__ void ddpvMFLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T 
     if(tid < s)
     {
       for(uint32_t k = 0; k < K; ++k){
-        if(asgnIdces[K*tid+k] > asgnIdces[K*(s+tid)+k]){
-          asgnIdces[K*tid+k] = asgnIdces[K*(s+tid)+k];
-        } 
+        asgnIdces[K*tid+k] = min(asgnIdces[K*tid+k],asgnIdces[K*(s+tid)+k]);
+//        if(asgnIdces[K*tid+k] > asgnIdces[K*(s+tid)+k]){
+//          asgnIdces[K*tid+k] = asgnIdces[K*(s+tid)+k];
+//        } 
       }
     }
     __syncthreads();
@@ -106,7 +107,7 @@ __global__ void ddpvMFLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T 
 
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
   {
-    T max_sim_k = 0;
+    T max_sim_k = -2.;
     uint32_t max_k = UNASSIGNED;
     T sim_k = 0.;
     T* p_k = oldp;
@@ -120,15 +121,16 @@ __global__ void ddpvMFLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T 
       {
         const T dot = min(1.0,max(-1.0,q_i[0]*p_k[0] + q_i[1]*p_k[1] 
               + q_i[2]*p_k[2]));
-        sim_k = distToUninstantiatedSmallAngleApprox<T,10>(
-            acos(dot),d_ages[k],tau,d_ws[k],Q,1e-6);
-        if(sim_k < lambda && max_sim_k > sim_k)
+        sim_k = distToUninstantiatedSmallAngleApprox<T>(
+            acos(dot),d_ages[k],tau,d_ws[k],Q);
+        if(sim_k < (lambda+1.) && max_sim_k < sim_k)
         {
           max_sim_k = sim_k;
           max_k = k;
         }
         p_k += DIM;
       }
+//      if(tid==0) printf("%f,%f,%f\t",max_sim_k,sim_k,lambda+1.);
       if(max_k < K && id < asgnIdces[K*tid+max_k] )
       {
         asgnIdces[K*tid+max_k] = id;
@@ -144,9 +146,7 @@ __global__ void ddpvMFLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T 
     if(tid < s)
     {
       for(uint32_t k = 0; k < K; ++k){
-        if(asgnIdces[K*tid+k] > asgnIdces[K*(s+tid)+k]){
-          asgnIdces[K*tid+k] = asgnIdces[K*(s+tid)+k];
-        } 
+        asgnIdces[K*tid+k] = min(asgnIdces[K*tid+k],asgnIdces[K*(s+tid)+k]);
       }
     }
     __syncthreads();

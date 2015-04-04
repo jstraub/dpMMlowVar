@@ -1,8 +1,12 @@
+/* Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+ * under the MIT license. See the license file LICENSE.
+ */
 
 #include <stdio.h>
 
-#include <dpMMlowVar/cuda_global.h>
+#include <jsCore/cuda_global.h>
 
+#define DIM 3
 // executions per thread
 #define N_PER_T 16
 #define BLOCK_SIZE 256

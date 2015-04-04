@@ -1,3 +1,6 @@
+/* Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+ * under the MIT license. See the license file LICENSE.
+ */
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <iomanip>

@@ -43,12 +43,12 @@ link_directories(
   ${CUDA_LIBRARIES}
   )
 cuda_add_library(dpMMlowVar SHARED
-  ./cuda/vectorSum_kernel.cu
+#  ./cuda/vectorSum_kernel.cu
   ./cuda/ddpvMFlabels_kernel.cu
   ./cuda/ddpLabels_kernel.cu
-  ./cuda/copy_kernel.cu
+#  ./cuda/copy_kernel.cu
   ./cuda/choiceMult_kernel.cu
-  ./cuda/labelMap_kernel.cu
+#  ./cuda/labelMap_kernel.cu
   ./cuda/ddpLabelsSpecial_kernel.cu
   ./cuda/spkmLabels_kernel.cu
   ./cuda/kmeansLabels_kernel.cu
@@ -70,7 +70,7 @@ target_link_libraries(testSO3
 add_executable(testSpkmCUDA ./test/spkmCUDA.cpp
   )
 target_link_libraries(testSpkmCUDA
-  dpMMlowVar
+  jsCore dpMMlowVar
   boost_system
   boost_random
   boost_unit_test_framework
@@ -87,7 +87,7 @@ target_link_libraries(testClusterer
 add_executable(dpMMlowVarCluster ./src/dpMMlowVarCluster.cpp
   )
 target_link_libraries(dpMMlowVarCluster
-  dpMMlowVar
+  jsCore dpMMlowVar
   boost_system
   boost_random
   boost_program_options
@@ -96,7 +96,7 @@ target_link_libraries(dpMMlowVarCluster
 add_executable(ddpImageCluster ./src/ddpImageCluster.cpp
   )
 target_link_libraries(ddpImageCluster
-  dpMMlowVar
+  jsCore dpMMlowVar 
   boost_system
   boost_random
   boost_program_options
@@ -108,7 +108,7 @@ target_link_libraries(ddpImageCluster
 add_executable(ddpSphereCluster ./src/ddpSphereCluster.cpp
   )
 target_link_libraries(ddpSphereCluster
-  dpMMlowVar
+  jsCore dpMMlowVar
   boost_system
   boost_random
   boost_program_options

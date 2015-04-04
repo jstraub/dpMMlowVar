@@ -1,5 +1,8 @@
+/* Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+ * under the MIT license. See the license file LICENSE.
+ */
 
-#include <dpMMlowVar/cuda_global.h>
+#include <jsCore/cuda_global.h>
 
 // executions per thread
 #define N_PER_T 32

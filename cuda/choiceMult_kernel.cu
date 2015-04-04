@@ -1,6 +1,9 @@
+/* Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+ * under the MIT license. See the license file LICENSE.
+ */
 
 #include <stdint.h>
-#include <dpMMlowVar/helper_cuda.h>
+#include <nvidia/helper_cuda.h>
 
   __device__ uint wang_hash(uint seed)
   {

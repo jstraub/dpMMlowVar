@@ -1,6 +1,9 @@
 project(DpGMMs)
 cmake_minimum_required(VERSION 2.8.1)
 
+set(POD_NAME dpMMlowVar)
+include(cmake/pods.cmake)
+
 message("${CMAKE_MODULE_PATH}")
 
 if(COMMAND cmake_policy)
@@ -29,67 +32,32 @@ find_package (CUDA REQUIRED)
 
 message(${EIGEN3_INCLUDE_DIR})
 
-#IF(BOOST_OLD)
-#  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DBOOST_OLD")
-#  include_directories(
-#    ./include
-#    ./cuda
-#    ${EIGEN3_INCLUDE_DIR}
-##    /usr/include
-#    #/usr/include/eigen3
-#    ${Boost_INCLUDE_DIRS}
-#    ${CUDA_TOOLKIT_INCLUDE}
-#    )
-#  link_directories(
-#    ${Boost_LIBRARY_DIRS}
-##    $ENV{WORKSPACE_HOME}/3rdparty/lib
-##    /usr/lib
-#    ${CUDA_LIBRARIES}
-##    /usr/local/cuda-6.5/targets/x86_64-linux/lib/
-#    )
-#  # no sampling from chi_squared
-#  cuda_add_library(dpMMlowVar SHARED
-#    ./cuda/vectorSum_kernel.cu
-#    ./cuda/ddpvMFlabels_kernel.cu
-#    ./cuda/copy_kernel.cu
-#    ./cuda/choiceMult_kernel.cu
-#    ./cuda/labelMap_kernel.cu
-#    ./cuda/ddpLabelsSpecial_kernel.cu
-#    )
-#  target_link_libraries(dpMMlowVar
-#    boost_system
-#    boost_random
-#    boost_program_options
-#    )
-#ELSE(BOOST_OLD)
-  include_directories(
-    ./include
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${CUDA_TOOLKIT_INCLUDE}
-    )
-  link_directories(
-    ${Boost_LIBRARY_DIRS}
-    ${CUDA_LIBRARIES}
-    )
-  cuda_add_library(dpMMlowVar SHARED
-    ./cuda/vectorSum_kernel.cu
-    ./cuda/ddpvMFlabels_kernel.cu
-    ./cuda/ddpLabels_kernel.cu
-    ./cuda/copy_kernel.cu
-    ./cuda/choiceMult_kernel.cu
-    ./cuda/labelMap_kernel.cu
-    ./cuda/ddpLabelsSpecial_kernel.cu
-    ./cuda/spkmLabels_kernel.cu
-    ./cuda/kmeansLabels_kernel.cu
-    )
-  target_link_libraries(dpMMlowVar
-    boost_system
-    boost_random
-    boost_program_options
-    )
-#
-#ENDIF(BOOST_OLD)
+include_directories(
+  ./include
+  ${EIGEN3_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${CUDA_TOOLKIT_INCLUDE}
+  )
+link_directories(
+  ${Boost_LIBRARY_DIRS}
+  ${CUDA_LIBRARIES}
+  )
+cuda_add_library(dpMMlowVar SHARED
+  ./cuda/vectorSum_kernel.cu
+  ./cuda/ddpvMFlabels_kernel.cu
+  ./cuda/ddpLabels_kernel.cu
+  ./cuda/copy_kernel.cu
+  ./cuda/choiceMult_kernel.cu
+  ./cuda/labelMap_kernel.cu
+  ./cuda/ddpLabelsSpecial_kernel.cu
+  ./cuda/spkmLabels_kernel.cu
+  ./cuda/kmeansLabels_kernel.cu
+  )
+target_link_libraries(dpMMlowVar
+  boost_system
+  boost_random
+  boost_program_options
+  )
 
 add_executable(testSO3 ./test/SO3.cpp
   )
@@ -157,8 +125,8 @@ INSTALL(TARGETS dpMMlowVar ddpImageCluster dpMMlowVarCluster
   )
 
 install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
-  FILES_MATCHING PATTERN "*.h")                                         
-#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/                                 
-#  FILES_MATCHING PATTERN "*.h")                                         
-install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/                                 
-  FILES_MATCHING PATTERN "*.hpp") 
+  FILES_MATCHING PATTERN "*.h")
+#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/
+#  FILES_MATCHING PATTERN "*.h")
+install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
+  FILES_MATCHING PATTERN "*.hpp")

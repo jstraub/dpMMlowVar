@@ -200,10 +200,11 @@ extern void ddpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
-  if(K == 0){
-    ddpLabelAssign_kernel<double,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
-  }else if(K == 1){
+//  if(K == 0){
+//    ddpLabelAssign_kernel<double,0,BLK_SIZE><<<blocks,threads>>>(
+//        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
+//  }else 
+  if(K == 1){
     ddpLabelAssign_kernel<double,1,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==2){
@@ -268,10 +269,11 @@ extern void ddpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
-  if(K == 0){
-    ddpLabelAssign_kernel<float,0,BLK_SIZE><<<blocks,threads>>>(
-        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
-  }else if(K == 1){
+//  if(K == 0){
+//    ddpLabelAssign_kernel<float,0,BLK_SIZE><<<blocks,threads>>>(
+//        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
+//  }else 
+  if(K == 1){
     ddpLabelAssign_kernel<float,1,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, Q, tau, d_iAction, i0, N);
   }else if(K==2){

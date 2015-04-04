@@ -67,10 +67,11 @@ protected:
 
   T Kprev_; // K before updateLabels()
 //  VectorXu prevNs_;
+  typename DS::DependentCluster cl0_;
   uint32_t globalMaxInd_;
 
-  typename DS::DependentCluster cl0_;
-  //vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; // prev clusters 
+  //vector< shared_ptr<typename DS::DependentCluster> > clsPrev_; //
+  //prev clusters 
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
   virtual VectorXu initLabels();

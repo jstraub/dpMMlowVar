@@ -161,7 +161,7 @@ int main(int argc, char** argv){
 //		}while (!clusterer->converged());
 		clusterer->updateState();
     const VXu& z = clusterer->z();
-    const MXf& p = clusterer->centroids();
+//    const MXf& p = clusterer->centroids();
 
 		//JULIAN: here is where you take the results from your cuda algorithm and draw the superpixel boundaries in red/whatever color
 //		Mat postFrame = createOutputFrame(frame, res);

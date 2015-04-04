@@ -1,6 +1,7 @@
 build
 jsCore
 cudaPcl
+pod-build
 *~
 *.pyc
 *.csv

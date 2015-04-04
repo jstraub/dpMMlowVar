@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <float.h>
 #include <jsCore/cuda_global.h>
-#include <dpMMlowVar/ddpvMF_cuda_helper.h>
 
 #define DIM 3
+#include <dpMMlowVar/ddpvMF_cuda_helper.h>
 // executions per thread
 #define K_MAX 50
 #define N_PER_T 16

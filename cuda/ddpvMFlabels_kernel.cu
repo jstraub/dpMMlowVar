@@ -4,9 +4,9 @@
 
 #include <stdio.h>
 #include <jsCore/cuda_global.h>
-#include <dpMMlowVar/ddpvMF_cuda_helper.h>
 
 #define DIM 3
+#include <dpMMlowVar/ddpvMF_cuda_helper.h>
 // executions per thread
 #define N_PER_T 16
 #define BLOCK_SIZE 256

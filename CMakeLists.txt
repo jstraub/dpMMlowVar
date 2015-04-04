@@ -47,9 +47,10 @@ cuda_add_library(dpMMlowVar SHARED
   ./cuda/ddpvMFlabels_kernel.cu
   ./cuda/ddpLabels_kernel.cu
 #  ./cuda/copy_kernel.cu
-  ./cuda/choiceMult_kernel.cu
+#  ./cuda/choiceMult_kernel.cu
 #  ./cuda/labelMap_kernel.cu
   ./cuda/ddpLabelsSpecial_kernel.cu
+  ./cuda/ddpvMFlabelsSpecial_kernel.cu
   ./cuda/spkmLabels_kernel.cu
   ./cuda/kmeansLabels_kernel.cu
   )
@@ -117,16 +118,14 @@ target_link_libraries(ddpSphereCluster
   opencv_highgui
   )
 
-INSTALL(TARGETS dpMMlowVar ddpImageCluster dpMMlowVarCluster
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  # ARCHIVE DESTINATION lib
-  COMPONENT compLib
-  )
-
 install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
   FILES_MATCHING PATTERN "*.h")
 #install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/
 #  FILES_MATCHING PATTERN "*.h")
 install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
   FILES_MATCHING PATTERN "*.hpp")
+
+pods_install_executables(ddpImageCluster dpMMlowVarCluster
+  testClusterer testSpkmCUDA testSO3)
+pods_install_libraries(dpMMlowVar)
+

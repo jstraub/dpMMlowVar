@@ -118,14 +118,28 @@ target_link_libraries(ddpSphereCluster
   opencv_highgui
   )
 
-install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
-  FILES_MATCHING PATTERN "*.h")
-#install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/
+#install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
 #  FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
-  FILES_MATCHING PATTERN "*.hpp")
+##install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/
+##  FILES_MATCHING PATTERN "*.h")
+#install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
+#  FILES_MATCHING PATTERN "*.hpp")
 
 pods_install_executables(ddpImageCluster dpMMlowVarCluster
   testClusterer testSpkmCUDA testSO3)
 pods_install_libraries(dpMMlowVar)
-
+pods_install_headers(
+  ./include/dpMMlowVar/clusterer.hpp
+  ./include/dpMMlowVar/ddpmeans.hpp
+  ./include/dpMMlowVar/ddpmeansCUDA.hpp
+  ./include/dpMMlowVar/dpmeans.hpp
+  ./include/dpMMlowVar/ddpvMF_cuda_helper.h
+  ./include/dpMMlowVar/euclideanData.hpp
+  ./include/dpMMlowVar/sphericalData.hpp
+  ./include/dpMMlowVar/spline.h
+  ./include/dpMMlowVar/kmeans.hpp
+  ./include/dpMMlowVar/kmeansCUDA.hpp
+  ./include/dpMMlowVar/opencvHelper.hpp
+  ./include/dpMMlowVar/random.hpp
+  ./include/dpMMlowVar/SO3.hpp
+  DESTINATION dpMMlowVar)

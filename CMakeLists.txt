@@ -94,17 +94,17 @@ target_link_libraries(dpMMlowVarCluster
   boost_program_options
   )
 
-add_executable(ddpImageCluster ./src/ddpImageCluster.cpp
-  )
-target_link_libraries(ddpImageCluster
-  jsCore dpMMlowVar 
-  boost_system
-  boost_random
-  boost_program_options
-  opencv_core
-  opencv_imgproc
-  opencv_highgui
-  )
+#add_executable(ddpImageCluster ./src/ddpImageCluster.cpp
+#  )
+#target_link_libraries(ddpImageCluster
+#  jsCore dpMMlowVar 
+#  boost_system
+#  boost_random
+#  boost_program_options
+#  opencv_core
+#  opencv_imgproc
+#  opencv_highgui
+#  )
 
 add_executable(ddpSphereCluster ./src/ddpSphereCluster.cpp
   )
@@ -125,7 +125,9 @@ target_link_libraries(ddpSphereCluster
 #install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
 #  FILES_MATCHING PATTERN "*.hpp")
 
-pods_install_executables(ddpImageCluster dpMMlowVarCluster
+pods_install_executables(
+#  ddpImageCluster 
+  dpMMlowVarCluster
   testClusterer testSpkmCUDA testSO3)
 pods_install_libraries(dpMMlowVar)
 pods_install_headers(

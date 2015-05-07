@@ -1,9 +1,12 @@
-## Bayesian nonparametric small-variance asymptotic clustering algorithms
+### Bayesian Nonparametric Small-Variance Asymptotic Clustering Algorithms
+
+![DP-vMF-means Direcitonal Segmentation of the NYU
+RGB-D dataset](./doc/figureDPvMF_segmentationOverlay_extendedAbstract_cropped.png)
+![DDP-vMF-means Real-time Direcitonal Segmentation](./doc/figureDDPvMF_segmentationOverlay_extendedAbstract_cropped.png)
 
 This is a library of Bayesian nonparametric small-variance asymptotic
 clustering algorithms: DP-means, Dynamic means, DP-vMF-means,
 DDP-vMF-means.
-
 For comparison reasons the library also implements k-means as well as
 spherical k-means.
 
@@ -14,6 +17,8 @@ For an example of using DDP-vMF-means refer to
 [git@github.com:jstraub/rtDDPvMF.git](git@github.com:jstraub/rtDDPvMF.git) 
 which relies on this package's dpMMlowVar library to perform real-time
 directional segmentation from Kinect RGB-D streams using DDP-vMF-means.
+[![Real-time Directional Segmentation using DDP-vMF-means](./doc/ddpVideoPreview.png)](http://www.youtube.com/watch?v=wLP18q80oAE)
+
 
 If you use DP-vMF-means or DDP-vMF-means please cite:
 ```
@@ -27,7 +32,58 @@ T. Campbell, M. Liu, B. Kulis, J. How, and L. Carin. "Dynamic
 Clustering via Asymptotics of the Dependent Dirichlet Process Mixture".
 In Advances in Neural Information Processing Systems (NIPS), 2013.
 ```
-## Usage
+
+### Dependencies
+This code is dependent on Eigen3, Boost, CUDA, OpenCV, OpenMP and PCL.
+It has been tested on Ubuntu 14.04 with 
+- Eigen3 (3.0.5) 
+- Boost (1.54)
+- CUDA (6.5)
+- OpenCV (2.4)
+- PCL (1.7)
+
+### Install
+
+This package uses [the pods build
+system](http://sourceforge.net/p/pods/home/Home/). Used widely at CSAIL
+MIT the build system makes it easy to break up software projects into
+small packages that can be checked out and compiled automatically (see
+below).
+
+- *Linux:* 
+
+    Install Eigen3, Boost, OpenCV, and PCL
+
+    ```
+    sudo apt-get install libeigen3-dev libboost-dev libopencv-dev libpcl-1.7-all-dev
+    ```
+
+    Install the appropriate CUDA version matching with your nvidia
+    drivers. On our machines we use `nvidia-340-dev` with
+    `libcuda1-340 cuda-6-5 cuda-toolkit-6-5`
+
+    Clone this repository and compile the code:
+
+    ```
+    git clone git@github.com:jstraub/dpMMlowVar; cd dpMMlowVar;
+    make checkout; make configure; make -j6; make install;
+    ```
+    
+    Note that this will checkout several other necessary repositories.
+    To update all repositories run
+    
+    ```
+    make update; make configure; make -j6; make install;
+    ```
+
+### Getting Started
+
+Plug in your Kinect and run the following from the rtDDPvMF folder:
+```
+./build/bin/realtimeDDPvMF_openni --lambdaDeg 100 
+```
+
+### Usage
 ```
 ./dpMMlowVarCluster -h
 Allowed options:
@@ -52,10 +108,5 @@ Allowed options:
   --shuffle             shuffle the data before processing
 ```
 
-## Clustering videos in RGB space using Dynamic means (video posterisation)
-One example here is clustering of RGB values in images
-```
-./ddpImageCluster
-```
-## Contributors
+### Contributors
 Julian Straub and Trevor D. Campbell

@@ -67,7 +67,7 @@ configure:
 
 
 checkout:
-	git clone /data/vision/fisher/code/jstraub/gitrep/research/jsCore.git/
+	git clone git@github.com:jstraub/jsCore
 
 update:
 	cd jsCore; git pull; cd -

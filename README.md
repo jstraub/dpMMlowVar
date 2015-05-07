@@ -83,6 +83,10 @@ normals of an example data set in the ./data/ folder by running:
 ```
 cd ./python; python dpView.py
 ```
+Note that the extraction of surface normals necessitates matlab. An
+alternative is to directly run segmentation from Kinect RGB-D frames
+using the 
+[rtDDPvMF](https://github.com/jstraub/rtDDPvMF) package.
 
 ### Usage
 ```

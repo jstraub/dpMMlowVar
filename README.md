@@ -11,9 +11,9 @@ This library comes with one executable that allows batch clustering
 using DP-vMF-means, DP-means, spherical k-means and k-means.
 
 For an example of using DDP-vMF-means refer to
-git@github.com:jstraub/rtDDPvMF.git which relies on the dpMMlowVar
-library to perform real-time directional segmentation from Kinect RGB-D
-streams using DDP-vMF-means.
+[git@github.com:jstraub/rtDDPvMF.git](git@github.com:jstraub/rtDDPvMF.git) 
+which relies on this package's dpMMlowVar library to perform real-time
+directional segmentation from Kinect RGB-D streams using DDP-vMF-means.
 
 If you use DP-vMF-means or DDP-vMF-means please cite:
 ```

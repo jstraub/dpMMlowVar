@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-import cv2
 import scipy.io
+import cv2
 import subprocess as subp
 
 import os, re, time
@@ -16,7 +16,7 @@ from js.utils.plot.pyplot import SaveFigureAsImage
 def run(cfg,reRun):
   #args = ['../build/dpSubclusterSphereGMM',
 #  args = ['../build/dpStickGMM',
-  args = ['../build/dpMMlowVarCluster',
+  args = ['../build/bin/dpMMlowVarCluster',
     '--seed {}'.format(int(time.time()*100000) - 100000*int(time.time())),
     '-N {}'.format(cfg['N']), #TODO: read N,D from file!
     '-D {}'.format(cfg['D']),
@@ -62,8 +62,12 @@ cfg=dict()
 cfg['rootPath'] = '/home/jstraub/workspace/research/vpCluster/data/nyu2/'
 cfg['rootPath'] = '/home/jstraub/workspace/research/vpCluster/data/'
 cfg['rootPath'] = '~/workspace/research/vpCluster/data/'
-cfg['outputPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/'
+cfg['outputPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
 cfg['rootPath'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
+cfg['rootPath'] = '/data/vision/fisher/data1/nyu_depth_v2/extracted/'
+
+
+
 #cfg['base'] = 'DpNiwSphereFull';
 #cfg['base'] = 'spkm';
 #cfg['base'] = 'DpNiw';
@@ -99,6 +103,8 @@ if args.nyu:
   mode = ['multiFromFile']
 
 if 'single' in mode:
+  cfg['outputPath'] = '../data/'
+  cfg['rootPath'] = '../data/'
   cfg['dataPath'] = '2013-09-27.10:33:47' #
   cfg['dataPath'] = '2013-10-01.19:25:00' # my room
   cfg['dataPath'] = 'living_room_0000'
@@ -108,9 +114,13 @@ if 'single' in mode:
   cfg['dataPath'] = '2boxes_1'
   cfg['dataPath'] = 'kitchen_0004'
   cfg['dataPath'] = 'office_0008_uint16'
-  cfg['dataPath'] = '3boxes_moreTilted_0' #segments really well - has far distance!!! [k=4]
   cfg['dataPath'] = 'table_1'
   cfg['dataPath'] = 'kitchen_0016_252'
+  cfg['lambda'] = np.cos(45.*np.pi/180.0)-1.
+  cfg['dataPath'] = '3boxes_moreTilted_0' #segments really well - has far distance!!! [k=4]
+  cfg['lambda'] = np.cos(100.*np.pi/180.0)-1.
+  cfg['dataPath'] = 'MIT_hallway_1'
+  cfg['dataPath'] = 'MIT_hallway_0'
   names = [cfg['dataPath']]
 elif 'multi' in mode:
   names = []
@@ -158,7 +168,7 @@ for ind in rndInds:
   cfg['outName'] = cfg['outputPath']+cfg['dataPath']+'_'+config2Str(cfg)
   if not reRun and 'multiFromFile' in mode and os.path.isfile(cfg['outName']+'_measures.csv'):
     print '  ** skipping '+cfg['outName']+' since it is already existing'
-    continue;
+#    continue;
   if not reRun and os.path.isfile(cfg['outName']+'_measures.csv'):
     measures = np.loadtxt(cfg['outName']+'_measures.csv')
     if not measures.size == 2:
@@ -170,7 +180,7 @@ for ind in rndInds:
   print 'processing '+cfg['rootPath']+cfg['dataPath']
   rgbd = RgbdFrame(460.0) # correct: 540
   rgbd.load(cfg['rootPath']+cfg['dataPath'])
-  if 'disp' in mode:
+  if False and 'disp' in mode:
     rgbd.showRgbd(fig=fig0)
   rgbd.getPc()
   nAll = rgbd.getNormals(algo=algo)
@@ -190,11 +200,34 @@ for ind in rndInds:
   I = np.zeros(rgbd.mask.shape)
   I[rgbd.mask] = z[-1,:] + 1
   plt.imshow(I,cmap=cm.spectral,figure = figL)
-#  plt.imshow(I,cmap=cm.hsv,figure = figL)
+  print "image to {}".format(cfg['outName']+'lbls.png')
   SaveFigureAsImage(cfg['outName']+'lbls.png',figL)
 
+  # compute blended image gray with overlayed segmentation
+  figLrgb = plt.figure()
+  Iz = np.zeros(rgbd.mask.shape)
+  Iz[rgbd.mask] = z[-1,:]
+  Iz = np.floor(Iz * 255./Iz.max())
+  Iz = Iz.astype(np.uint8)
+  Iz = cv2.applyColorMap(Iz,cv2.COLORMAP_JET)
+  gray = np.zeros((rgbd.mask.shape[0],rgbd.mask.shape[1],3), dtype=np.uint8)
+  for i in range(3): 
+    Iz[:,:,i][np.logical_not(rgbd.mask)] = 255
+    gray[:,:,i] = cv2.cvtColor( rgbd.rgb, cv2.COLOR_BGR2GRAY)
+#  cv2.imshow("Iz",Iz)
+#  cv2.waitKey(0)
+  Iout = cv2.addWeighted(gray , 0.7, Iz,0.3,0.0)
+  plt.imshow(Iout,figure = figLrgb)
+  print "image to {}".format(cfg['outName']+'lblsRgbBlend.png')
+  SaveFigureAsImage(cfg['outName']+'lblsRgbBlend.png',figLrgb)
+
   if 'disp' in mode:
-    figL.show()
+#    figL.show()
+    figLrgb.show()
+    figm1 = rgbd.showNormals(as2D=True); 
+    figm1.show()
+    plt.show()
+
 #    plt.show()
 #    figm2 = rgbd.showWeightedNormals(algo=algo)
 #    fig = rgbd.showAxialSigma()
@@ -202,10 +235,26 @@ for ind in rndInds:
     #fig = rgbd.bilateralDepthFiltering(theta=30.0)
 #    figm0 = rgbd.showPc(showNormals=True,algo=algo)
 #    figm1 = rgbd.showNormals()
-    figm2 = rgbd.showNormals(as2D=True); figm2.show()
+
+
+    # show raw normals
+    figm1 = mlab.figure(bgcolor=(1,1,1))
     M = Sphere(2)
-    figm1 = mlab.figure()
     M.plotFanzy(figm1,1.0) 
+    from js.utils.plot.colors import colorScheme
+    rgbd.n[2,:] *= -1.
+    figm1=rgbd.showNormals(figm=figm1,color=colorScheme("labelMap")["orange"])
+    # show clustered normals
+    figm3 = mlab.figure(bgcolor=(1,1,1))
+    M = Sphere(2)
+    M.plotFanzy(figm1,1.0) 
+    mlab.points3d(n[0,:],n[1,:],n[2,:],-z[-1,:],colormap='jet',
+            mode='point')
+#    for k in range(K):
+#      ids = z[-1,:]==k
+#      if np.count_nonzero(ids) > 0:
+#        mlab.points3d(n[0,ids],n[1,ids],n[2,ids],color=((float(k)/K),0,0),
+#            mode='point')
     mlab.show(stop=True)
   elif  'multiFromFile' in mode and 'disp' in mode:
     figm0 = rgbd.showPc(figm=figm0,showNormals=True,algo=algo)

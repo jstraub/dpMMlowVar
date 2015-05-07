@@ -1,6 +1,7 @@
 build
 jsCore
 cudaPcl
+data
 pod-build
 *~
 *.pyc

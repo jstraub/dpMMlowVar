@@ -78,9 +78,10 @@ below).
 
 ### Getting Started
 
-Plug in your Kinect and run the following from the rtDDPvMF folder:
+After you have compiled the code you can run clustering of the surface
+normals of an example data set in the ./data/ folder by running:
 ```
-./build/bin/realtimeDDPvMF_openni --lambdaDeg 100 
+cd ./python; python dpView.py
 ```
 
 ### Usage

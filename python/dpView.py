@@ -8,10 +8,9 @@ import subprocess as subp
 import os, re, time
 import argparse
 
-from vpCluster.rgbd.rgbdframe import RgbdFrame
-from vpCluster.manifold.sphere import Sphere
-from js.utils.config import Config2String
-from js.utils.plot.pyplot import SaveFigureAsImage
+from rgbdframe import RgbdFrame
+from sphere import Sphere
+from pyplot import SaveFigureAsImage
 
 def run(cfg,reRun):
   #args = ['../build/dpSubclusterSphereGMM',
@@ -97,6 +96,7 @@ mode = ['multi']
 mode = ['single','disp']
 
 reRun = False
+reRun = True
 printCmd = True
 
 if args.nyu:

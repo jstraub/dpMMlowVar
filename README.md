@@ -1,5 +1,33 @@
+## Bayesian nonparametric small-variance asymptotic clustering algorithms
 
-## Bayesian nonparametric low variance asymptotic clustering algorithms
+This is a library of Bayesian nonparametric small-variance asymptotic
+clustering algorithms: DP-means, Dynamic means, DP-vMF-means,
+DDP-vMF-means.
+
+For comparison reasons the library also implements k-means as well as
+spherical k-means.
+
+This library comes with one executable that allows batch clustering
+using DP-vMF-means, DP-means, spherical k-means and k-means.
+
+For an example of using DDP-vMF-means refer to
+git@github.com:jstraub/rtDDPvMF.git which relies on the dpMMlowVar
+library to perform real-time directional segmentation from Kinect RGB-D
+streams using DDP-vMF-means.
+
+If you use DP-vMF-means or DDP-vMF-means please cite:
+```
+Julian Straub, Trevor Campbell, Jonathan P. How, John W. Fisher III. 
+"Small-Variance Nonparametric Clustering on the Hypersphere", In CVPR,
+2015.
+```
+If you use Dynamic-means please cite:
+```
+T. Campbell, M. Liu, B. Kulis, J. How, and L. Carin. "Dynamic
+Clustering via Asymptotics of the Dependent Dirichlet Process Mixture".
+In Advances in Neural Information Processing Systems (NIPS), 2013.
+```
+## Usage
 ```
 ./dpMMlowVarCluster -h
 Allowed options:

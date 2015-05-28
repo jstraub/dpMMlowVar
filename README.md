@@ -13,12 +13,15 @@ spherical k-means.
 This library comes with an executable that allows batch clustering
 using DP-vMF-means, DP-means, spherical k-means and k-means.
 
+The [pure python implementation of
+DP-vMF-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpvMFmeans.py)
+shows the simplicity of the algorithm.
+
 For an example of using DDP-vMF-means refer to
 [rtDDPvMF](https://github.com/jstraub/rtDDPvMF),
 which relies on this package's dpMMlowVar library to perform real-time
 directional segmentation from Kinect RGB-D streams using DDP-vMF-means. 
 [![Real-time Directional Segmentation using DDP-vMF-means](./doc/ddpVideoPreview.png)](http://www.youtube.com/watch?v=wLP18q80oAE)
-
 
 If you use DP-vMF-means or DDP-vMF-means please cite:
 ```
@@ -87,6 +90,10 @@ Note that the extraction of surface normals necessitates matlab. An
 alternative is to directly run segmentation from Kinect RGB-D frames
 using the 
 [rtDDPvMF](https://github.com/jstraub/rtDDPvMF) package.
+
+The [pure python implementation of
+DP-vMF-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpvMFmeans.py)
+shows the simplicity of the algorithm.
 
 ### Usage
 ```

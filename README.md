@@ -1,4 +1,4 @@
-### Bayesian Nonparametric Small-Variance Asymptotic Clustering Algorithms
+### Bayesian Nonparametric Small-Variance Asymptotic Clustering
 
 ![DP-vMF-means Direcitonal Segmentation of the NYU
 RGB-D dataset](./doc/figureDPvMF_segmentationOverlay_extendedAbstract_cropped.png)

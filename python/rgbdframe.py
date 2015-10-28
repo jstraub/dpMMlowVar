@@ -1,10 +1,5 @@
-# Licensed for research purposes only. See the license file LICENSE.txt
-#
-# If this code is used, the following should be cited:
-# Straub, Julian, Guy Rosman, Oren Freifeld, John Leonard, and John Fisher. "A
-# mixture of Manhattan frames: Beyond the Manhattan world." In Proceedings of
-# the IEEE Conference on Computer Vision and Pattern Recognition, pp.
-# 3770-3777. 2013.
+# Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+# under the MIT license. See the license file LICENSE.
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm

@@ -1,4 +1,6 @@
 import numpy as np
+# Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+# under the MIT license. See the license file LICENSE.
 import subprocess as subp
 
 import matplotlib.pyplot as plt

@@ -1,3 +1,5 @@
+# Copyright (c) 2015, Julian Straub <jstraub@csail.mit.edu> Licensed
+# under the MIT license. See the license file LICENSE.
 path = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2/'
 
 cand = ['bathroom_0004_47_K_1-base_DPvMFmeans-T_100-delta_12.0-nu_10003.0-lambda_-1.17364817767lbls.png',

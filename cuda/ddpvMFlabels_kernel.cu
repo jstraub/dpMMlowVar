@@ -35,7 +35,6 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 //  if(tid < K) ws[tid] = d_ws[tid];
   __syncthreads(); // make sure that ys have been cached
 
-
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
   {
     uint32_t z_i = K;
@@ -75,6 +74,93 @@ __global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
         p_k += DIM;
       }
       if (z_i == K || Ns[z_i] == 0)
+      {
+        iAction[tid] = id;
+        break; // save id at which an action occured and break out because after
+        // that id anything more would be invalid.
+      }
+      z[id] = z_i;
+    }
+  }
+
+  // min() reduction
+  __syncthreads(); //sync the threads
+#pragma unroll
+  for(int s=(BLK_SIZE)/2; s>1; s>>=1) {
+    if(tid < s)
+    {
+      iAction[tid] = min(iAction[tid], iAction[s+tid]);
+    }
+    __syncthreads();
+  }
+  if(tid == 0) {
+    // reduce the last two remaining matrixes directly into global memory
+    atomicMin(d_iAction, min(iAction[0],iAction[1]));
+  }
+};
+
+template<typename T, uint32_t BLK_SIZE>
+__global__ void ddpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
+    uint32_t *d_Ns, T *d_ages, T *d_ws, T lambda, T beta, T Q, uint32_t *d_iAction,
+    uint32_t i0, uint32_t N, uint32_t K)
+{
+//  __shared__ T p[DIM*(K+1)]; // K+1 because K might be 0 and 0 size arrays are not appreciated
+//  __shared__ T ages[K+1];
+//  __shared__ T Ns[K+1];
+//  __shared__ T ws[K+1];
+  __shared__ uint32_t iAction[BLK_SIZE]; // id of first action (revieval/new) for one core
+
+  const int tid = threadIdx.x;
+  const int idx = threadIdx.x + blockDim.x * blockIdx.x;
+
+  // caching and init
+  iAction[tid] = UNASSIGNED;
+//  if(tid < DIM*K) p[tid] = d_p[tid];
+//  if(tid < K) ages[tid] = d_ages[tid];
+//  if (K>=1) return;
+//  if(tid < K) Ns[tid] = d_Ns[tid];
+//  if(tid < K) ws[tid] = d_ws[tid];
+  __syncthreads(); // make sure that ys have been cached
+
+  for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
+  {
+    uint32_t z_i = K;
+    T sim_closest = lambda + 1.;
+    T sim_k = 0.;
+    T* p_k = d_p;
+    T q_i[DIM];
+    q_i[0] = d_q[id*DIM];
+    q_i[1] = d_q[id*DIM+1];
+    q_i[2] = d_q[id*DIM+2];
+    if (q_i[0]!=q_i[0] || q_i[1]!=q_i[1] || q_i[2]!=q_i[2])
+    {
+      // normal is nan -> break out here
+      z[id] = UNASSIGNED;
+    }else{
+      for (uint32_t k=0; k<K; ++k)
+      {
+        T dot = min(1.0,max(-1.0,q_i[0]*p_k[0] + q_i[1]*p_k[1]
+              + q_i[2]*p_k[2]));
+        T zeta = acos(dot);
+
+        if(d_Ns[k] == 0)
+        {// cluster not instantiated yet in this timestep
+          T age = d_ages[k]; // TODO d_ages size is not always = K
+          //TODO: using small angle approximation here!
+          sim_k = distToUninstantiatedSmallAngleApprox<T>(zeta,
+              age,beta,d_ws[k],Q);
+//          sim_k = distToUninstantiated<T,10>(zeta,age,beta,d_ws[k],Q,1e-6);
+        }else{ // cluster instantiated
+          sim_k = dot;
+        }
+        if(sim_k > sim_closest)
+        {
+          sim_closest = sim_k;
+          z_i = k;
+        }
+        p_k += DIM;
+      }
+      if (z_i == K || d_Ns[z_i] == 0)
       {
         iAction[tid] = id;
         break; // save id at which an action occured and break out because after
@@ -161,7 +247,8 @@ void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
     ddpvMFlabelAssign_kernel<double,16,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
   }else{
-    assert(false);
+    ddpvMFlabelAssign_kernel<double,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N, K);
   }
   checkCudaErrors(cudaDeviceSynchronize());
 };
@@ -227,7 +314,8 @@ void ddpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
     ddpvMFlabelAssign_kernel<float,16,BLK_SIZE><<<blocks,threads>>>(
         d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N);
   }else{
-    assert(false);
+    ddpvMFlabelAssign_kernel<float,BLK_SIZE><<<blocks,threads>>>(
+        d_q, d_p, d_z, d_Ns, d_ages, d_ws, lambda, beta, Q, d_iAction, i0, N, K);
   }
   checkCudaErrors(cudaDeviceSynchronize());
 };

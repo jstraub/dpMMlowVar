@@ -15,6 +15,9 @@ mpl.rc('lines',linewidth=4.)
 figSize = (14, 5.5)
 figSize = (14, 12)
 
+mpl.rc('font',size=45) 
+mpl.rc('lines',linewidth=8.)
+
 cfg=dict()
 cfg['path'] = '/data/vision/scratch/fisher/jstraub/dpMMlowVar/nyu2'
 cfg['base'] = ['DpNiw' , 'DpNiwSphereFull', 'spkm'];

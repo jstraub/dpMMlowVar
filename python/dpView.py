@@ -224,9 +224,9 @@ for ind in rndInds:
   if 'disp' in mode:
 #    figL.show()
     figLrgb.show()
-    figm1 = rgbd.showNormals(as2D=True); 
-    figm1.show()
-    plt.show()
+#    figm1 = rgbd.showNormals(as2D=True); 
+#    figm1.show()
+#    plt.show()
 
 #    plt.show()
 #    figm2 = rgbd.showWeightedNormals(algo=algo)

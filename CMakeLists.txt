@@ -1,47 +1,66 @@
-project(DpGMMs)
+# project(DpGMMs)
 cmake_minimum_required(VERSION 2.8.1)
+project(dpMMlowVar)
 
-set(POD_NAME dpMMlowVar)
-include(cmake/pods.cmake)
+# set(POD_NAME dpMMlowVar)
+# include(cmake/pods.cmake)
 
-message("${CMAKE_MODULE_PATH}")
+# message("${CMAKE_MODULE_PATH}")
 
-if(COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
+# if(COMMAND cmake_policy)
+#   cmake_policy(SET CMP0003 NEW)
+# endif(COMMAND cmake_policy)
 
-set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_BUILD_TYPE Debug) # Release; debug; ...
-set(CMAKE_BUILD_TYPE Release) # Release; debug; ...
-  #ENDIF()
+# set(CMAKE_COLOR_MAKEFILE ON)
+# set(CMAKE_BUILD_TYPE Debug) # Release; debug; ...
+# set(CMAKE_BUILD_TYPE Release) # Release; debug; ...
+#   #ENDIF()
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+# set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # add flags depending on build type
 set(CMAKE_CXX_FLAGS_RELEASE "-g -Wall -fopenmp -Wno-deprecated -O2 -finline-functions -DNDEBUG -DCUDA") # -DNDEBUG
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wno-deprecated -DCUDA")
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=\"sm_35,compute_35\")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1) #what's this?
 
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  jsCore
+  sensor_msgs
+  pcl_conversions
+  pcl_ros
+)
 
 find_package (Eigen3 REQUIRED)
 find_package (Boost REQUIRED)
 find_package (OpenMP REQUIRED)
 find_package (CUDA REQUIRED)
 
-message(${EIGEN3_INCLUDE_DIR})
+# message(${EIGEN3_INCLUDE_DIR})
+
+catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES dpMMlowVar
+   CATKIN_DEPENDS roscpp rospy
+#  DEPENDS system_lib
+)
 
 include_directories(
-  ./include
+  include
+  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${CUDA_TOOLKIT_INCLUDE}
   )
+
 link_directories(
   ${Boost_LIBRARY_DIRS}
   ${CUDA_LIBRARIES}
   )
+
 cuda_add_library(dpMMlowVar SHARED
 #  ./cuda/vectorSum_kernel.cu
   ./cuda/ddpvMFlabels_kernel.cu
@@ -118,6 +137,15 @@ target_link_libraries(ddpSphereCluster
   opencv_highgui
   )
 
+add_executable(cudaClusterNode ./src/cudaClusterNode.cpp)
+target_link_libraries(cudaClusterNode
+  ${catkin_LIBRARIES}
+  jsCore dpMMlowVar
+  boost_system
+  boost_random
+  boost_program_options
+  )
+
 #install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
 #  FILES_MATCHING PATTERN "*.h")
 ##install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/
@@ -125,23 +153,23 @@ target_link_libraries(ddpSphereCluster
 #install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
 #  FILES_MATCHING PATTERN "*.hpp")
 
-pods_install_executables(
-#  ddpImageCluster 
-  dpMMlowVarCluster
-  testClusterer testSpkmCUDA testSO3)
-pods_install_libraries(dpMMlowVar)
-pods_install_headers(
-  ./include/dpMMlowVar/clusterer.hpp
-  ./include/dpMMlowVar/ddpmeans.hpp
-  ./include/dpMMlowVar/ddpmeansCUDA.hpp
-  ./include/dpMMlowVar/dpmeans.hpp
-  ./include/dpMMlowVar/ddpvMF_cuda_helper.h
-  ./include/dpMMlowVar/euclideanData.hpp
-  ./include/dpMMlowVar/sphericalData.hpp
-  ./include/dpMMlowVar/spline.h
-  ./include/dpMMlowVar/kmeans.hpp
-  ./include/dpMMlowVar/kmeansCUDA.hpp
-  ./include/dpMMlowVar/opencvHelper.hpp
-  ./include/dpMMlowVar/random.hpp
-  ./include/dpMMlowVar/SO3.hpp
-  DESTINATION dpMMlowVar)
+# pods_install_executables(
+# #  ddpImageCluster 
+#   dpMMlowVarCluster
+#   testClusterer testSpkmCUDA testSO3)
+# pods_install_libraries(dpMMlowVar)
+# pods_install_headers(
+#   ./include/dpMMlowVar/clusterer.hpp
+#   ./include/dpMMlowVar/ddpmeans.hpp
+#   ./include/dpMMlowVar/ddpmeansCUDA.hpp
+#   ./include/dpMMlowVar/dpmeans.hpp
+#   ./include/dpMMlowVar/ddpvMF_cuda_helper.h
+#   ./include/dpMMlowVar/euclideanData.hpp
+#   ./include/dpMMlowVar/sphericalData.hpp
+#   ./include/dpMMlowVar/spline.h
+#   ./include/dpMMlowVar/kmeans.hpp
+#   ./include/dpMMlowVar/kmeansCUDA.hpp
+#   ./include/dpMMlowVar/opencvHelper.hpp
+#   ./include/dpMMlowVar/random.hpp
+#   ./include/dpMMlowVar/SO3.hpp
+#   DESTINATION dpMMlowVar)

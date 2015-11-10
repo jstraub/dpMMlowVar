@@ -161,10 +161,10 @@ MatrixXu KMeans<T,DS>::mostLikelyInds(uint32_t n,
           }
       }
   } 
-  cout<<"::mostLikelyInds: deviates"<<endl;
-  cout<<deviates<<endl;
-  cout<<"::mostLikelyInds: inds"<<endl;
-  cout<<inds<<endl;
+  // cout<<"::mostLikelyInds: deviates"<<endl;
+  // cout<<deviates<<endl;
+  // cout<<"::mostLikelyInds: inds"<<endl;
+  // cout<<inds<<endl;
   return inds;
 };
 

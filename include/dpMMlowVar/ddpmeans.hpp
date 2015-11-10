@@ -197,7 +197,7 @@ void DDPMeans<T,DS>::updateLabels()
       createReviveFrom(idAction);
       i0 = idAction;
     }
-    cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
+    // cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
   }while(idAction != UNASSIGNED);
   // if a cluster runs out of labels reset it to the previous mean!
   for(uint32_t k=0; k<this->K_; ++k)
@@ -320,7 +320,7 @@ void DDPMeans<T,DS>::initRevive()
     // revive or add cluster from the first data-point
     createReviveFrom(0);
   }
-  cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
+  // cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
 }
 
 template<class T, class DS>

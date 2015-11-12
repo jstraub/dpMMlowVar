@@ -95,7 +95,9 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T
 };
 
 template<typename T, uint32_t K, uint32_t BLK_SIZE>
-__global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_asgnIdces, uint32_t N)
+__global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T
+    *d_ages, T *d_ws, T lambda, T Q, T tau, uint32_t *d_asgnIdces,
+    uint32_t N)
 {
   //__shared__ T oldp[DIM*K];
   __shared__ uint32_t asgnIdces[K*BLK_SIZE]; //for each thread, index selected for each old K
@@ -173,7 +175,8 @@ extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages, 
 {
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
   assert(K >= 1);//only run the special kernel if there is at least one old cluster
-  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);
+//  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);
+  assert(K < 50);
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
@@ -240,7 +243,8 @@ extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
 {
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
   assert(K >= 1);//only run the special kernel if there is at least one old cluster
-  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);
+//  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);
+  assert(K < 50);
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);

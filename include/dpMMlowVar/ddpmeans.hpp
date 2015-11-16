@@ -320,7 +320,7 @@ void DDPMeans<T,DS>::initRevive()
     // revive or add cluster from the first data-point
     createReviveFrom(0);
   }
-  // cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
+  cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
 }
 
 template<class T, class DS>

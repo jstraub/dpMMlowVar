@@ -10,16 +10,17 @@
 #include <dpMMlowVar/euclideanData.hpp>
 
 
+typedef shared_ptr<dplv::DDPMeansCUDA<float, dplv::Euclidean<float> > > DDPMeansCUDAPtr;
+
 class CudaClusterNode{
 public:
     ros::NodeHandle nh_;
     ros::Subscriber sub_cloud_;
 
     /* Clustering */
-    // dplv::Clusterer<double, dplv::Euclidean<double> > *clusterer_;
-    dplv::DDPMeansCUDA<double, dplv::Euclidean<double> > *clusterer_;
-    shared_ptr<jsc::ClDataGpu<double> > cld_;
-    shared_ptr<Eigen::MatrixXd> spx_;
+    DDPMeansCUDAPtr clusterer_;
+    shared_ptr<jsc::ClDataGpu<float> > cld_;
+    shared_ptr<Eigen::MatrixXf> spx_;
 
     /* Parameters */
     double lambda_;
@@ -33,19 +34,9 @@ public:
         nh_ = ros::NodeHandle("~");
         setDefaultParams();
         getParams();
-        double Q = lambda_/t_q_;
-        double tau = (t_q_*(k_tau_-1.0)+1.0)/(t_q_-1.0);
-
-        /* Initialize the clusterer */
-        // clusterer_ = NULL;
-
-        // shared_ptr<Eigen::MatrixXd> spx(new MatrixXd(2,1));
-        spx_ = shared_ptr<Eigen::MatrixXd>(new MatrixXd(2,1));
-        Eigen::MatrixXd& input_matrix(*spx_);
-        input_matrix(0,0) = 0.0;
-        input_matrix(1,0) = 0.0;
-        cld_ = shared_ptr<jsc::ClDataGpu<double> >(new jsc::ClDataGpu<double>(spx_,0));
-        clusterer_ = new dplv::DDPMeansCUDA<double, dplv::Euclidean<double> >(cld_, lambda_, Q, tau);
+        /* Initialize spx_ */
+        shared_ptr<Eigen::MatrixXf> spx(new MatrixXf(3,0));
+        spx_ = spx;
 
         /* Subscription */
         sub_cloud_ = nh_.subscribe("input_cloud",1,&CudaClusterNode::cb_cloud,this);
@@ -63,10 +54,10 @@ public:
 
     void getParams()
     {
-        ros::param::getCached("lambda",lambda_);
-        ros::param::getCached("t_q",t_q_);
-        ros::param::getCached("k_tau",k_tau_);
-        ros::param::getCached("max_kmean_iter",max_kmean_iter_);
+        ros::param::getCached("~lambda",lambda_);
+        ros::param::getCached("~t_q",t_q_);
+        ros::param::getCached("~k_tau",k_tau_);
+        ros::param::getCached("~max_kmean_iter",max_kmean_iter_);
     }
 
     void cb_cloud(const sensor_msgs::PointCloud2& input_cloud)
@@ -77,25 +68,37 @@ public:
         /* Convert to pcl::PointCloud */
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::fromROSMsg (input_cloud, *cloud);
-
         /* Populate the matrix for clusterer */
-        // shared_ptr<Eigen::MatrixXd> spx(new MatrixXd(2,cloud->size()));
-        spx_->resize(2,cloud->size());
-        Eigen::MatrixXd& input_matrix(*spx_);
+        spx_->resize(3,cloud->size());
+        Eigen::MatrixXf& input_matrix(*spx_);
         for(pcl::PointCloud<pcl::PointXYZ>::const_iterator iter = cloud->begin(); iter != cloud->end(); ++iter)
         {
             int N_index = iter - cloud->begin();
             input_matrix(0,N_index) = (*iter).x;
             input_matrix(1,N_index) = (*iter).y;
+            input_matrix(2,N_index) = 0.0;
         }
         ROS_INFO_STREAM("[CudaClusterNode] Matrix populated. rows: " << spx_->rows() << " cols: " << spx_->cols() );
+        // ROS_INFO_STREAM("[CudaClusterNode] Matrix: \n" << input_matrix.transpose());
 
-        clusterer_->nextTimeStep(spx_);
-        ROS_INFO_STREAM("[CudaClusterNode] clusterer feed.");
+        if (clusterer_ == NULL){
+            /* Initialize the clusterer_ at the first callback */
+            float Q = lambda_/t_q_;
+            float tau = (t_q_*(k_tau_-1.0)+1.0)/(t_q_-1.0);
+            cld_ = shared_ptr<jsc::ClDataGpu<float> >(new jsc::ClDataGpu<float>(spx_,0));
+            ROS_INFO_STREAM("[CudaClusterNode] cld_ initialized. lambda=" << lambda_ << " Q = " << Q << " tau = " << tau);
+            clusterer_ = DDPMeansCUDAPtr(new dplv::DDPMeansCUDA<float, dplv::Euclidean<float> >(cld_, lambda_, Q, tau));
+            ROS_INFO_STREAM("[CudaClusterNode] Clusterer Initialized.");
+        }
+        else{
+            /* Call nextTimeStep if initialized already */
+            clusterer_->nextTimeStep(spx_);
+            ROS_INFO_STREAM("[CudaClusterNode] Clusterer nextTimeStep called.");
+        }
 
         /* Do clustering and gather results */
-        Eigen::MatrixXd deviates;
-        Eigen::MatrixXd centroids;
+        Eigen::MatrixXf deviates;
+        Eigen::MatrixXf centroids;
         MatrixXu inds; //typedef in jsCore/global.hpp
         for (size_t i = 0; i < max_kmean_iter_; ++i){
             ROS_INFO_STREAM("[CudaClusterNode] kmean iter: " << i);

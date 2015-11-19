@@ -137,15 +137,6 @@ target_link_libraries(ddpSphereCluster
   opencv_highgui
   )
 
-add_executable(cudaClusterNode ./src/cudaClusterNode.cpp)
-target_link_libraries(cudaClusterNode
-  ${catkin_LIBRARIES}
-  jsCore dpMMlowVar
-  boost_system
-  boost_random
-  boost_program_options
-  )
-
 #install(DIRECTORY include/dpMMlowVar/ DESTINATION include/dpMMlowVar/
 #  FILES_MATCHING PATTERN "*.h")
 ##install(DIRECTORY cuda/ DESTINATION include/dpMMlowVar/

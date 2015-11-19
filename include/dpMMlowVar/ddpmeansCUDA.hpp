@@ -19,6 +19,8 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+#define K_MAX 80 //TODO: should be linked to the K_MAX in ddpLabelsSpecial_kernel.cu
+
 // for spherical space 
 void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
     uint32_t *d_Ns, double *d_ages, double *d_ws, double lambda, double beta,
@@ -215,31 +217,77 @@ template<class T,class DS>
 VectorXu DDPMeansCUDA<T,DS>::initLabels()
 {
   cout<<"cuda init labels K="<<this->K_<<endl;
+  cout<<"K_MAX = " << K_MAX;
+
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
-//  return asgnIdces;
+  // VectorXu asgnIdces = VectorXu::Ones(K_MAX)*UNASSIGNED;
+  //  return asgnIdces;
   // TODO: seems to slow down the init!
-  jsc::GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
+  // jsc::GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
 
-  d_ages_.set(this->ages());
-  d_ws_.set(this->weights());
+  for (int k_batch = 0; k_batch < (this->K_ + K_MAX-1)/K_MAX; ++k_batch){
+    int k_index_start = k_batch*K_MAX;
+    int k_batch_size = K_MAX;
+    if (this->K_ - k_batch*K_MAX < K_MAX){
+      k_batch_size = this->K_ - k_batch*K_MAX;
+    }
 
-  // TODO not too too sure about this
-  Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
-  for(uint32_t k=0; k<this->K_; ++k)
-    if(this->cls_[k]->isInstantiated())
-      ps.col(k) = this->cls_[k]->centroid();
-    else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
-      ps.col(k) = this->cls_[k]->prevCentroid();
-  d_p_.set(ps);
+    // d_ages_.set(this->ages());
+    // d_ws_.set(this->weights());
+    
+    // cout << "[DDPMeansCUDA::initLabels] k_index_start:" << k_index_start << " k_batch_size" << k_batch_size << endl;
+    Matrix<T,Dynamic,1> ages = this->ages().block(k_index_start,0,k_batch_size,1);
+    Matrix<T,Dynamic,1> weights = this->weights().block(k_index_start,0,k_batch_size,1);
+    // cout << "[DDPMeansCUDA::initLabels] ages: " << ages.rows() << " by " << ages.cols() << endl;
+    // cout << "[DDPMeansCUDA::initLabels] weights: " << weights.rows() << " by " << weights.cols() << endl;
+    
+    d_ages_.set(ages);
+    d_ws_.set(weights);
 
-  d_p_.print();
-  d_ages_.print();
-  d_ws_.print();
-//
-  ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), d_ages_.data(),
-      d_ws_.data(), this->cl0_.lambda(), this->cl0_.Q(),
-      this->cl0_.tau(), this->K_, this->N_, d_asgnIdces.data());
-  return d_asgnIdces.get();      
+    // TODO not too too sure about this
+    // Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
+    Matrix<T,Dynamic,Dynamic> ps(this->D_,k_batch_size);
+    // cout << "[DDPMeansCUDA::initLabels] ps: " << ps.rows() << " by " << ps.cols() << endl;
+
+    // for(uint32_t k=0; k<this->K_; ++k)
+    int ps_index = 0;
+    for(int k = k_index_start; k < k_index_start + k_batch_size; ++k){ 
+      // cout << "[DDPMeansCUDA::initLabels] k = " << k << endl;
+      if(this->cls_[k]->isInstantiated())
+        ps.col(ps_index) = this->cls_[k]->centroid();
+      else if(!this->cls_[k]->isInstantiated() && !this->cls_[k]->isNew())
+        ps.col(ps_index) = this->cls_[k]->prevCentroid();
+      ps_index++;
+    }
+    // cout << "[DDPMeansCUDA::initLabels] ps: " << ps.rows() << " by " << ps.cols() << endl;
+
+    d_p_.set(ps);
+    d_p_.print();
+    d_ages_.print();
+    d_ws_.print();
+
+    VectorXu asgnIdces_batch = VectorXu::Ones(k_batch_size)*UNASSIGNED;
+    jsc::GpuMatrix<uint32_t> d_asgnIdces(asgnIdces_batch);
+    // ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), d_ages_.data(),
+    //     d_ws_.data(), this->cl0_.lambda(), this->cl0_.Q(),
+    //     this->cl0_.tau(), this->K_, this->N_, d_asgnIdces.data());
+    ddpLabelsSpecial_gpu(this->cld_->d_x(),  d_p_.data(), d_ages_.data(),
+        d_ws_.data(), this->cl0_.lambda(), this->cl0_.Q(),
+        this->cl0_.tau(), k_batch_size, this->N_, d_asgnIdces.data());
+
+    // append the result to asgnIdces
+    asgnIdces_batch = d_asgnIdces.get();
+    // cout << "[DDPMeansCUDA::initLabels] asgnIdces_batch: " << asgnIdces_batch.rows() << " by " << asgnIdces_batch.cols() << endl;
+    // asgnIdces.block(k_index_start,0,k_batch_size,1) = d_asgnIdces.get();
+    
+
+    asgnIdces.block(k_index_start,0,k_batch_size,1) = d_asgnIdces.get();
+    // cout << "[DDPMeansCUDA::initLabels] asgnIdces: " << asgnIdces.rows() << " by " << asgnIdces.cols() << endl;
+  }
+
+  // Combinte the output
+  // return d_asgnIdces.get();      
+  return asgnIdces;
 }
 
 template<>

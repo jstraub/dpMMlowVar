@@ -92,7 +92,8 @@ public:
         }
         else{
             /* Call nextTimeStep if initialized already */
-            clusterer_->nextTimeStep(spx_);
+            // clusterer_->nextTimeStep(spx_,false);
+            clusterer_->nextTimeStep(spx_,true);
             ROS_INFO_STREAM("[CudaClusterNode] Clusterer nextTimeStep called.");
         }
 

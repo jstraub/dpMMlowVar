@@ -244,7 +244,7 @@ extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
     float *d_ws, float lambda, float Q, float tau, uint32_t K, uint32_t N,
     uint32_t *d_asgnIdces)
 {
-  std::cout << "[ddpLabelsSpecial_gpu]  K = " << K << std::endl; 
+  // std::cout << "[ddpLabelsSpecial_gpu]  K = " << K << std::endl; 
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
   assert(K >= 1);//only run the special kernel if there is at least one old cluster
 //  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);

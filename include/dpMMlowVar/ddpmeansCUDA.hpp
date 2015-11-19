@@ -216,8 +216,8 @@ uint32_t DDPMeansCUDA<T,DS>::optimisticLabelsAssign(uint32_t i0)
 template<class T,class DS>
 VectorXu DDPMeansCUDA<T,DS>::initLabels()
 {
-  cout<<"cuda init labels K="<<this->K_<<endl;
-  cout<<"K_MAX = " << K_MAX;
+  // cout<<"cuda init labels K="<<this->K_<<endl;
+  // cout<<"K_MAX = " << K_MAX;
 
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
   // VectorXu asgnIdces = VectorXu::Ones(K_MAX)*UNASSIGNED;
@@ -262,9 +262,9 @@ VectorXu DDPMeansCUDA<T,DS>::initLabels()
     // cout << "[DDPMeansCUDA::initLabels] ps: " << ps.rows() << " by " << ps.cols() << endl;
 
     d_p_.set(ps);
-    d_p_.print();
-    d_ages_.print();
-    d_ws_.print();
+    // d_p_.print();
+    // d_ages_.print();
+    // d_ws_.print();
 
     VectorXu asgnIdces_batch = VectorXu::Ones(k_batch_size)*UNASSIGNED;
     jsc::GpuMatrix<uint32_t> d_asgnIdces(asgnIdces_batch);

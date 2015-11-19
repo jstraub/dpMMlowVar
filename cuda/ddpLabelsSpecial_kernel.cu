@@ -8,7 +8,8 @@
 
 #define DIM 3
 // executions per thread
-#define K_MAX 50
+// #define K_MAX 50
+#define K_MAX 80
 #define N_PER_T 16
 #define BLOCK_SIZE 256
 
@@ -25,7 +26,7 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T
 {
   //__shared__ T oldp[DIM*K];
   __shared__ uint32_t asgnIdces[K_MAX*BLK_SIZE]; //for each thread, index selected for each old K
-  __shared__ T oldp[K_MAX*DIM];
+  // __shared__ T oldp[K_MAX*DIM];
 
   const int tid = threadIdx.x;
   const int idx = threadIdx.x + blockDim.x * blockIdx.x;
@@ -33,7 +34,7 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T
   // caching and init
   for(int k = 0; k < K; k++){
     asgnIdces[K*tid+k] = UNASSIGNED;
-    if(tid < DIM) oldp[k*DIM+tid] = d_oldp[k*DIM+tid];
+    // if(tid < DIM) oldp[k*DIM+tid] = d_oldp[k*DIM+tid];
   }
   __syncthreads(); // make sure that ys have been cached
 
@@ -42,7 +43,8 @@ __global__ void ddpLabelAssignSpecial_kernel(T *d_q, T *d_oldp, T
     T max_sim_k = FLT_MAX;
     uint32_t max_k = UNASSIGNED;
     T sim_k = 0.;
-    T* p_k = oldp;
+    T* p_k = d_oldp;
+    // T* p_k = oldp;
     T q_i[DIM];
     q_i[0] = d_q[id*DIM];
     q_i[1] = d_q[id*DIM+1];
@@ -176,7 +178,7 @@ extern void ddpLabelsSpecial_gpu( double *d_q,  double *d_oldp, double *d_ages, 
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
   assert(K >= 1);//only run the special kernel if there is at least one old cluster
 //  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);
-  assert(K < 50);
+  assert(K < K_MAX);
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);
@@ -244,7 +246,7 @@ extern void ddpLabelsSpecial_gpu( float *d_q,  float *d_oldp, float *d_ages,
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
   assert(K >= 1);//only run the special kernel if there is at least one old cluster
 //  assert(BLK_SIZE > DIM*K+DIM*(DIM-1)*K);
-  assert(K < 50);
+  assert(K < K_MAX);
 
   dim3 threads(BLK_SIZE,1,1);
   dim3 blocks(N/(BLK_SIZE*N_PER_T)+(N%(BLK_SIZE*N_PER_T)>0?1:0),1,1);

@@ -42,7 +42,7 @@ find_package (CUDA REQUIRED)
 # message(${EIGEN3_INCLUDE_DIR})
 
 catkin_package(
-   INCLUDE_DIRS include
+   INCLUDE_DIRS include ${CUDA_TOOLKIT_INCLUDE}
    LIBRARIES dpMMlowVar
    CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib

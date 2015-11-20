@@ -189,16 +189,21 @@ void DDPMeans<T,DS>::updateLabels()
 {
   uint32_t i0 = 0;
   uint32_t idAction = UNASSIGNED;
-
-  do{
+  for (int count = 0; count < this->N_; count++){
+    // FIXME: in some edge cases optimisticLabelsAssign can output the same idAction repeatedly when it's supposed to be UNASSIGNED
     idAction = optimisticLabelsAssign(i0);
+    // cout<<"[ddpmeans] iter:" << count << " K=" << this->K_ << " i0=" << i0 << " idAction=" << idAction << endl;
     if(idAction != UNASSIGNED)
     {
       createReviveFrom(idAction);
       i0 = idAction;
     }
-    cout<<" K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
-  }while(idAction != UNASSIGNED);
+    else{
+      // cout<<"[ddpmeans] break." << endl;
+      break;
+    }
+  }
+
   // if a cluster runs out of labels reset it to the previous mean!
   for(uint32_t k=0; k<this->K_; ++k)
     if(!this->cls_[k]->isInstantiated())
@@ -292,8 +297,8 @@ void DDPMeans<T,DS>::initRevive()
     for(uint32_t k=0; k<this->K_; ++k)
       sortedIds[k] = idActions(k);
     std::sort(sortedIds.begin(),sortedIds.end());
-    cout<<"idActions count: "<<idActions.size()<<endl;
-    cout<<"idActions: "<<idActions.transpose()<<endl;
+    // cout<<"idActions count: "<<idActions.size()<<endl;
+    // cout<<"idActions: "<<idActions.transpose()<<endl;
     for(uint32_t j=0; j<this->K_; ++j)
     {
       uint32_t k =0;
@@ -305,13 +310,13 @@ void DDPMeans<T,DS>::initRevive()
         uint32_t z_i = this->indOfClosestCluster(idActions(k),sim);
         if(z_i == k)
         {
-          cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
-          cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
+          // cout<<"revieve cluster "<<k<<" from point "<<idActions(k)<<endl;
+          // cout<<(this->cld_->x()->col(idActions(k))).transpose()<<endl;
           this->cls_[k]->reInstantiate(this->cld_->x()->col(idActions(k)));
         }else{
-          cout<<"NOT revieving cluster "<<k<<" from point "
-            <<idActions(k)
-            <<" because on CPU z_i = "<<z_i<<endl;
+          // cout<<"NOT revieving cluster "<<k<<" from point "
+          //   <<idActions(k)
+          //   <<" because on CPU z_i = "<<z_i<<endl;
         }
       }
     }
@@ -320,7 +325,7 @@ void DDPMeans<T,DS>::initRevive()
     // revive or add cluster from the first data-point
     createReviveFrom(0);
   }
-  cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
+  // cout<<" init: K="<<this->K_<<" Ns="<<this->counts().transpose()<<endl;
 }
 
 template<class T, class DS>

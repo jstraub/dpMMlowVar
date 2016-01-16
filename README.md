@@ -120,5 +120,13 @@ Allowed options:
   --shuffle             shuffle the data before processing
 ```
 
+Examples:
+- DPvMFmeans clustering: First compute the lambda parameter of
+  DPvMFmeans as lambda = cos(angleInRadians) - 1. so for example lambda
+  = -0.06 for an angle of 20deg.
+```
+./dpMMlowVarCluster -N 10000 -D 3 --base DPvMFmeans -p -0.06 -i ./data/rndSphereDataIwUncertain.csv -o test
+```
+
 ### Contributors
 Julian Straub and Trevor D. Campbell

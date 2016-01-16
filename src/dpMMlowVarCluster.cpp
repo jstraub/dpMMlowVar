@@ -93,7 +93,7 @@ int main(int argc, char **argv)
   MatrixXd& x(*spx);
   string pathIn ="";
   if(vm.count("input")) pathIn = vm["input"].as<string>();
-  cout<<"loading data from "<<pathIn<<endl;
+  cout<<"loading data of size " << D << "x" << N << " from "<<pathIn<<endl;
   ifstream fin(pathIn.data(),ifstream::in);
 //  fin >> D,N;
 
@@ -125,7 +125,12 @@ int main(int argc, char **argv)
         cout<<x.col(i).norm() <<endl;
       }else
         x.col(i) /= x.col(i).norm();
-    if(err>0) return 0;
+    if(err>0) {
+      cout << "Aborting processing because input data had datapoints with "
+        << "lengths deviating significantly from 1 when running "
+        << "spkm or DPvMFmeans" << std::endl;
+      return 0;
+    }
   }
   
   Clusterer<double, Spherical<double> > *clustSp = NULL;

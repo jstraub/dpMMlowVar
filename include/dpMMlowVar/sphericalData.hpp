@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <vector>
 #include <jsCore/clData.hpp>
 
 using namespace Eigen;
@@ -283,6 +284,11 @@ struct Spherical //: public DataSpace<T>
   static bool closer(const T a, const T b)
   { return a > b; };
 
+  template<int D>
+  static void computeCenters(const std::vector<Eigen::Matrix<T,D,1> >& xs,
+      const std::vector<uint32_t> zs, uint32_t K,
+      std::vector<Eigen::Matrix<T,D,1> >& mus);
+
   private:
 
   static void solveProblem1(T gamma, T age, const T beta, T& phi, 
@@ -298,11 +304,25 @@ struct Spherical //: public DataSpace<T>
   static Matrix<T,Dynamic,1> computeSum(const 
       Matrix<T,Dynamic,Dynamic>& x, const VectorXu& z, const uint32_t k,
       uint32_t* N_k);
+
 };
 
 
 
 // ================================ impl ======================================
+
+template<typename T> template<int D>
+void Spherical<T>::computeCenters(const
+    std::vector<Eigen::Matrix<T,D,1> >& xs, const std::vector<uint32_t>
+    zs, uint32_t K, std::vector<Eigen::Matrix<T,D,1> >& mus) {
+  
+  for(uint32_t k=0; k<K; ++k) mus[k].fill(0);
+  for(uint32_t i=0; i<xs.size(); ++i)
+    mus[zs[i]] += xs[i];
+  // Spherical mean computation
+  for(uint32_t k=0; k<K; ++k)
+    mus[k] /= mus[k].norm();
+};
 
   template<typename T>                                                            
 Matrix<T,Dynamic,1> Spherical<T>::computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
@@ -492,4 +512,5 @@ float silhouetteClD<float, dplv::Spherical<float> >(const
   }
   return sil.sum()/static_cast<float>(cld.N());
 };
+
 }

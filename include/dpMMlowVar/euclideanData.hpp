@@ -217,6 +217,11 @@ struct Euclidean //: public DataSpace<T>
 
   static bool closer(const T a, const T b) { return a<b; };
 
+  template<int D>
+  static void computeCenters(const std::vector<Eigen::Matrix<T,D,1> >& xs,
+      const std::vector<uint32_t> zs, uint32_t K,
+      std::vector<Eigen::Matrix<T,D,1> >& mus);
+
   static Matrix<T,Dynamic,1> computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
       const VectorXu& z, const uint32_t k, uint32_t* N_k);
 
@@ -247,7 +252,23 @@ struct Euclidean //: public DataSpace<T>
 };
 
 //============================= impl ==========================================
-//
+
+template<typename T> template<int D>
+void Euclidean<T>::computeCenters(const
+    std::vector<Eigen::Matrix<T,D,1> >& xs, const std::vector<uint32_t>
+    zs, uint32_t K, std::vector<Eigen::Matrix<T,D,1> >& mus) {
+  
+  for(uint32_t k=0; k<K; ++k) mus[k].fill(0);
+  std::vector<uint32_t> Ns(K,0);
+  for(uint32_t i=0; i<xs.size(); ++i) {
+    mus[zs[i]] += xs[i];
+    ++Ns[zs[i]]; 
+  }
+  // Spherical mean computation
+  for(uint32_t k=0; k<K; ++k)
+    mus[k] /= Ns[k];
+};
+
   template<typename T>                                                            
 Matrix<T,Dynamic,1> Euclidean<T>::computeSum(const Matrix<T,Dynamic,Dynamic>& x, 
     const VectorXu& z, const uint32_t k, uint32_t* N_k)

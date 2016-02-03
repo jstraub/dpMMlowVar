@@ -19,7 +19,7 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
-#define K_MAX 80 //TODO: should be linked to the K_MAX in ddpLabelsSpecial_kernel.cu
+#define K_MAX_ 80 //TODO: should be linked to the K_MAX_ in ddpLabelsSpecial_kernel.cu
 
 // for spherical space 
 void ddpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
@@ -217,19 +217,19 @@ template<class T,class DS>
 VectorXu DDPMeansCUDA<T,DS>::initLabels()
 {
   // cout<<"cuda init labels K="<<this->K_<<endl;
-  // cout<<"K_MAX = " << K_MAX;
+  // cout<<"K_MAX_ = " << K_MAX_;
 
   VectorXu asgnIdces = VectorXu::Ones(this->K_)*UNASSIGNED;
-  // VectorXu asgnIdces = VectorXu::Ones(K_MAX)*UNASSIGNED;
+  // VectorXu asgnIdces = VectorXu::Ones(K_MAX_)*UNASSIGNED;
   //  return asgnIdces;
   // TODO: seems to slow down the init!
   // jsc::GpuMatrix<uint32_t> d_asgnIdces(asgnIdces);
 
-  for (int k_batch = 0; k_batch < (this->K_ + K_MAX-1)/K_MAX; ++k_batch){
-    int k_index_start = k_batch*K_MAX;
-    int k_batch_size = K_MAX;
-    if (this->K_ - k_batch*K_MAX < K_MAX){
-      k_batch_size = this->K_ - k_batch*K_MAX;
+  for (int k_batch = 0; k_batch < (this->K_ + K_MAX_-1)/K_MAX_; ++k_batch){
+    int k_index_start = k_batch*K_MAX_;
+    int k_batch_size = K_MAX_;
+    if (this->K_ - k_batch*K_MAX_ < K_MAX_){
+      k_batch_size = this->K_ - k_batch*K_MAX_;
     }
 
     // d_ages_.set(this->ages());

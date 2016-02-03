@@ -72,6 +72,7 @@ BOOST_AUTO_TEST_CASE(kmeans_test)
       <<dpvmfmeans.avgIntraClusterDeviation()<<endl;
     cout<<dpvmfmeans.centroids()<<endl;
   }
+
 //  inds = dpvmfmeans.mostLikelyInds(10,deviates);
 //  cout<<"most likely indices"<<endl;
 //  cout<<inds<<endl;

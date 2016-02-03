@@ -8,14 +8,15 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <dpMMlowVar/kmeans.hpp>
+#include <dpMMlowVar/sphericalData.hpp>
+#include <dpMMlowVar/euclideanData.hpp>
 
 using namespace Eigen;
 using std::cout;
 using std::endl;
 
 namespace dplv {
-/// This is a simple version of the DPMeans algorithm in dpmeans.hpp
+/// This is a simple version of the DPMeansSimple algorithm in dpmeans.hpp
 /// without inheritance or the use of CLData structures which can make
 /// it a bit hard to read the other algorithm.
 ///
@@ -26,6 +27,9 @@ template<class T, class DS, int D>
 class DPMeansSimple
 {
 public:
+  /// Constructor
+  /// 
+  /// lambda = cos(lambda_in_degree * M_PI/180.) - 1.
   DPMeansSimple(double lambda);
   virtual ~DPMeansSimple();
 
@@ -38,6 +42,10 @@ public:
   /// assignments.
   virtual void updateCenters();
 
+  uint32_t GetK() const {return K_;};
+  const std::vector<uint32_t>& GetNs() const {return Ns_;};
+  bool GetCenter(uint32_t k, Eigen::Vector3d& mu) const {
+    if (k<K_) {mu = mus_[k]; return true; } else { return false; } };
   
 protected:
   double lambda_;
@@ -45,13 +53,19 @@ protected:
   std::vector<Eigen::Matrix<T,D,1>> xs_;
   std::vector<Eigen::Matrix<T,D,1>> mus_;
   std::vector<uint32_t> zs_;
+  std::vector<uint32_t> Ns_;
 
+  /// resets all clusters (mus_ and Ks_) and resizes them to K_
+  void resetClusters();
   /// Removes all empty clusters.
-  void removeEmptyClustes(const std::vector<uint32_t>& Ns);
+  void removeEmptyClusters(const std::vector<uint32_t>& Ns);
   /// Computes the index of the closest cluster (may be K_ in which
   /// case a new cluster has to be added).
-  uint32_t indOfClosestCluster(int32_t i, T& sim_closest);
+  uint32_t indOfClosestCluster(const Eigen::Matrix<T,D,1>& x, T& sim_closest);
 };
+
+typedef DPMeansSimple<double,Euclidean<double>,3> DPMeansSimpleE3d;
+typedef DPMeansSimple<double,Spherical<double>,3> DPMeansSimpleS3d; 
 
 // -------------------------------- impl ----------------------------------
 template<class T, class DS, int D>
@@ -72,17 +86,17 @@ void DPMeansSimple<T,DS,D>::addObservation(const Eigen::Matrix<T,D,1>& x) {
     ++K_;
   }
   zs_.push_back(z);
-}
+};
 
 template<class T, class DS, int D>
-uint32_t DPMeans<T,DS,D>::indOfClosestCluster(const
+uint32_t DPMeansSimple<T,DS,D>::indOfClosestCluster(const
     Eigen::Matrix<T,D,1>& x, T& sim_closest)
 {
   uint32_t z_i = K_;
   sim_closest = lambda_;
   for (uint32_t k=0; k<K_; ++k)
   {
-    T sim_k = DS::dist(mus_.col(k), x);
+    T sim_k = DS::dist(mus_[k], x);
     if(DS::closer(sim_k, sim_closest))
     {
       sim_closest = sim_k;
@@ -90,92 +104,95 @@ uint32_t DPMeans<T,DS,D>::indOfClosestCluster(const
     }
   }
   return z_i;
-}
+};
 
-template<class T, class DS, int D>
-void DPMeans<T,DS,D>::updateLabels()
+  template<class T, class DS, int D>
+void DPMeansSimple<T,DS,D>::updateLabels()
 {
   for(uint32_t i=0; i<xs_.size(); ++i) {
     T sim_closest = 0;
     uint32_t z = indOfClosestCluster(xs_[i], sim_closest);
     if (z == K_) {
-      mus_.push_back(x);
+      mus_.push_back(xs_[i]);
       ++K_;
     }
     zs_[i] = z;
   }
-}
+};
 
 // General update centers assumes Euclidean
-template<class T, class DS, int D>
-void DPMeans<T,DS,D>::updateCenters()
+  template<class T, class DS, int D>
+void DPMeansSimple<T,DS,D>::updateCenters()
 {
-  std::vector<uint32_t> Ns(K_, 0);
-  for(uint32_t k=0; k<K_; ++k)
-    mus_[k].fill(0);
+  resetClusters();
   for(uint32_t i=0; i<xs_.size(); ++i) {
-    ++Ns[zs_[i]]; 
-    mus_[zs_[i]] += xs_[i];
+    ++Ns_[zs_[i]]; 
+//    mus_[zs_[i]] += xs_[i];
   }
   // Euclidean mean computation
-  std::vector<bool> toDelete(K_,false);
-  for(uint32_t k=0; k<K_; ++k) {
-    mus_[k] /= Ns[k];
-  }
-  removeEmptyClustes(Ns);
-}
+//  for(uint32_t k=0; k<K_; ++k) {
+//    mus_[k] /= Ns_[k];
+//  }
+  DS::computeCenters(xs_, zs_, K_, mus_);
+  removeEmptyClusters(Ns_);
+};
 
-// Template specialization to Euclidean data
-template<class T, int D>
-void DPMeans<T,Euclidean<T>,D>::updateCenters()
-{
-  std::vector<uint32_t> Ns(K_, 0);
-  for(uint32_t k=0; k<K_; ++k)
-    mus_[k].fill(0);
-  for(uint32_t i=0; i<xs_.size(); ++i) {
-    ++Ns[zs_[i]]; 
-    mus_[zs_[i]] += xs_[i];
-  }
-  // Euclidean mean computation
-  std::vector<bool> toDelete(K_,false);
-  for(uint32_t k=0; k<K_; ++k) {
-    mus_[k] /= Ns[k];
-  }
-  removeEmptyClustes(Ns);
-}
+//// Template specialization to Euclidean data
+//template<int D>
+//void DPMeansSimple<double,Euclidean<double>,D>::updateCenters()
+//{
+//  resetClusters();
+//  for(uint32_t i=0; i<xs_.size(); ++i) {
+//    ++Ns_[zs_[i]]; 
+////    mus_[zs_[i]] += xs_[i];
+//  }
+//  // Euclidean mean computation
+////  for(uint32_t k=0; k<K_; ++k) {
+////    mus_[k] /= Ns_[k];
+////  }
+//  DS::computeCenters<D>(xs_, zs_, mus_);
+//  removeEmptyClusters(Ns_);
+//}
+//
+//// template specialization to spherical data
+//template<int D>
+//void DPMeansSimple<double,Spherical<double>,D>::updateCenters()
+//{
+//  resetClusters();
+//  for(uint32_t i=0; i<xs_.size(); ++i) {
+//    ++Ns_[zs_[i]]; 
+//    mus_[zs_[i]] += xs_[i];
+//  }
+//  // Spherical mean computation
+//  for(uint32_t k=0; k<K_; ++k) {
+//    mus_[k] /= mus_[k].norm();
+//  }
+//  removeEmptyClusters(Ns_);
+//}
 
-// template specialization to spherical data
-template<class T, int D>
-void DPMeans<T,Spherical<T>,D>::updateCenters()
-{
-  std::vector<uint32_t> Ns(K_, 0);
-  for(uint32_t k=0; k<K_; ++k)
-    mus_[k].fill(0);
-  for(uint32_t i=0; i<xs_.size(); ++i) {
-    ++Ns[zs_[i]]; 
-    mus_[zs_[i]] += xs_[i];
-  }
-  // Spherical mean computation
-  std::vector<bool> toDelete(K_,false);
+template<class T, class DS, int D>
+void DPMeansSimple<T,DS,D>::resetClusters() {
+  Ns_.resize(K_, 0);
   for(uint32_t k=0; k<K_; ++k) {
-    mus_[k] /= mus_[k].norm();
+    mus_[k].fill(0);
+    Ns_[k] = 0;
   }
-  removeEmptyClustes(Ns);
 }
 
 template<class T, class DS, int D>
-void DPMeans<T,DS,D>::removeEmptyClustes(const std::vector<uint32_t>& Ns) {
-
+void DPMeansSimple<T,DS,D>::removeEmptyClusters(const std::vector<uint32_t>& Ns) {
   uint32_t kNew = K_;
   for(int32_t k=K_-1; k>-1; --k)
     if(Ns[k] == 0) {
       cout<<"cluster k "<<k<<" empty"<<endl;
 #pragma omp parallel for 
       for(uint32_t i=0; i<xs_.size(); ++i)
-        if(static_cast<int32_t>(zs_[i]) >= k) sz_[i] -= 1;
+        if(static_cast<int32_t>(zs_[i]) >= k) zs_[i] -= 1;
       kNew --;
     }
   for(int32_t k=K_; k>=0; --k)
     if(Ns[k] == 0) mus_.erase(mus_.begin()+k);
   K_ = kNew;
 };
+
+}

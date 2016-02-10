@@ -46,6 +46,8 @@ cuda_add_library(dpMMlowVar SHARED
 #  ./cuda/vectorSum_kernel.cu
   ./cuda/ddpvMFlabels_kernel.cu
   ./cuda/ddpLabels_kernel.cu
+  ./cuda/dpvMFlabels_kernel.cu
+  ./cuda/dpLabels_kernel.cu
 #  ./cuda/copy_kernel.cu
 #  ./cuda/choiceMult_kernel.cu
 #  ./cuda/labelMap_kernel.cu

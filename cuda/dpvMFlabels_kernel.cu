@@ -6,7 +6,6 @@
 #include <jsCore/cuda_global.h>
 
 #define DIM 3
-#include <dpMMlowVar/dpvMF_cuda_helper.h>
 // executions per thread
 #define N_PER_T 16
 #define BLOCK_SIZE 256
@@ -25,7 +24,6 @@ __global__ void dpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, T
   // caching and init
   iAction[tid] = UNASSIGNED;
   if(tid < DIM*K) p[tid] = d_p[tid];
-  if(tid < K) Ns[tid] = d_Ns[tid];
   __syncthreads(); // make sure that ys have been cached
 
   for(int id=idx*N_PER_T; id<min(N,(idx+1)*N_PER_T); ++id)
@@ -146,7 +144,7 @@ __global__ void dpvMFlabelAssign_kernel(T *d_q, T *d_p, uint32_t *z, T
 };
 
 
-void dpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
+extern void dpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
      double lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
      uint32_t *d_iAction)
 {
@@ -213,7 +211,7 @@ void dpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 };
 
 
-void dpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
+extern void dpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
      float lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
      uint32_t *d_iAction)
 {

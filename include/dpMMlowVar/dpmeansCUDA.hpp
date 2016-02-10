@@ -14,6 +14,20 @@ using namespace Eigen;
 using std::cout;
 using std::endl;
 
+extern void dpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
+    double lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
+    uint32_t *d_iAction)
+extern void dpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
+    float lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
+    uint32_t *d_iAction)
+
+extern void dpvMFlabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
+     double lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
+     uint32_t *d_iAction)
+extern void dpvMFlabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
+     float lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
+     uint32_t *d_iAction)
+
 namespace dplv {
 
 template<class T, class DS>
@@ -32,7 +46,6 @@ public:
   
 protected:
   jsc::GpuMatrix<uint32_t> d_iAction_;
-  jsc::GpuMatrix<uint32_t> d_Ns_;
   jsc::GpuMatrix<T> d_p_;
 
   virtual uint32_t optimisticLabelsAssign(uint32_t i0);
@@ -47,7 +60,7 @@ protected:
 template<class T, class DS>
 DPMeansCUDA<T,DS>::DPMeansCUDA(const shared_ptr<jsc::ClDataGpu<T> >&
     cld, double lambda)
-  : DPMeans<T,DS>(cld, lambda), d_iAction_(1), d_Ns_(1), d_p_(this->D_,1)
+  : DPMeans<T,DS>(cld, lambda), d_iAction_(1), d_p_(this->D_,1)
 {}
 
 template<class T, class DS>
@@ -73,7 +86,6 @@ template<class T, class DS>
 void DPMeansCUDA<T,DS>::setupComputeLabelsGPU(uint32_t iAction)
 {
   d_iAction_.set(iAction);
-  d_Ns_.set(this->counts());
 
   Matrix<T,Dynamic,Dynamic> ps(this->D_,this->K_);
   for(uint32_t k=0; k<this->K_; ++k) {
@@ -97,7 +109,7 @@ uint32_t DDPMeansCUDA<float,Euclidean<float> >::computeLabelsGPU(uint32_t i0)
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   dpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
-      d_Ns_.data(), this->cl0_.lambda(), 
+      this->cl0_.lambda(), 
       0, this->K_, i0, this->N_-i0, 
       d_iAction_.data());
 //  cout << "------------------AFTER--------------------"<<endl;
@@ -112,7 +124,7 @@ uint32_t DPMeansCUDA<double,Euclidean<double> >::computeLabelsGPU(uint32_t i0)
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   dpLabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(), 
-      d_Ns_.data(), this->cl0_.lambda(), 
+      this->cl0_.lambda(), 
        0, this->K_, i0, this->N_-i0, 
       d_iAction_.data());
 //  cout << "------------------AFTER--------------------"<<endl;
@@ -127,7 +139,7 @@ uint32_t DPMeansCUDA<float,Spherical<float> >::computeLabelsGPU(uint32_t i0)
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   dpvMFlabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(),
-      d_Ns_.data(),  this->cl0_.lambda(),
+      this->cl0_.lambda(),
        0, this->K_, i0, this->N_-i0,
       d_iAction_.data());
 //  cout << "------------------AFTER--------------------"<<endl;
@@ -142,7 +154,7 @@ uint32_t DPMeansCUDA<double,Spherical<double> >::computeLabelsGPU(uint32_t i0)
   this->setupComputeLabelsGPU(iAction);
 //  cout << "******************BEFORE*******************"<<endl;
   dpvMFlabels_gpu( this->cld_->d_x(),  d_p_.data(), this->cld_->d_z(),
-      d_Ns_.data(),  this->cl0_.lambda(),
+      this->cl0_.lambda(),
        0, this->K_, i0, this->N_-i0,
       d_iAction_.data());
 //  cout << "------------------AFTER--------------------"<<endl;

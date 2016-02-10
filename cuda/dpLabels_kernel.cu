@@ -152,7 +152,8 @@ __global__ void dpLabelAssign_kernel(T *d_q, T *d_p, uint32_t *z,
 
 
 extern void dpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
-     double lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
+    double lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
+    uint32_t *d_iAction)
 {
   const uint32_t BLK_SIZE = BLOCK_SIZE/2;
 //  assert(BLK_SIZE > DIM*K);
@@ -220,8 +221,8 @@ extern void dpLabels_gpu( double *d_q,  double *d_p,  uint32_t *d_z,
 
 
 extern void dpLabels_gpu( float *d_q,  float *d_p,  uint32_t *d_z,
-    uint32_t *d_Ns, float *d_ages, float *d_ws, float lambda, float Q,
-    float tau, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N, uint32_t *d_iAction)
+    float lambda, uint32_t k0, uint32_t K, uint32_t i0, uint32_t N,
+    uint32_t *d_iAction)
 {
   const uint32_t BLK_SIZE = BLOCK_SIZE;
 //  assert(BLK_SIZE > DIM*K);

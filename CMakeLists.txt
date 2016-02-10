@@ -137,6 +137,7 @@ pods_install_headers(
   ./include/dpMMlowVar/ddpmeans.hpp
   ./include/dpMMlowVar/ddpmeansCUDA.hpp
   ./include/dpMMlowVar/dpmeans.hpp
+  ./include/dpMMlowVar/dpmeansCUDA.hpp
   ./include/dpMMlowVar/dpmeans_simple.hpp
   ./include/dpMMlowVar/ddpvMF_cuda_helper.h
   ./include/dpMMlowVar/euclideanData.hpp

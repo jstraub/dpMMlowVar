@@ -72,8 +72,6 @@ uint32_t DPMeans<T,DS>::indOfClosestCluster(int32_t i, T& sim_closest)
 template<class T, class DS>
 void DPMeans<T,DS>::updateLabels()
 {
-//#pragma omp parallel for 
-// TODO not sure how to parallelize
   this->prevCost_ = this->cost_;
   this->cost_ = 0.;
   for(uint32_t i=0; i<this->N_; ++i)

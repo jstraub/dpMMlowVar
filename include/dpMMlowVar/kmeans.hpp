@@ -119,6 +119,9 @@ void KMeans<T,DS>::updateCenters()
   for(uint32_t k=0; k<this->K_; ++k)
     prevNs_(k) = this->cls_[k]->N();
 
+  // Carefull: this copies the labels from CPU to GPU and might thus
+  // overwrite already compute labels in GPU memory. Use updateK()
+  // instead.
   this->cld_->updateLabels(this->K_);
   this->cld_->computeSS();
   for(uint32_t k=0; k<this->K_; ++k)

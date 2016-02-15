@@ -93,7 +93,7 @@ using the
 
 The [pure python implementation of
 DP-vMF-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpvMFmeans.py) and of 
-[DP-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpmeans.py)
+[DP-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpMeans.py)
 shows the simplicity of the nonparametric algorithms.
 
 ### Usage

@@ -92,8 +92,9 @@ using the
 [rtDDPvMF](https://github.com/jstraub/rtDDPvMF) package.
 
 The [pure python implementation of
-DP-vMF-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpvMFmeans.py)
-shows the simplicity of the algorithm.
+DP-vMF-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpvMFmeans.py) and of 
+[DP-means](https://github.com/jstraub/dpMMlowVar/blob/master/python/dpmeans.py)
+shows the simplicity of the nonparametric algorithms.
 
 ### Usage
 ```

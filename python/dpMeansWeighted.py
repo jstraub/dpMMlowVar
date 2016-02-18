@@ -7,9 +7,9 @@ def normed(x):
   return x / np.sqrt((x**2).sum(axis=0)) 
 
 class DPmeansWeighted(object):
-  def __init__(self, lamb):
+  def __init__(self, lamb, verbose=False):
     self.lamb = lamb
-    self.verbose=False
+    self.verbose=verbose
   def removeCluster(self,k):
     self.mu = np.concatenate((self.mu[:,:k],self.mu[:,k+1::]),axis=1)
     self.N_ = np.concatenate((self.N_[:k],self.N_[k+1::]),axis=1)
@@ -66,8 +66,8 @@ class DPmeansWeighted(object):
 #      print x
 #      print self.mu
       self.C[t] = np.array(\
-          [np.sqrt((\
-          (x[:,i][:,np.newaxis]-self.mu[:,z_i][:,np.newaxis])**2\
+          [x[D-1,i] * np.sqrt((\
+          (x[:D-1,i][:,np.newaxis]-self.mu[:D-1,z_i][:,np.newaxis])**2\
           ).sum(axis=0)) for i,z_i in enumerate(self.z)]).sum() \
           + self.K*self.lamb
       if self.verbose:

@@ -17,6 +17,10 @@ template<typename T>
 class SO3
 {
   public:
+    static inline Matrix<T,3,1> vee(const Matrix<T,3,3>& W);
+    static inline Matrix<T,3,3> invVee(const Matrix<T,3,1>& w);
+    static inline Matrix<T,3,3> expMap(const Matrix<T,3,1>& w);
+
     static inline Matrix<T,Dynamic,1> vee(const Matrix<T,Dynamic,Dynamic>& W);
     static inline Matrix<T,Dynamic,Dynamic> invVee(const Matrix<T,Dynamic,1>& w);
     static inline Matrix<T,Dynamic,Dynamic> logMapW(const Matrix<T,Dynamic,Dynamic>& R);
@@ -42,6 +46,14 @@ inline Matrix<T,Dynamic,1> SO3<T>::vee(const Matrix<T,Dynamic,Dynamic>& W)
 };
 
 template<typename T>
+inline Matrix<T,3,1> SO3<T>::vee(const Matrix<T,3,3>& W)
+{
+  const Matrix<T,3,3> A = 0.5*(W - W.transpose());
+  Matrix<T,3,1> w(A(2,1), A(0,2), A(1,0));
+  return w;
+};
+
+template<typename T>
 inline Matrix<T,Dynamic,Dynamic> SO3<T>::invVee(const Matrix<T,Dynamic,1>& w)
 {
   Matrix<T,Dynamic,Dynamic> W = MatrixXf::Zero(3,3);
@@ -49,6 +61,19 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::invVee(const Matrix<T,Dynamic,1>& w)
   W(0,2) = w(1);
   W(1,0) = w(2);
 
+  W(1,2) = -w(0);
+  W(2,0) = -w(1);
+  W(0,1) = -w(2);
+  return W;
+};
+
+template<typename T>
+inline Matrix<T,3,3> SO3<T>::invVee(const Matrix<T,3,1>& w)
+{
+  Matrix<T,3,3> W = Matrix<T,3,3>::Zero();
+  W(2,1) = w(0);
+  W(0,2) = w(1);
+  W(1,0) = w(2);
   W(1,2) = -w(0);
   W(2,0) = -w(1);
   W(0,1) = -w(2);
@@ -86,6 +111,23 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::expMap(const Matrix<T,Dynamic,1>& w)
   T b = (1.-cos(theta))/(theta*theta);
   if(b!=b) b = 0.0;
   const Matrix<T,Dynamic,Dynamic> R = MatrixXf::Identity(3,3) + a * W + b * W*W;
+//  cout<<"W"<<endl<<W<<endl;
+//  cout<<"W*W"<<endl<<W*W<<endl;
+//  cout<<"Rdet="<<R.determinant()<<endl;
+  return R;
+};
+
+template<typename T>
+inline Matrix<T,3,3> SO3<T>::expMap(const Matrix<T,3,1>& w)
+{
+  const T theta = sqrt(w.array().square().matrix().sum());
+//  cout<<"theta="<<theta<<endl;
+  const Matrix<T,3,3> W = invVee(w);
+  T a = sin(theta)/theta;
+  if(a!=a) a = 0.0;
+  T b = (1.-cos(theta))/(theta*theta);
+  if(b!=b) b = 0.0;
+  const Matrix<T,3,3> R = MatrixXf::Identity(3,3) + a * W + b * W*W;
 //  cout<<"W"<<endl<<W<<endl;
 //  cout<<"W*W"<<endl<<W*W<<endl;
 //  cout<<"Rdet="<<R.determinant()<<endl;

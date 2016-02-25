@@ -110,7 +110,7 @@ inline Matrix<T,Dynamic,Dynamic> SO3<T>::expMap(const Matrix<T,Dynamic,1>& w)
   if(a!=a) a = 0.0;
   T b = (1.-cos(theta))/(theta*theta);
   if(b!=b) b = 0.0;
-  const Matrix<T,Dynamic,Dynamic> R = MatrixXf::Identity(3,3) + a * W + b * W*W;
+  const Matrix<T,Dynamic,Dynamic> R = Matrix<T,Dynamic,Dynamic>::Identity(3,3) + a * W + b * W*W;
 //  cout<<"W"<<endl<<W<<endl;
 //  cout<<"W*W"<<endl<<W*W<<endl;
 //  cout<<"Rdet="<<R.determinant()<<endl;
@@ -127,7 +127,7 @@ inline Matrix<T,3,3> SO3<T>::expMap(const Matrix<T,3,1>& w)
   if(a!=a) a = 0.0;
   T b = (1.-cos(theta))/(theta*theta);
   if(b!=b) b = 0.0;
-  const Matrix<T,3,3> R = MatrixXf::Identity(3,3) + a * W + b * W*W;
+  const Matrix<T,3,3> R = Matrix<T,3,3>::Identity() + a * W + b * W*W;
 //  cout<<"W"<<endl<<W<<endl;
 //  cout<<"W*W"<<endl<<W*W<<endl;
 //  cout<<"Rdet="<<R.determinant()<<endl;

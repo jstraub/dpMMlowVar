@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <Eigen/StdVector>
 #include <vector>
 #include <jsCore/clData.hpp>
 
@@ -285,9 +286,9 @@ struct Spherical //: public DataSpace<T>
   { return a > b; };
 
   template<int D>
-  static void computeCenters(const std::vector<Eigen::Matrix<T,D,1> >& xs,
+  static void computeCenters(const std::vector<Eigen::Matrix<T,D,1>,Eigen::aligned_allocator<Eigen::Matrix<T,D,1> > >& xs,
       const std::vector<uint32_t> zs, uint32_t K,
-      std::vector<Eigen::Matrix<T,D,1> >& mus);
+      std::vector<Eigen::Matrix<T,D,1>,Eigen::aligned_allocator<Eigen::Matrix<T,D,1> > >& mus);
 
   private:
 
@@ -313,8 +314,8 @@ struct Spherical //: public DataSpace<T>
 
 template<typename T> template<int D>
 void Spherical<T>::computeCenters(const
-    std::vector<Eigen::Matrix<T,D,1> >& xs, const std::vector<uint32_t>
-    zs, uint32_t K, std::vector<Eigen::Matrix<T,D,1> >& mus) {
+    std::vector<Eigen::Matrix<T,D,1>,Eigen::aligned_allocator<Eigen::Matrix<T,D,1> > >& xs, const std::vector<uint32_t>
+    zs, uint32_t K, std::vector<Eigen::Matrix<T,D,1>,Eigen::aligned_allocator<Eigen::Matrix<T,D,1> > >& mus) {
   
   for(uint32_t k=0; k<K; ++k) mus[k].fill(0);
   for(uint32_t i=0; i<xs.size(); ++i)
